@@ -131,16 +131,16 @@ def findBoundingBoxesLine(fname, translate):
 
     textureX = lowestXValue // 2
 
-    for i, box in enumerate(boundingBoxes):
+    for idx, box in enumerate(boundingBoxes):
         # Cut textures for expansion in paper backgrounds. 
         # The idea is to take a strip and randomize the pixels in blocks of some
         # number width hopefully making it possible to grow the image
 
         #find the centre between the 2 lines : this doesn't account for the footer FIX THIS
-        if i <= len(boundingBoxes)-2:
+        if idx <= len(boundingBoxes)-2:
 
-            box1 = boundingBoxes[i]
-            box2 = boundingBoxes[i+1]
+            box1 = boundingBoxes[idx]
+            box2 = boundingBoxes[idx+1]
 
             # This calculatesthe middle of the space between two lines
             middleYDistance = (box2['y'] - (box1['y']+box1['h']))-1
@@ -149,37 +149,11 @@ def findBoundingBoxesLine(fname, translate):
 
         # This cuts a number of lines from below the text bounding box.
         textureCrop = img.crop((0, box['y']+box['h']+1, imgWidth, box['y']+box['h']+5))
-        pixelCutWidth = 5
-        rgb_im = textureCrop.convert('RGB')
-        imWidth, imHeight = textureCrop.size
-
-        noise = True
-        for i in range(0,imWidth,pixelCutWidth):
-            for t in lineLst:
-                if abs(t-i) <= 25:
-                    noise = False
-
-            z = []
-            pixelList = []
-            for y in range(imHeight):
-
-                for x in range(pixelCutWidth):
-                    r, g, b = rgb_im.getpixel((i+x, y))
-                    pixelList.append(tuple([r,g,b]))
-
-            #Create a new image from random pixel choices
-            im2 = Image.new('RGB', (pixelCutWidth, imHeight))
-
-            if noise == False:
-                im2.putdata(pixelList)
-                noise = True
-
-            else:
-                random.shuffle(pixelList)
-                im2.putdata(pixelList)
-
-        img_patches.append(im2)
-        # im2.save(open('./img_patches/outputs/img_{:03d}.png'.format(i), 'w'))
+        
+        img_block = randomizeStrip(textureCrop, lineLst)
+        compImage = merge_image_list(img_block)
+        img_patches.append(compImage)
+        # compImage.save(open('./image_processing/img_{:03d}.png'.format(idx), 'w'))
 
     # This creates a composite image with the original image and the transparent overlay
     img = Image.alpha_composite(img, tmp)
@@ -209,7 +183,8 @@ def findBoundingBoxesLine(fname, translate):
                 widthOld,heightOld = oldCompImage.size
 
                 for x in range(1,spreadCounter):
-                    stripImage = randomizeStrip(img_patches[i],lineLst)
+                    img_block = randomizeStrip(img_patches[i],lineLst)
+                    stripImage = merge_image_list(img_block)
                     compImage = merge_images(compImage, stripImage, "vertical")
 
                 widthNew,heightNew = compImage.size
@@ -228,7 +203,8 @@ def findBoundingBoxesLine(fname, translate):
 
             if spreadCounter > 1:
                 for x in range(1,spreadCounter):
-                    stripImage = randomizeStrip(img_patches[i], lineLst)
+                    img_block = randomizeStrip(img_patches[i], lineLst)
+                    stripImage = merge_image_list(img_block)
                     compImage = merge_images(compImage,stripImage,"vertical")
 
                 widthNew,heightNew = compImage.size

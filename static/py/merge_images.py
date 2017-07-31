@@ -32,3 +32,18 @@ def merge_images(image1, image2, orientation):
         result.paste(image2, (width1, 0), mask2)
     
     return result
+
+def merge_image_list(img_block):
+    """ Iteratively merge a list of PIL image objects """
+    compImage = None
+    for i in range(0, len(img_block)):
+        if len(img_block) > 1:
+            if i == 0:
+                compImage = merge_images(img_block[0],img_block[1],"horizontal")
+            elif i > 1:
+                compImage = merge_images(compImage, img_block[i],"horizontal")
+        else:
+            # nothing to merge
+            compImage = img_block[i]
+
+    return compImage
