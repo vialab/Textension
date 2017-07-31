@@ -1,0 +1,8 @@
+image_processing/*
+file_processing/*
+venv/*
+uploads/*
+img_patches/*
+Inputs/*
+outputs/*
+.vscode/*

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<head>
+  <title>OCR viz</title>
+  <meta name='author' content='Adam Bradley'x>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="./static/lib/dropzone/dropzone.css">
+  <link rel="stylesheet" href="./static/lib/dropzone/style.css">
+  <link rel="stylesheet" type="text/css" href="./static/lib/bootstrap/css/bootstrap.min.css">
+
+
+
+  <style>
+    #dropzone {
+      padding: 15px 32px;
+      margin: auto;
+      width: 60%;
+      /*border: 3px solid #008CBA;
+      padding: 10px;*/
+
+    }
+
+    #video{
+      margin: 10px 0;
+    }
+
+    #photo {
+      margin: 10px 0;
+    }
+
+    #startbutton {
+       margin: 10px 0;
+       box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+  	   background-color: #008CBA; /* Blue */
+       border: none;
+       color: white;
+       padding: 15px 32px;
+       text-align: center;
+       text-decoration: none;
+       display: inline-block;
+       font-size: 16px;
+       border-radius: 8px;
+       transition-duration: 0.4s;
+       cursor: pointer;
+       clear: right;
+    }
+
+    #startbutton:active {
+       margin: 10px 0;
+       box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+       background-color: #00FFFF; /* Cyan */
+       border: none;
+       color: white;
+       padding: 15px 32px;
+       text-align: center;
+       text-decoration: none;
+       display: inline-block;
+       font-size: 16px;
+       border-radius: 8px;
+       transition-duration: 0.4s;
+       cursor: pointer;
+       clear: right;
+    }
+
+    #dlbutton {
+       margin: 10px 0;
+       box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+  	   background-color: #008CBA; /* Blue */
+       border: none;
+       color: white;
+       padding: 15px 32px;
+       text-align: center;
+       text-decoration: none;
+       display: inline-block;
+       font-size: 16px;
+       border-radius: 8px;
+       transition-duration: 0.4s;
+       cursor: pointer;
+       clear: right;
+    }
+
+    #dlbutton:active {
+       margin: 10px 0;
+       box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+       background-color: #00FFFF; /* Cyan */
+       border: none;
+       color: white;
+       padding: 15px 32px;
+       text-align: center;
+       text-decoration: none;
+       display: inline-block;
+       font-size: 16px;
+       border-radius: 8px;
+       transition-duration: 0.4s;
+       cursor: pointer;
+       clear: right;
+    }
+
+    #canvas{
+      display: none;
+    }
+
+    .camera{
+
+    }
+
+    .output{
+      position: relative
+  	  top: 10px;
+
+
+    }
+
+    .col-md-6 {
+      /*border:2px solid blue;*/
+    }
+
+    .col-md-4{
+      border:2px solid white;
+    }
+
+    .row{
+      overflow: hidden;
+    }
+
+    [class*="col-"]{
+      margin-bottom: -99999px;
+      padding-bottom: 99999px;
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="container-fluid">
+  	<div class="row">
+  		<div class="col-md-12">
+        <section>
+          <div id="dropzone">
+            <form action="/upload" class="dropzone needsclick dz-clickable" id="demo-upload">
+              <div class="dz-message needsclick">
+                Drop files here or click to upload.<br>
+              </div>
+            </form>
+          </div>
+          <div class="col-md-4 text-center">
+            <a href="/return_file" target=blank><button type="submit" id="dlbutton"><span class="glyphicon glyphicon-picture"></span>Download Viz File</button></a>
+        </div>
+        </section>
+  		</div>
+  	</div>
+  	<!--<div class="row">
+  		<div class="col-md-6 text-right vertical-center">
+        <div class="camera">
+          <video id="video">Video stream not available.</video>
+        </div>
+  		</div>
+  		<div class="col-md-6 text-left vertical-center">
+        <div class="output">
+          <img id="photo" alt="The screen capture will appear in this box.">
+        </div>
+  		</div>
+  	</div>
+  	<div class="row">
+  		<div class="col-md-4">
+  		</div>
+  		<div class="col-md-4 text-center">
+        <button id="startbutton"><span class="glyphicon glyphicon-picture"></span> Take a picture</button>
+  		</div>
+  		<div class="col-md-4">
+        <canvas id="canvas">
+        </canvas>
+  		</div>
+  	</div>
+  </div>-->
+
+
+  <script src="./static/lib/dropzone/dropzone.js"></script>
+  <script src="./static/lib/capture/capture.js"></script>
+  <script src="./static/lib/jquery/jquery-3.2.0.min.js"></script>
+  <script src="./static/lib/bootstrap/js/bootstrap.min.js"></script>
+</body>
+
+</html>
