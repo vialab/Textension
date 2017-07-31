@@ -6,3 +6,5 @@ img_patches/*
 Inputs/*
 outputs/*
 .vscode/*
+*.pyc
+*/*.pyc
