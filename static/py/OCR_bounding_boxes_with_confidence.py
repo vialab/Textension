@@ -13,10 +13,7 @@ from opacityConversion import *
 from randomizeStrip import *
 from lineDetection import *
 
-
-
 #Find the bounding boxes
-
 def findBoundingBoxesWord(fname):
     """ Use OCR to find the bounding boxes of each word in a document"""
     # This opens the converted pdf as an image file
@@ -78,9 +75,6 @@ def findBoundingBoxesLine(fname, translate):
     draw = ImageDraw.Draw(tmp)
     nlp = spacy.load('en')
     lowestXValue = 9999
-    # set an empty variable to find the longest width of a bounding box for texture synthesis
-    longestWidthValue = 0
-    longestHeightValue = 0
     boundingBoxes = [] # this keep tracks of all the bounding boxes to build the new spaces
 
     with PyTessBaseAPI() as api:
@@ -98,14 +92,6 @@ def findBoundingBoxesLine(fname, translate):
             #this caluclates the lowest x-value which indicates the margin.
             if box['x'] < lowestXValue:
                 lowestXValue = box['x']
-
-            #this tracks the longest witdth for texture synthesis
-            if box['w'] > longestWidthValue:
-                longestWidthValue = box['w']
-
-            #this tracks the longest height for texture synthesis
-            if box['h'] > longestHeightValue:
-                longestHeightValue = box['h']
 
             #this tracks all the places that the texture needs to be laid
             boundingBoxes.append(box)
@@ -159,7 +145,6 @@ def findBoundingBoxesLine(fname, translate):
     img = Image.alpha_composite(img, tmp)
     width, height = img.size
 
-    imageRebuildCounter = 0
     # iterate through the bounding boxes and crop them out accounting for the first and the last chop
     # to keep headers and footers
     for i, box in enumerate(boundingBoxes):
