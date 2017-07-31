@@ -7,4 +7,5 @@ Inputs/*
 outputs/*
 .vscode/*
 *.pyc
-*/*.pyc
+**/*.pyc
+**.pyc
