@@ -31,7 +31,7 @@ def textProcessing (filename):
             #textConfidence('./file_processing/'+filename3)
             #Get the bounding boxes of the document
             #findBoundingBoxesWord('./file_processing/'+filename3)
-            findBoundingBoxesLine('./file_processing/'+filename3, True)
+            findBoundingBoxesLine('./file_processing/'+filename3, False)
             #insertMaps('./file_processing/'+filename3)
 
     #Turn marked up image back to pdf
