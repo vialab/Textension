@@ -1,4 +1,5 @@
 import os
+import InlineViz
 from pdf_page_splitter import *
 from ocr_pdf_with_imag_conversion_bounding_boxes import *
 from OCR_bounding_boxes_with_confidence import *
@@ -31,8 +32,10 @@ def textProcessing (filename):
             #textConfidence('./file_processing/'+filename3)
             #Get the bounding boxes of the document
             #findBoundingBoxesWord('./file_processing/'+filename3)
-            findBoundingBoxesLine('./file_processing/'+filename3, False)
+            # findBoundingBoxesLine('./file_processing/'+filename3, False)
             #insertMaps('./file_processing/'+filename3)
+
+            
 
     #Turn marked up image back to pdf
 
