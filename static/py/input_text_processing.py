@@ -1,5 +1,6 @@
 import os
-import InlineViz
+import InlineViz as iv
+import cPickle as pickle
 from pdf_page_splitter import *
 from ocr_pdf_with_imag_conversion_bounding_boxes import *
 from OCR_bounding_boxes_with_confidence import *
@@ -34,14 +35,16 @@ def textProcessing (filename):
             #findBoundingBoxesWord('./file_processing/'+filename3)
             # findBoundingBoxesLine('./file_processing/'+filename3, False)
             #insertMaps('./file_processing/'+filename3)
-
-            
+            vis = iv.InlineViz("./file_processing/"+filename3, _translate=False, _spread=20)
+            vis.decompose()
+            with open("./vis.pkl", "w+") as f:
+                pickle.dump(vis, f)
 
     #Turn marked up image back to pdf
 
-    for filename4 in os.listdir('./file_processing/'):
-        if not filename4.startswith('.'):
-            convertImageToPDF('./file_processing/'+filename4)
+    # for filename4 in os.listdir('./file_processing/'):
+    #     if not filename4.startswith('.'):
+    #         convertImageToPDF('./file_processing/'+filename4)
 
     #Merge into one pdf
-    pdfMerger('./file_processing/')
+    # pdfMerger('./file_processing/')

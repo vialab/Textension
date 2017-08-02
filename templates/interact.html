@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<head>
+  <title>Inline Viz</title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" type="text/css" href="./static/lib/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="./static/css/style.css">
+</head>
+
+<body>
+  <div class="container-fluid">
+  	<div class="row">
+  		<div class="col-md-12 vis">
+            {% for i in range(image_blocks|length) %}
+            <img class="img-block" src="data:image/png;base64,{{ image_blocks[i] }}" />
+            <img class="img-block img-patch" src="data:image/png;base64,{{ image_patches[i] }}" />
+            {% endfor %}
+  		</div>
+  	</div>
+  <script src="./static/lib/jquery/jquery-3.2.0.min.js"></script>
+  <script src="./static/lib/bootstrap/js/bootstrap.min.js"></script>
+  <script src="./static/js/interact.js"></script>
+</body>
+
+</html>

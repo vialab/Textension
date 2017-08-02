@@ -17,19 +17,7 @@ class InlineViz:
     # Class Variables
     img_comp = None
     img_file = None
-    img_patches = []
-    img_blocks = []
-    img_height = 0.0
-    img_width = 0.0
-    ocr_text = []
-    ocr_translated = []
-    bounding_boxes = []
-    boxes = None
     nlp = spacy.load("en")
-    line_list = None
-    spread = 0
-    pixel_cut_width = 5
-    noise_threshold = 25
 
     def __init__(self, fname, _translate=False, _pixel_cut_width=5, _noise_threshold=25, _spread=0):
         """ Initialize a file to work with """
@@ -40,13 +28,15 @@ class InlineViz:
         self.spread = _spread
         self.pixel_cut_width = _pixel_cut_width
         self.noise_threshold = _noise_threshold
+        self.img_patches = []
+        self.img_blocks = []
+        self.ocr_text = []
+        self.ocr_translated = []
+        self.bounding_boxes = []
 
     def decompose(self):
         """ Use OCR to find bounding boxes of each line in document and dissect 
         into workable parts """
-        tmp = Image.new('RGBA', (self.img_width, self.img_height), (0,0,0,0)
-        img = self.img_file.convert("RGBA")
-
         with PyTessBaseAPI() as api:
             api.SetImage(self.img_file)
             # Interate over lines using OCR
@@ -70,12 +60,13 @@ class InlineViz:
 
     def expandStrip(self, img_strip):
         """ Expand an image strip using pixel randomization and quilting """
-        img_comp = img_strip
+        img_comp = [img_strip]
         for x in range(1, self.spread):
             img_block = self.randomizeStrip(img_strip)
             img_expand = self.mergeImageList(img_block, "horizontal")
-            img_comp = self.mergeImages(img_comp, img_expand, "vertical")
-        return img_comp
+            img_comp.append(img_expand)
+        
+        return self.mergeImageList(img_comp, "vertical")
 
     def translateText(self):
         """ Translate text that has been OCR'd from this image """

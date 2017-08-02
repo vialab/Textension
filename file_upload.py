@@ -1,6 +1,6 @@
 import sys
 sys.path.append('./static/py')
-
+import io
 import os
 from flask import Flask, request, redirect, url_for,send_from_directory,render_template,jsonify, send_file
 from werkzeug import secure_filename
@@ -11,6 +11,7 @@ import re
 import cStringIO
 import imp
 import pdf_text_extraction
+import cPickle as pickle
 from input_text_processing import *
 
 UPLOAD_FOLDER = './uploads/'
@@ -30,12 +31,27 @@ def index():
     return render_template('index2.html')
 
 @app.route('/return_file')
-
 def return_file():
     return send_file('./file_processing/ocr_document.pdf', attachment_filename="ocr_document.pdf")
 
-@app.route('/upload', methods=['GET', 'POST'])
+@app.route('/interact')
+def interact():
+    with open('./vis.pkl', 'r') as f:
+        vis = pickle.load(f)
 
+    image_blocks = []
+    image_patches = []
+    for block, strip in zip(vis.img_blocks, vis.img_patches):
+        bImage = io.BytesIO()
+        block.save(bImage, format='PNG')
+        image_blocks.append(bImage.getvalue().encode('base64'))
+        bImage = io.BytesIO()        
+        strip.save(bImage, format='PNG')
+        image_patches.append(bImage.getvalue().encode('base64'))
+
+    return render_template('interact.html', image_blocks=image_blocks, image_patches=image_patches)
+
+@app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
         file = request.files['file']
@@ -46,7 +62,6 @@ def upload_file():
             textProcessing(filename)
 
     return "ooooooppppppssss"
-
 
 #This gets the camera image
 @app.route('/hook', methods=['POST'])
