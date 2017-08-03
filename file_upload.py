@@ -44,10 +44,10 @@ def interact():
     for block, strip in zip(vis.img_blocks, vis.img_patches):
         bImage = io.BytesIO()
         block.save(bImage, format='PNG')
-        image_blocks.append(bImage.getvalue().encode('base64'))
-        bImage = io.BytesIO()        
+        image_blocks.append({ "src":bImage.getvalue().encode('base64'), "width":block.size[0], "height":block.size[1] } )
+        bImage = io.BytesIO()
         strip.save(bImage, format='PNG')
-        image_patches.append(bImage.getvalue().encode('base64'))
+        image_patches.append({ "src":bImage.getvalue().encode('base64'), "width":strip.size[0], "height":strip.size[1] } )
 
     return render_template('interact.html', image_blocks=image_blocks, image_patches=image_patches)
 

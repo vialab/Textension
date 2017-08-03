@@ -19,9 +19,11 @@ class InlineViz:
     img_file = None
     nlp = spacy.load("en")
 
-    def __init__(self, fname, _translate=False, _pixel_cut_width=5, _noise_threshold=25, _spread=0):
+    def __init__(self, fname, _translate=False, _max_size=(1024,1024), _pixel_cut_width=5, _noise_threshold=25, _spread=0):
         """ Initialize a file to work with """
+        self.max_size = _max_size
         self.img_file = Image.open(fname)
+        self.img_file.thumbnail(self.max_size, Image.ANTIALIAS)
         self.img_width, self.img_height = self.img_file.convert("RGBA").size
         self.line_list = self.detectLines(fname)
         self.translate = _translate
@@ -90,24 +92,37 @@ class InlineViz:
         self.img_comp.save(open('./image_processing/img_comp.jpg', 'w')) # testing
 
     def generateExpandedPatches(self):
-        """ Crop space between lines and expand the strip based on spread """
+        """ Crop space between lines using starting and ending co-ordinates 
+        and then expand the strip based on spread """
         tmp = Image.new('RGBA', (self.img_width, self.img_height), (0,0,0,0))
         img = self.img_file.convert("RGBA")
+        space_height = 5 # default max space height
+        # Find minimum space height - use this for symmetry
+        for idx, box in enumerate(self.bounding_boxes):
+            if idx+1 == len(self.bounding_boxes):
+                break
+            new_space_height = (self.bounding_boxes[idx+1]['y']-1) - (box['y']+box['h']+1)
+            if new_space_height < space_height and new_space_height > 0:
+                space_height = new_space_height
+
         # Create the expanded patches
         for idx, box in enumerate(self.bounding_boxes):
             # Cut textures for expansion in paper backgrounds
-            # This cuts a number of lines from below the text bounding box.
-            textureCrop = img.crop((0, box['y']+box['h']+1, self.img_width, box['y']+box['h']+5))
+            # Cut between current box and next box +/- a pixel for slack
+            y_start = box['y']+box['h']+1
+            y_end = y_start + space_height
+
+            textureCrop = img.crop((0, y_start, self.img_width, y_end))
             img_strip = self.randomizeStrip(textureCrop)
             img_patch = self.mergeImageList(img_strip)
             # don't need to expand the last patch
-            if idx != len(self.bounding_boxes):
+            if idx != len(self.bounding_boxes)-1:
                 img_patch = self.expandStrip(img_patch)
 
             self.img_patches.append(img_patch)
 
-    def cropImageBlocks(self):
-        """ Crop blocks of image entities for recomposition """
+    def cropImageBlocks(self, pad_bottom=True):
+        """ Crop blocks of image entities for recomposition with bottom padding """
         tmp = Image.new('RGBA', (self.img_width, self.img_height), (0,0,0,0))
         # This creates a composite image with the original image and the transparent overlay
         img = Image.alpha_composite(self.img_file.convert("RGBA"), tmp)
@@ -115,12 +130,16 @@ class InlineViz:
         # iterate through the bounding boxes and crop them out accounting for the first and the last chop
         # to keep headers and footers
         for i, box in enumerate(self.bounding_boxes):
+            y_end = box['y']+box['h']+1
             if i == 0:
-                tmpImageCrop = img.crop((0, 0, width, box['y']+box['h']))
-            elif i == len(self.bounding_boxes):
-                tmpImageCrop = img.crop((0, box['y'], width, height))
+                tmpImageCrop = img.crop((0, 0, width, y_end))
+            elif i == len(self.bounding_boxes)-1:
+                tmpImageCrop = img.crop((0, box['y']-1, width, height))
             else:
-                tmpImageCrop = img.crop((0, box['y'], width, box['y']+box['h']))
+                if pad_bottom:
+                    # use space between bounding boxes as padding
+                    y_end = self.bounding_boxes[i+1]['y']-1
+                tmpImageCrop = img.crop((0, box['y']-1, width, y_end))
             self.img_blocks.append(tmpImageCrop)
 
     #This merges two image files using PIL
@@ -177,6 +196,7 @@ class InlineViz:
         imWidth, imHeight = im.size
         noise = True
         img_block = []
+        cut_width = 0        
         for i in range(0,imWidth,self.pixel_cut_width):
             for t in self.line_list:
                 if abs(t-i) <= self.noise_threshold:
@@ -185,13 +205,19 @@ class InlineViz:
             z = []
             pixelList = []
             for y in range(imHeight):
-
+                cut_width = 0                
                 for x in range(self.pixel_cut_width):
+                    if i+x == imWidth:
+                        break
+                    cut_width += 1
                     r, g, b = rgb_im.getpixel((i+x, y))
                     pixelList.append(tuple([r,g,b]))
 
+            if cut_width == 0:
+                continue
+
             #Create a new image from random pixel choices
-            im2 = Image.new('RGB', (self.pixel_cut_width, imHeight))
+            im2 = Image.new('RGB', (cut_width, imHeight))
 
             if noise:
                 random.shuffle(pixelList)

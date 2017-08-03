@@ -10,13 +10,23 @@
 </head>
 
 <body>
-  <div class="container-fluid">
+  <div class="tool-bar">
+    <div class="tool-table">
+      <div class="tool-row">      
+        <div class="tool-btn" onclick="javascript:openSpaces();">Open Spaces</div>
+      </div>
+      <div class="tool-row">            
+        <div class="tool-btn" onclick="javascript:closeSpaces();">Close Spaces</div>
+      </div>      
+    </div>
+  </div>
+  <div class="stage container-fluid">
   	<div class="row">
   		<div class="col-md-12 vis">
-            {% for i in range(image_blocks|length) %}
-            <img class="img-block" src="data:image/png;base64,{{ image_blocks[i] }}" />
-            <img class="img-block img-patch" src="data:image/png;base64,{{ image_patches[i] }}" />
-            {% endfor %}
+        {% for i in range(image_blocks|length) %}
+        <div class="img-block" id="{{i}}" style="height:{{ image_blocks[i]['height'] }}px;width:{{ image_blocks[i]['width'] }}px;" data-img-src="data:image/png;base64,{{image_blocks[i]['src']}}"></div>
+        <div class="img-block img-patch hidden" id="{{i}}" style="height:{{ image_patches[i]['height'] }}px;width:{{ image_patches[i]['width'] }}px;" data-img-src="data:image/png;base64,{{ image_patches[i]['src'] }}"></div> 
+        {% endfor %}
   		</div>
   	</div>
   <script src="./static/lib/jquery/jquery-3.2.0.min.js"></script>

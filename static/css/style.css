@@ -3,6 +3,48 @@
 }
 
 .vis .img-block {
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
+.hidden {
+    display: none;
+}
+
+.stage {
+    z-index: 1;
+}
+
+.tool-bar {
+    position: fixed;
+    background-color: #455672;
+    right: 0px;
+    width: 80px;
+    height: 100%;
+    padding: 10px;
+    z-index: 5;    
+}
+
+.tool-table {
+    display: table;
+    border-spacing: 0 10px;
     width: 100%;
     height: auto;
+}
+
+.tool-row {
+    display: table-row;
+}
+
+.tool-table .tool-row .tool-btn {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+    width: 100%;
+    height: 60px;
+    color: white;
+    border-radius: 60px;
+    background-color: gray;
+    cursor: pointer;
 }
