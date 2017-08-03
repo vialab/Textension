@@ -1,19 +1,35 @@
+.main-nav {
+    background: rgba(0,0,0,0);
+    text-transform: uppercase;
+    border: none;
+    padding: 5px;
+    box-shadow: none;
+}
+
+.fade-background {
+    background-color: rgba(0,0,0,0);
+}
+
+.slide-up {
+    top: -60px;
+}
+
 .vis {
-    width: 100%;
+    width: auto;
+    margin: 0 auto;
 }
 
 .vis .img-block {
     padding: 0;
-    margin: 0;
-    width: 100%;
-}
-
-.hidden {
-    display: none;
+    margin: 0 auto;
+    transition: all 0.5s ease;
 }
 
 .stage {
     z-index: 1;
+    margin: 0 auto;
+    padding: 125px 0;
+    width: 80%;
 }
 
 .tool-bar {
@@ -47,4 +63,20 @@
     border-radius: 60px;
     background-color: gray;
     cursor: pointer;
+}
+
+.img-patch {
+    overflow: hidden;
+}
+
+.img-patch .img-patch-text {
+    height: auto;
+    background-color: rgba(0,0,0,0);
+    border: none;
+    box-shadow: none;
+}
+
+.img-patch .img-patch-text:focus {
+    border: none;
+    box-shadow: none;
 }

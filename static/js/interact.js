@@ -1,11 +1,11 @@
 $(document).ready(function() {
-    $(".img-block").on("click", function() {
+    $(".img-block:not(.img-patch)").on("click", function() {
         var i = parseInt($(this).attr("id"));
         if(i == 0) {
             return;
         }
         i--;
-        $("#"+i.toString()+".img-patch").toggleClass("hidden");
+        toggleSpace($("#"+i.toString()+".img-patch"))
     });
 
     $(".img-block").each(function() {
@@ -17,11 +17,24 @@ $(document).ready(function() {
     });
 }); 
 
+function toggleSpace($elem) {
+    if($elem.hasClass("squeeze")) {
+        $elem.removeClass("squeeze");
+        $elem.height($elem.data("img-height"));
+    } else {
+        $elem.height(0);
+        $elem.addClass("squeeze");        
+    }
+}
 
 function openSpaces() {
-    $(".img-patch").removeClass("hidden");
+    $(".img-patch").removeClass("squeeze");
+    $(".img-patch").each(function() {
+        $(this).height($(this).data("img-height"));
+    });
 }
 
 function closeSpaces() {
-    $(".img-patch").addClass("hidden");
+    $(".img-patch").height(0);
+    $(".img-patch").addClass("squeeze");    
 }

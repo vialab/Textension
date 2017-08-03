@@ -49,7 +49,7 @@ def interact():
         strip.save(bImage, format='PNG')
         image_patches.append({ "src":bImage.getvalue().encode('base64'), "width":strip.size[0], "height":strip.size[1] } )
 
-    return render_template('interact.html', image_blocks=image_blocks, image_patches=image_patches)
+    return render_template('interact.html', image_blocks=image_blocks, image_patches=image_patches, bounding_boxes=vis.bounding_boxes)
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
