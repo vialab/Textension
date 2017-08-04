@@ -33,10 +33,12 @@ class InlineViz:
         self.line_buffer = _line_buffer # space buffer cropping between bounding boxes
         self.img_patches = [] # strips between lines of text
         self.img_blocks = [] # lines of text
+        self.word_blocks = [] # meta info for word in each line/block
         self.ocr_text = [] # OCR'd text
         self.ocr_translated = [] # OCR'd text translated
         self.bounding_boxes = [] # bounding boxes of text lines
         self.space_height = 5 # minimum space height to crop between text lines
+        self.is_inverted = False # indicator for text and background color inversion
 
     def decompose(self):
         """ Use OCR to find bounding boxes of each line in document and dissect 
@@ -49,7 +51,7 @@ class InlineViz:
             for i, (im, box, _, _) in enumerate(boxes):
                 # im is a PIL image object
                 # box is a dict with x, y, w and h keys
-                api.SetRectangle(box['x'], box['y'], box['w'], box['h'])
+                api.SetRectangle(box["x"], box["y"], box["w"], box["h"])
 
                 #this tracks all the places that the texture needs to be laid
                 self.bounding_boxes.append(box)
@@ -60,7 +62,8 @@ class InlineViz:
         self.space_height = self.getMinSpaceHeight() # get the minimum patch height
         self.generateExpandedPatches() # strip and expand line spaces
         self.cropImageBlocks() # slice original image into lines
-        self.generateFullCompositeImage() # merge everything together
+        self.getWordBlocks() # get all word meta info per block
+        # self.generateFullCompositeImage() # merge everything together
 
     def expandStrip(self, img_strip):
         """ Expand an image strip using pixel randomization and quilting """
@@ -215,6 +218,11 @@ class InlineViz:
 
         return compImage
 
+    def calculateColorDistance(self, color_1, color_2):
+        """ Calculates euclidean color distance of two colors not normalized (for simplicity) """
+        distance = (color_2[0]-color_1[0])**2 + (color_2[1]-color_1[1])**2 + (color_2[2]-color_1[2])**2
+        return distance
+
     def randomizeStrip(self, im):
         """ Return blocks of randomized pixels in a single strip """
         rgb_im = im.convert('RGB')
@@ -270,3 +278,31 @@ class InlineViz:
             cv2.line(gray, (lines[i][0][0], lines[i][0][1]), (lines[i][0][2], lines[i][0][3]), (0, 0, 255), 3, cv2.LINE_AA)
 
         return lineLst
+
+    def getWordInfo(self, image):
+        """ Get word boxes with confidence level in an image -
+         does not include text for injection protection"""
+        img = image.convert("RGB")
+        word_boxes = []        
+        with PyTessBaseAPI() as api:
+            api.SetImage(img)
+
+            boxes = api.GetComponentImages(RIL.WORD, True)
+            for i, (im, box, _, _) in enumerate(boxes):
+                api.SetRectangle(box["x"], box["y"], box["w"], box["h"])
+                text = api.GetUTF8Text()
+                conf = api.MeanTextConf()
+                word = { "x":box["x"]
+                    , "y":box["y"]
+                    , "width":box["w"]
+                    , "height":box["h"]
+                    , "confidence":conf 
+                }
+                word_boxes.append(word)
+
+        return word_boxes
+
+    def getWordBlocks(self):
+        for img in self.img_blocks:
+            word_block = self.getWordInfo(img)
+            self.word_blocks.append(word_block)

@@ -8,6 +8,20 @@
           </ul>
       </div>
   </nav>
+  <div class="tool-box">
+    <table>
+      <tr>
+        <td>TEXT CONFIDENCE:</td>
+        <td>
+          <label class="switch">
+            <input id="confidence" type="checkbox"/>
+            <span class="slider round"></span>
+          </label>
+        </td>
+      </tr>
+      <tr><td></td></tr>
+    </table>
+  </div>
   <div class="stage container-fluid">
   	<div class="row">
   		<div class="vis">
@@ -17,12 +31,18 @@
           <input style="margin-left:{{ bounding_boxes[i-1]['x'] }}px;width:{{bounding_boxes[i-1]['w']}}px;" class="img-patch-text" type="text" />
         </div>
         {% endif %}        
-        <div class="img-block" id="{{i}}" style="height:{{ image_blocks[i]['height'] }}px;width:{{ image_blocks[i]['width'] }}px;" data-img-src="data:image/png;base64,{{image_blocks[i]['src']}}"></div>
+        <div class="img-block" id="{{i}}" style="height:{{ image_blocks[i]['height'] }}px;width:{{ image_blocks[i]['width'] }}px;" data-img-src="data:image/png;base64,{{image_blocks[i]['src']}}">
+          <canvas class="text-confidence"></canvas>
+        </div>
         {% endfor %}
   		</div>
-  	</div>
+    </div>
+  </div>
 {%endblock%}
 {%block scripts%}
   <script src="./static/js/main.js"></script>
+  <script type="text/javascript">
+    var word_blocks = {{ word_blocks|safe }}
+  </script>
   <script src="./static/js/interact.js"></script>
 {%endblock%}

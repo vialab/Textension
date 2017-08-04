@@ -12,6 +12,7 @@ import cStringIO
 import imp
 import pdf_text_extraction
 import cPickle as pickle
+import json
 from input_text_processing import *
 
 UPLOAD_FOLDER = './uploads/'
@@ -51,7 +52,7 @@ def interact():
         strip.save(bImage, format='PNG')
         image_patches.append({ "src":bImage.getvalue().encode('base64'), "width":strip.size[0], "height":strip.size[1] } )
 
-    return render_template('interact.html', image_blocks=image_blocks, image_patches=image_patches, bounding_boxes=vis.bounding_boxes)
+    return render_template('interact.html', image_blocks=image_blocks, word_blocks=json.dumps(vis.word_blocks), image_patches=image_patches, bounding_boxes=vis.bounding_boxes)
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
