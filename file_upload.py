@@ -41,10 +41,12 @@ def interact():
 
     image_blocks = []
     image_patches = []
-    for block, strip in zip(vis.img_blocks, vis.img_patches):
+    for block in vis.img_blocks:
         bImage = io.BytesIO()
         block.save(bImage, format='PNG')
         image_blocks.append({ "src":bImage.getvalue().encode('base64'), "width":block.size[0], "height":block.size[1] } )
+        
+    for strip in vis.img_patches:
         bImage = io.BytesIO()
         strip.save(bImage, format='PNG')
         image_patches.append({ "src":bImage.getvalue().encode('base64'), "width":strip.size[0], "height":strip.size[1] } )

@@ -1,14 +1,25 @@
-.main-nav {
-    background: rgba(0,0,0,0);
+#main-nav {
+    background: rgba(75,95,125,1);
     text-transform: uppercase;
     border: none;
     padding: 5px;
     box-shadow: none;
 }
 
-.fade-background {
-    background-color: rgba(0,0,0,0);
+#main-nav.navbar-default .navbar-nav>li>a {
+    color: white;
+    font-weight: 900;
 }
+
+#main-nav.fade-background.navbar-default .navbar-nav>li>a {
+    color: black !important;
+}
+
+.fade-background {
+    background-color: rgba(0,0,0,0) !important;
+}
+
+
 
 .slide-up {
     top: -60px;

@@ -12,9 +12,11 @@
   	<div class="row">
   		<div class="vis">
         {% for i in range(image_blocks|length) %}
-        <div class="img-block img-patch squeeze" id="{{i}}" data-img-height="{{ image_patches[i]['height'] }}" style="width:{{ image_patches[i]['width'] }}px;height:0px;" data-img-src="data:image/png;base64,{{ image_patches[i]['src'] }}">
-          <input style="margin-left:{{ bounding_boxes[i]['x'] }}px;width:{{bounding_boxes[i]['w']}}px;" class="img-patch-text" type="text" />
+        {% if i > 0 %}
+        <div class="img-block img-patch squeeze" id="{{i-1}}" data-img-height="{{ image_patches[i-1]['height'] }}" style="width:{{ image_patches[i-1]['width'] }}px;height:0px;" data-img-src="data:image/png;base64,{{ image_patches[i-1]['src'] }}">
+          <input style="margin-left:{{ bounding_boxes[i-1]['x'] }}px;width:{{bounding_boxes[i-1]['w']}}px;" class="img-patch-text" type="text" />
         </div>
+        {% endif %}        
         <div class="img-block" id="{{i}}" style="height:{{ image_blocks[i]['height'] }}px;width:{{ image_blocks[i]['width'] }}px;" data-img-src="data:image/png;base64,{{image_blocks[i]['src']}}"></div>
         {% endfor %}
   		</div>

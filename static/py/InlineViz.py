@@ -19,22 +19,24 @@ class InlineViz:
     img_file = None
     nlp = spacy.load("en")
 
-    def __init__(self, fname, _translate=False, _max_size=(1024,1024), _pixel_cut_width=5, _noise_threshold=25, _spread=0):
+    def __init__(self, fname, _translate=False, _max_size=(1024,1024), _pixel_cut_width=5, _noise_threshold=25, _spread=0, _line_buffer=1):
         """ Initialize a file to work with """
-        self.max_size = _max_size
-        self.img_file = Image.open(fname)
-        self.img_file.thumbnail(self.max_size, Image.ANTIALIAS)
-        self.img_width, self.img_height = self.img_file.convert("RGBA").size
-        self.line_list = self.detectLines(fname)
-        self.translate = _translate
-        self.spread = _spread
-        self.pixel_cut_width = _pixel_cut_width
-        self.noise_threshold = _noise_threshold
-        self.img_patches = []
-        self.img_blocks = []
-        self.ocr_text = []
-        self.ocr_translated = []
-        self.bounding_boxes = []
+        self.max_size = _max_size # maximum size of image for resizing
+        self.img_file = Image.open(fname) # image itselfs
+        self.img_file.thumbnail(self.max_size, Image.ANTIALIAS) # resize image to maximum size
+        self.img_width, self.img_height = self.img_file.convert("RGBA").size # resized width and height
+        self.line_list = self.detectLines(fname) # X coordinates for vertical lines
+        self.translate = _translate # indicator for translating OCR'd text
+        self.spread = _spread # multiplier for strip size
+        self.pixel_cut_width = _pixel_cut_width # horizontal pixel cut size for randomization
+        self.noise_threshold = _noise_threshold # vertical line detection threshold
+        self.line_buffer = _line_buffer # space buffer cropping between bounding boxes
+        self.img_patches = [] # strips between lines of text
+        self.img_blocks = [] # lines of text
+        self.ocr_text = [] # OCR'd text
+        self.ocr_translated = [] # OCR'd text translated
+        self.bounding_boxes = [] # bounding boxes of text lines
+        self.space_height = 5 # minimum space height to crop between text lines
 
     def decompose(self):
         """ Use OCR to find bounding boxes of each line in document and dissect 
@@ -55,7 +57,7 @@ class InlineViz:
 
         if self.translate:
             self.translateText()
-
+        self.space_height = self.getMinSpaceHeight() # get the minimum patch height
         self.generateExpandedPatches() # strip and expand line spaces
         self.cropImageBlocks() # slice original image into lines
         self.generateFullCompositeImage() # merge everything together
@@ -81,45 +83,59 @@ class InlineViz:
         # merge everything back together to a composite image
         for i in range(0, len(self.img_blocks)):
             if i == 0:
-                self.img_comp = self.mergeImages(self.img_blocks[i], self.img_patches[i], "vertical")
-
+                self.img_comp = self.img_blocks[i]
             else:
+                self.img_comp = self.mergeImages(self.img_comp,self.img_patches[i-1],"vertical")
                 self.img_comp = self.mergeImages(self.img_comp,self.img_blocks[i],"vertical")
-                
-                if i != len(self.img_blocks):
-                    self.img_comp = self.mergeImages(self.img_comp,self.img_patches[i],"vertical")
 
         self.img_comp.save(open('./image_processing/img_comp.jpg', 'w')) # testing
 
+    def getMinSpaceHeight(self):
+        """ Find minimum space height - use this for symmetry """
+        space_height = 5 # default max space height
+        for idx, box in enumerate(self.bounding_boxes):
+            if idx == len(self.bounding_boxes)-1:
+                break
+            if idx == 0:
+                if box['y'] > self.line_buffer:
+                    new_space_height = box['y']-self.line_buffer
+            else:
+                new_space_height = (self.bounding_boxes[idx+1]['y']) - (box['y']+box['h'])
+                if new_space_height < space_height and new_space_height > 0:
+                    space_height = new_space_height
+        return space_height
+    
     def generateExpandedPatches(self):
         """ Crop space between lines using starting and ending co-ordinates 
         and then expand the strip based on spread """
         tmp = Image.new('RGBA', (self.img_width, self.img_height), (0,0,0,0))
         img = self.img_file.convert("RGBA")
-        space_height = 5 # default max space height
-        # Find minimum space height - use this for symmetry
-        for idx, box in enumerate(self.bounding_boxes):
-            if idx+1 == len(self.bounding_boxes):
-                break
-            new_space_height = (self.bounding_boxes[idx+1]['y']-1) - (box['y']+box['h']+1)
-            if new_space_height < space_height and new_space_height > 0:
-                space_height = new_space_height
 
         # Create the expanded patches
         for idx, box in enumerate(self.bounding_boxes):
             # Cut textures for expansion in paper backgrounds
             # Cut between current box and next box +/- a pixel for slack
-            y_start = box['y']+box['h']+1
-            y_end = y_start + space_height
+            if box['y'] <= self.line_buffer:
+                # text too close to top of page
+                continue
+            y_start = box['y']-self.space_height
+            y_end = box['y']-self.line_buffer
 
-            textureCrop = img.crop((0, y_start, self.img_width, y_end))
-            img_strip = self.randomizeStrip(textureCrop)
-            img_patch = self.mergeImageList(img_strip)
+            expand = True
             # don't need to expand the last patch
-            if idx != len(self.bounding_boxes)-1:
-                img_patch = self.expandStrip(img_patch)
+            if idx == len(self.bounding_boxes)-1:
+                expand = False
 
+            img_patch = self.createNewPatch(img, y_start, y_end, expand)
             self.img_patches.append(img_patch)
+
+    def createNewPatch(self, img, y_start, y_end, expand=True):
+        """ Crop, randomize, and expand a strip """
+        textureCrop = img.crop((0, y_start, self.img_width, y_end))
+        img_strip = self.randomizeStrip(textureCrop)
+        img_patch = self.mergeImageList(img_strip)
+        img_patch = self.expandStrip(img_patch)
+        return img_patch
 
     def cropImageBlocks(self, pad_bottom=True):
         """ Crop blocks of image entities for recomposition with bottom padding """
@@ -130,16 +146,25 @@ class InlineViz:
         # iterate through the bounding boxes and crop them out accounting for the first and the last chop
         # to keep headers and footers
         for i, box in enumerate(self.bounding_boxes):
-            y_end = box['y']+box['h']+1
+            y_end = box['y']+box['h']+self.line_buffer
             if i == 0:
-                tmpImageCrop = img.crop((0, 0, width, y_end))
+                # check if there is room to make space above first line
+                if box['y'] > self.line_buffer:
+                    # seperate the header from first block
+                    tmpImageCrop = img.crop((0, 0, width, box['y']-self.line_buffer))
+                    self.img_blocks.append(tmpImageCrop)            
+                    tmpImageCrop = img.crop((0, box['y']-self.line_buffer, width, y_end))
+                else:
+                    # include the header in first block
+                    tmpImageCrop = img.crop((0, 0, width, y_end))                    
             elif i == len(self.bounding_boxes)-1:
-                tmpImageCrop = img.crop((0, box['y']-1, width, height))
+                # include footer in last block
+                tmpImageCrop = img.crop((0, box['y']-self.line_buffer, width, height))
             else:
                 if pad_bottom:
                     # use space between bounding boxes as padding
-                    y_end = self.bounding_boxes[i+1]['y']-1
-                tmpImageCrop = img.crop((0, box['y']-1, width, y_end))
+                    y_end = self.bounding_boxes[i+1]['y']-self.line_buffer
+                tmpImageCrop = img.crop((0, box['y']-self.line_buffer, width, y_end))
             self.img_blocks.append(tmpImageCrop)
 
     #This merges two image files using PIL
