@@ -16,7 +16,7 @@ import json
 from input_text_processing import *
 
 UPLOAD_FOLDER = './uploads/'
-ALLOWED_EXTENSIONS = set(['docx','txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+ALLOWED_EXTENSIONS = set(['bmp', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -59,12 +59,15 @@ def upload_file():
     if request.method == 'POST':
         file = request.files['file']
         if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            file_extension = file.filename.split(".")[-1].lower()
             
-            textProcessing(filename)
+            if file_extension == "pdf":
+                # need to split pages
+            else:
+                # just an image
 
-    return "ooooooppppppssss"
+            textProcessing(file.stream)
+    return
 
 #This gets the camera image
 @app.route('/hook', methods=['POST'])

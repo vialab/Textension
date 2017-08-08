@@ -189,7 +189,7 @@ class InlineViz:
             result_height = height1 + height2
 
             result = Image.new('RGB', (result_width, result_height))
-            result.paste(image1, (0, 0), mask1)        
+            result.paste(image1, (0, 0), mask1)
             result.paste(image2, (0, height1), mask2)
 
         elif orientation == "horizontal":     
@@ -303,6 +303,7 @@ class InlineViz:
         return word_boxes
 
     def getWordBlocks(self):
+        """ Get bounding boxes for single words in a line """
         for img in self.img_blocks:
             word_block = self.getWordInfo(img)
             self.word_blocks.append(word_block)
