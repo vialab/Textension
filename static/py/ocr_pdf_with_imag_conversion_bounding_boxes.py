@@ -13,6 +13,7 @@ import os
 #Create a symlink to this newly installed dylib file as mentioned in other answer to get things working.
 #ln -s /usr/local/Cellar/imagemagick@6/6.9.7-4/lib/libMagickWand-6.Q16.dylib /usr/local/lib/libMagickWand.dylib
 
+
 #This converts a pdf to jpeg
 def convertPDFToJPG(fname):
     image_pdf = Image(filename=fname, resolution=300)

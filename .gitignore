@@ -9,3 +9,4 @@ outputs/**
 **/*.pkl
 **/*.pyc
 vis.pkl
+app_session/**

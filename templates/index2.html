@@ -181,6 +181,15 @@
   <script src="./static/lib/capture/capture.js"></script>
   <script src="./static/lib/jquery/jquery-3.2.0.min.js"></script>
   <script src="./static/lib/bootstrap/js/bootstrap.min.js"></script>
+  <script>
+    Dropzone.autoDiscover = false;
+    $(function() {
+      var myDropzone = new Dropzone("#demo-upload");
+      myDropzone.on("queuecomplete", function(file) {
+        window.location = "{{ url_for('interact') }}";
+      });
+    });
+  </script>
 </body>
 
 </html>

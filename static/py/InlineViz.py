@@ -19,13 +19,13 @@ class InlineViz:
     img_file = None
     nlp = spacy.load("en")
 
-    def __init__(self, fname, _translate=False, _max_size=(1024,1024), _pixel_cut_width=5, _noise_threshold=25, _spread=0, _line_buffer=1):
+    def __init__(self, stream, _translate=False, _max_size=(1024,1024), _pixel_cut_width=5, _noise_threshold=25, _spread=0, _line_buffer=1):
         """ Initialize a file to work with """
         self.max_size = _max_size # maximum size of image for resizing
-        self.img_file = Image.open(fname) # image itselfs
+        self.img_file = Image.open(stream) # image itselfs
         self.img_file.thumbnail(self.max_size, Image.ANTIALIAS) # resize image to maximum size
         self.img_width, self.img_height = self.img_file.convert("RGBA").size # resized width and height
-        self.line_list = self.detectLines(fname) # X coordinates for vertical lines
+        self.line_list = self.detectLines(self.img_file) # X coordinates for vertical lines
         self.translate = _translate # indicator for translating OCR'd text
         self.spread = _spread # multiplier for strip size
         self.pixel_cut_width = _pixel_cut_width # horizontal pixel cut size for randomization
@@ -260,9 +260,10 @@ class InlineViz:
 
         return img_block
 
-    def detectLines(self, fname):
+    def detectLines(self, img):
         """ Use CV2 to estimate vertical line threshold for randomization """
-        gray = cv2.imread(fname)
+        img_array = np.asarray(img)
+        gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
         edges = cv2.Canny(gray,50,150,apertureSize = 3)
         
         minLineLength=100
