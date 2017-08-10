@@ -145,9 +145,56 @@
               </div>
             </form>
           </div>
-          <div class="col-md-4 text-center">
+          <div class="row">
+            <div class="col-md-12 text-center">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Advanced Settings</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Spread</td>
+                    <td><input id="option-spread" type="number" class="form-control" form="demo-upload" value="{{ session['options']['spread'] }}"/></td>
+                  </tr>
+                  <tr>
+                    <td>Translate</td>
+                    <td>
+                      {% if session['options']['translate']==True %}
+                        <input id="option-translate" type="checkbox" form="demo-upload" checked/>
+                      {% else %}
+                        <input id="option-translate" type="checkbox" form="demo-upload"/>                        
+                      {% endif %}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Pixel Cut Width</td>
+                    <td><input id="option-cut" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['cut'] }}"/></td>
+                  </tr>
+                  <tr>
+                    <td>Noise Threshold</td>
+                    <td><input id="option-noise" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['noise'] }}"/></td>
+                  </tr>
+                  <tr>
+                    <td>Line Buffer</td>
+                    <td><input id="option-buffer" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['buffer'] }}"/></td>
+                  </tr>
+                  <tr>
+                    <td>Max Width</td>
+                    <td><input id="option-width" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['width'] }}"/></td>
+                  </tr>
+                  <tr>
+                    <td>Max Height</td>
+                    <td><input id="option-height" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['height'] }}"/></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <!-- <div class="col-md-4 text-center">
             <a href="/return_file" target=blank><button type="submit" id="dlbutton"><span class="glyphicon glyphicon-picture"></span>Download Viz File</button></a>
-        </div>
+        </div> -->
         </section>
   		</div>
   	</div>
@@ -187,6 +234,15 @@
       var myDropzone = new Dropzone("#demo-upload");
       myDropzone.on("queuecomplete", function(file) {
         window.location = "{{ url_for('interact') }}";
+      });
+      myDropzone.on("sending", function(file, xhr, formData) {
+        formData.append("spread", $('#option-spread').val());
+        formData.append("translate", $('#option-translate').is(":checked"));
+        formData.append("cut", $('#option-cut').val());
+        formData.append("noise", $('#option-noise').val());
+        formData.append("buffer", $('#option-buffer').val()); 
+        formData.append("width", $('#option-width').val()); 
+        formData.append("height", $('#option-height').val()); 
       });
     });
   </script>

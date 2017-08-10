@@ -292,12 +292,17 @@ class InlineViz:
             for i, (im, box, _, _) in enumerate(boxes):
                 api.SetRectangle(box["x"], box["y"], box["w"], box["h"])
                 text = api.GetUTF8Text()
+                entities = self.nlp(text)
                 conf = api.MeanTextConf()
+                label = ""
+                if len(entities.ents) > 0:
+                    label = entities.ents[-1].label_
                 word = { "x":box["x"]
                     , "y":box["y"]
                     , "width":box["w"]
                     , "height":box["h"]
                     , "confidence":conf 
+                    , "label": label
                 }
                 word_boxes.append(word)
 

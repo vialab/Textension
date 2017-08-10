@@ -3,14 +3,24 @@
   <nav id="main-nav" class="navbar navbar-default navbar-fixed-top navbar-custom no-print">
       <div class="nav-links">
           <ul class="nav navbar-nav">
-          <li> <a href="#" onclick="javasript:openSpaces();">Open Spaces</a> </li>
-          <li> <a href="#" onclick="javasript:closeSpaces();">Close Spaces</a> </li>
-          <li> <a href="#" onclick="print();">Print</a> </li>
+            <li> <a href="/">Home</a> </li>
+            <li> <a href="#" onclick="javasript:openSpaces();">Open Spaces</a> </li>
+            <li> <a href="#" onclick="javasript:closeSpaces();">Close Spaces</a> </li>
+            <li> <a href="#" onclick="print();">Print</a> </li>
           </ul>
       </div>
   </nav>
   <div class="tool-box no-print">
     <table>
+      <tr>
+        <td>LOCATIONS:</td>
+        <td>
+          <label class="switch">
+            <input id="location" type="checkbox"/>
+            <span class="slider round"></span>
+          </label>
+        </td>
+      </tr>
       <tr>
         <td>TEXT CONFIDENCE:</td>
         <td>
@@ -21,25 +31,32 @@
         </td>
       </tr>
       <tr>
+        <td>OCR:</td>
+        <td>
+          <label class="switch">
+            <input id="ocr-text" type="checkbox"/>
+            <span class="slider round"></span>
+          </label>
+        </td>
+      </tr>
+      {% if session["options"]["translate"]==True %}
+      <tr>
+        <td>TRANSLATE:</td>
+        <td>
+          <label class="switch">
+            <input id="translate-text" type="checkbox"/>
+            <span class="slider round"></span>
+          </label>
+        </td>
+      </tr>
+      {% endif %}
+      <tr>
         <td>DRAW MODE:</td>
         <td>
           <label class="switch">
             <input id="draw-tool" type="checkbox"/>
             <span class="slider round"></span>
           </label>
-        </td>
-      </tr>
-      <tr id="draw-options">
-        <td colspan="2">
-          <div>Choose Color <span id="draw-color-select"></span></div>
-          <div class="draw-color" style="background:green;" id="green" onclick="color(this)"></div>
-          <div class="draw-color" style="background:blue;" id="blue" onclick="color(this)"></div>
-          <div class="draw-color" style="background:red;" id="red" onclick="color(this)"></div>
-          <div class="draw-color" style="background:yellow;" id="yellow" onclick="color(this)"></div>
-          <div class="draw-color" style="background:orange;" id="orange" onclick="color(this)"></div>
-          <div class="draw-color" style="background:black;" id="black" onclick="color(this)"></div>
-          <br/>
-          <input type="button" value="clear" id="clr" onclick="erase()">
         </td>
       </tr>
     </table>
@@ -57,16 +74,43 @@
         <div class="img-block" id="{{i}}" style="height:{{ image_blocks[i]['height'] }}px;width:{{ image_blocks[i]['width'] }}px;">
           <img src="data:image/png;base64,{{image_blocks[i]['src']}}"/>
           <canvas class="text-confidence"></canvas>
+          <canvas class="entity-location"></canvas>
         </div>
         {% endfor %}
         <canvas class="overlay" id="draw-board"></canvas>
       </div>
     </div>
+    <div id="text-options">
+      <span id="text-color-select"></span>
+      <div style="height:30px;padding-left:40px;">TEXT COLOR</div>
+      <div class="draw-color" style="background:green;" id="green" onclick="textColor(this)"></div>
+      <div class="draw-color" style="background:blue;" id="blue" onclick="textColor(this)"></div>
+      <div class="draw-color" style="background:red;" id="red" onclick="textColor(this)"></div>
+      <div class="draw-color" style="background:yellow;" id="yellow" onclick="textColor(this)"></div>
+      <div class="draw-color" style="background:orange;" id="orange" onclick="textColor(this)"></div>
+      <div class="draw-color" style="background:black;" id="black" onclick="textColor(this)"></div>
+      <div class="draw-color" style="background:white;" id="white" onclick="textColor(this)"></div>
+    </div>
+    <div id="draw-options">
+      <span id="draw-color-select"></span>
+      <div style="height:30px;padding-left:40px;">PEN COLOR</div>
+      <div class="draw-color" style="background:green;" id="green" onclick="color(this)"></div>
+      <div class="draw-color" style="background:blue;" id="blue" onclick="color(this)"></div>
+      <div class="draw-color" style="background:red;" id="red" onclick="color(this)"></div>
+      <div class="draw-color" style="background:yellow;" id="yellow" onclick="color(this)"></div>
+      <div class="draw-color" style="background:orange;" id="orange" onclick="color(this)"></div>
+      <div class="draw-color" style="background:black;" id="black" onclick="color(this)"></div>
+      <div class="draw-color" style="background:white;" id="white" onclick="color(this)"></div>
+      <br/>
+      <input type="button" value="clear" id="clr" onclick="erase()">
+    <div>
   </div>
 {%endblock%}
 {%block scripts%}
   <script src="./static/js/main.js"></script>
   <script type="text/javascript">
+    var ocr = {{ ocr|safe }}
+    var translation = {{ translation|safe }}
     var word_blocks = {{ word_blocks|safe }}
 </script>
   <script type='text/javascript' src="https://cdn.jsdelivr.net/g/canvas2image@0.1(base64.js+canvas2image.min.js+canvas2image.js)"></script>  

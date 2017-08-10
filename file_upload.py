@@ -15,6 +15,7 @@ import cPickle as pickle
 import pickle_session as ps
 import json
 import wand.image as wi
+from HTMLParser import HTMLParser
 from input_text_processing import *
 
 UPLOAD_FOLDER = './uploads/'
@@ -25,6 +26,17 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = 'super secret key'
 app.config['SESSION_TYPE'] = 'filesystem'
 app.session_interface = ps.PickleSessionInterface("./app_session")
+h = HTMLParser()
+
+default_options = {
+    "spread":20,
+    "cut":5,
+    "noise":25,
+    "buffer":1,
+    "width":1024,
+    "height":1024,
+    "translate": False
+}
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -32,6 +44,9 @@ def allowed_file(filename):
            
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    if "options" not in session:
+        session["options"] = default_options
+
     return render_template('index2.html')
 
 @app.route('/return_file')
@@ -42,60 +57,93 @@ def return_file():
 @app.route('/interact')
 @app.route('/interact/<page_no>')
 def interact(page_no=0):
-    # with open('./vis.pkl', 'r') as f:
-    #     session["vis"] = [pickle.load(f)]
+    # with open('./viz.pkl', 'r') as f:
+    #     session["viz"] = [pickle.load(f)]
 
-    if "vis" not in session:
+    if "viz" not in session:
         return redirect(url_for("index"))
 
     image_blocks = []
     image_patches = []
-    for block in session["vis"][page_no].img_blocks:
+    for block in session["viz"][page_no].img_blocks:
         bImage = io.BytesIO()
         block.save(bImage, format='PNG')
         image_blocks.append({ "src":bImage.getvalue().encode('base64')
                             , "width":block.size[0], "height":block.size[1] } )
         
-    for strip in session["vis"][page_no].img_patches:
+    for strip in session["viz"][page_no].img_patches:
         bImage = io.BytesIO()
         strip.save(bImage, format='PNG')
         image_patches.append({ "src":bImage.getvalue().encode('base64')
         , "width":strip.size[0], "height":strip.size[1] } )
 
     return render_template('interact.html', image_blocks=image_blocks
-        , word_blocks=json.dumps(session["vis"][page_no].word_blocks)
+        , word_blocks=json.dumps(session["viz"][page_no].word_blocks)
         , image_patches=image_patches
-        , bounding_boxes=session["vis"][page_no].bounding_boxes)
+        , bounding_boxes=session["viz"][page_no].bounding_boxes
+        , ocr=json.dumps([h.unescape(line) for line in session["viz"][page_no].ocr_text])
+        , translation=json.dumps([h.unescape(line) for line in session["viz"][page_no].ocr_translated]))
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
-    with open('./vis.pkl', 'r') as f:
-        session["vis"] = [pickle.load(f)]
-    return redirect(url_for("index"))    
+    # with open('./viz.pkl', 'r') as f:
+    #     session["viz"] = pickle.load(f)
+    # return redirect(url_for("index"))
 
     if request.method == 'POST':
         file = request.files['file']
         if file and allowed_file(file.filename):
+            saveVizSessionArgs(request.form)
             file_extension = file.filename.split(".")[-1].lower()
             
-            vis_list = []
+            viz_list = []
 
             if file_extension == "pdf":
                 # need to split pages and decompose one by one
                 pdf_pages = pdfSplitPageStream(file.stream)
                 for page in pdf_pages:
                     page.seek(0)
-                    vis = iv.InlineViz(page, _translate=False, _spread=20)
-                    vis.decompose()
-                    vis_list.append(vis)
+                    viz = iv.InlineViz(page, _translate=session["options"]["translate"]
+                                , _spread=session["options"]["spread"]
+                                , _pixel_cut_width=session["options"]["cut"]
+                                , _noise_threshold=session["options"]["noise"]
+                                , _line_buffer=session["options"]["buffer"]
+                                , _max_size=(session["options"]["width"],session["options"]["height"]))
+                    viz.decompose()
+                    viz_list.append(viz)
             else:
                 # just an image
-                vis = iv.InlineViz(file.stream, _translate=False, _spread=20)
-                vis.decompose()
-                vis_list.append(vis)
+                viz = iv.InlineViz(file.stream
+                                , _translate=session["options"]["translate"]
+                                , _spread=session["options"]["spread"]
+                                , _pixel_cut_width=session["options"]["cut"]
+                                , _noise_threshold=session["options"]["noise"]
+                                , _line_buffer=session["options"]["buffer"]
+                                , _max_size=(session["options"]["width"],session["options"]["height"]))
+                viz.decompose()
+                viz_list.append(viz)
 
-            session["vis"] = vis_list
+            session["viz"] = viz_list
+            with open("./vis.pkl", "w+") as f:
+                pickle.dump(viz_list, f)
     return redirect(url_for("index"))
+
+def saveVizSessionArgs(form):
+    """ Save visualization parameters into session"""
+    if "options" not in session:
+        session["options"] = default_options
+    
+    for option in form:
+        if option not in session["options"]:
+            # don't save unnecessary data
+            continue
+        if option == "translate":
+            if form[option] == u"true":
+                session["options"][option] = True
+            else:
+                session["options"][option] = False
+
+        session["options"][option] = form[option]
 
 #This gets the camera image
 @app.route('/hook', methods=['POST'])
