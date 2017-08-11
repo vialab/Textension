@@ -33,6 +33,7 @@ class InlineViz:
         self.line_buffer = _line_buffer # space buffer cropping between bounding boxes
         self.img_patches = [] # strips between lines of text
         self.img_blocks = [] # lines of text
+        self.img_chop = [] # lines of text chopped by word
         self.word_blocks = [] # meta info for word in each line/block
         self.ocr_text = [] # OCR'd text
         self.ocr_translated = [] # OCR'd text translated
@@ -168,7 +169,10 @@ class InlineViz:
                     # use space between bounding boxes as padding
                     y_end = self.bounding_boxes[i+1]['y']-self.line_buffer
                 tmpImageCrop = img.crop((0, box['y']-self.line_buffer, width, y_end))
-            self.img_blocks.append(tmpImageCrop)
+
+            img_block = self.chopImageBlock(tmpImageCrop)
+            
+            self.img_blocks.append(img_block)
 
     #This merges two image files using PIL
     def mergeImages(self, image1, image2, orientation):
@@ -280,7 +284,7 @@ class InlineViz:
 
         return lineLst
 
-    def getWordInfo(self, image):
+    def getWordInfo(self, idx, image):
         """ Get word boxes with confidence level in an image -
          does not include text for injection protection"""
         img = image.convert("RGB")
@@ -305,11 +309,26 @@ class InlineViz:
                     , "label": label
                 }
                 word_boxes.append(word)
+        return word_boxes, boxes
 
-        return word_boxes
+    def chopImageBlock(self, boxes, img):
+        """ Crop words in each line and capture space chops """
+        width, height = img.size
+        x_start = 0
+        img_chop = []
+        for i, box in enumerate(self.boxes):
+            if i == len(self.bounding_boxes)-1:
+                x_end = width
+            else:
+                x_end = box['x']-self.line_buffer
+
+            img_chop.append(img.crop((x_start, 0, x_end, height)))
+            x_start = box['x'] + box['w'] + self.line_buffer
+        return img_chop
 
     def getWordBlocks(self):
         """ Get bounding boxes for single words in a line """
-        for img in self.img_blocks:
-            word_block = self.getWordInfo(img)
+        for idx, img in enumerate(self.img_blocks):
+            word_block, boxes = self.getWordInfo(img)
+            self.img_chop.append(self.chopImageBlock(boxes, img))
             self.word_blocks.append(word_block)

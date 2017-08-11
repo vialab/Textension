@@ -169,7 +169,7 @@ input:checked + .slider:before {
     box-shadow: none;
 }
 
-#text-options {
+#color-options {
     position: absolute;
     right: 60px;
     top: 120px;
