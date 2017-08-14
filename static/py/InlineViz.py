@@ -169,10 +169,8 @@ class InlineViz:
                     # use space between bounding boxes as padding
                     y_end = self.bounding_boxes[i+1]['y']-self.line_buffer
                 tmpImageCrop = img.crop((0, box['y']-self.line_buffer, width, y_end))
-
-            img_block = self.chopImageBlock(tmpImageCrop)
             
-            self.img_blocks.append(img_block)
+            self.img_blocks.append(tmpImageCrop)
 
     #This merges two image files using PIL
     def mergeImages(self, image1, image2, orientation):
@@ -284,11 +282,12 @@ class InlineViz:
 
         return lineLst
 
-    def getWordInfo(self, idx, image):
+    def getWordInfo(self, image):
         """ Get word boxes with confidence level in an image -
          does not include text for injection protection"""
         img = image.convert("RGB")
-        word_boxes = []        
+        word_boxes = []
+        bounding_boxes = []        
         with PyTessBaseAPI() as api:
             api.SetImage(img)
 
@@ -308,16 +307,17 @@ class InlineViz:
                     , "confidence":conf 
                     , "label": label
                 }
+                bounding_boxes.append(box)
                 word_boxes.append(word)
-        return word_boxes, boxes
+        return word_boxes, bounding_boxes
 
     def chopImageBlock(self, boxes, img):
         """ Crop words in each line and capture space chops """
         width, height = img.size
         x_start = 0
         img_chop = []
-        for i, box in enumerate(self.boxes):
-            if i == len(self.bounding_boxes)-1:
+        for i, box in enumerate(boxes):
+            if i == len(boxes)-1:
                 x_end = width
             else:
                 x_end = box['x']-self.line_buffer

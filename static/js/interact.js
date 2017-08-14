@@ -117,7 +117,7 @@ function drawConfidence() {
         ctx.canvas.width = $(this).width();
         ctx.canvas.height = $(this).height();
         for(var i=0; i<word_blocks[idx].length; i++) {
-            var opacity = (word_blocks[idx][i]["confidence"]/100.0)*0.8;
+            var opacity = (word_blocks[idx][i]["confidence"]/100.0);
             ctx.beginPath();
             ctx.fillStyle = "rgba(244, 167, 66, " + opacity + ")";
             ctx.fillRect(word_blocks[idx][i]["x"], word_blocks[idx][i]["y"], word_blocks[idx][i]["width"], 20);
@@ -135,7 +135,7 @@ function drawLocations() {
         for(var i=0; i<word_blocks[idx].length; i++) {
             if(word_blocks[idx][i]["label"] == "GPE") {
                 ctx.beginPath();
-                ctx.fillStyle = "rgba(53, 153, 66, 0.8)";
+                ctx.fillStyle = "rgba(53, 153, 66, 0.5)";
                 ctx.fillRect(word_blocks[idx][i]["x"], word_blocks[idx][i]["y"], word_blocks[idx][i]["width"], 20);
             }
         }
