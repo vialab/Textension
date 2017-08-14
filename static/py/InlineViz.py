@@ -33,7 +33,7 @@ class InlineViz:
         self.line_buffer = _line_buffer # space buffer cropping between bounding boxes
         self.img_patches = [] # strips between lines of text
         self.img_blocks = [] # lines of text
-        self.img_chop = [] # lines of text chopped by word
+        self.img_chops = [] # lines of text chopped by word
         self.word_blocks = [] # meta info for word in each line/block
         self.ocr_text = [] # OCR'd text
         self.ocr_translated = [] # OCR'd text translated
@@ -330,5 +330,5 @@ class InlineViz:
         """ Get bounding boxes for single words in a line """
         for idx, img in enumerate(self.img_blocks):
             word_block, boxes = self.getWordInfo(img)
-            self.img_chop.append(self.chopImageBlock(boxes, img))
+            self.img_chops.append(self.chopImageBlock(boxes, img))
             self.word_blocks.append(word_block)

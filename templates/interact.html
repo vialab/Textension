@@ -70,9 +70,11 @@
           <img src="data:image/png;base64,{{ image_patches[i-1]['src'] }}"/>
           <input style="margin-left:{{ bounding_boxes[i-1]['x'] }}px;width:{{bounding_boxes[i-1]['w']}}px;" class="img-patch-text" type="text" />
         </div>
-        {% endif %}        
-        <div class="img-block" id="{{i}}" style="height:{{ image_blocks[i]['height'] }}px;width:{{ image_blocks[i]['width'] }}px;">
-          <img src="data:image/png;base64,{{image_blocks[i]['src']}}"/>
+        {% endif %}
+        <div class="img-block" id="{{i}}" style="height:{{ image_dim[i]['height'] }}px;width:{{ image_dim[i]['width'] }}px;">
+          {% for y in range(image_blocks[i]|length) %}
+          <img style="margin-left:{{image_blocks[i][y]['x']}}" src="data:image/png;base64,{{image_blocks[i][y]['src']}}"/>
+          {% endfor %}
           <canvas class="text-confidence"></canvas>
           <canvas class="entity-location"></canvas>
         </div>

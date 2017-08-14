@@ -64,12 +64,25 @@ def interact(page_no=0):
         return redirect(url_for("index"))
 
     image_blocks = []
+    image_dim = []
     image_patches = []
-    for block in session["viz"][page_no].img_blocks:
-        bImage = io.BytesIO()
-        block.save(bImage, format='PNG')
-        image_blocks.append({ "src":bImage.getvalue().encode('base64')
-                            , "width":block.size[0], "height":block.size[1] } )
+
+    for idx, block in enumerate(session["viz"][page_no].img_chops):
+        image_chops = []
+        for chop in block:
+            bImage = io.BytesIO()
+            chop.save(bImage, format="PNG")
+            image_chops.append({ "src":bImage.getvalue().encode('base64')
+                            , "width":chop.size[0], "height":chop.size[1] })
+        full_width, full_height = session["viz"][page_no].img_blocks[idx].size
+        image_dim.append({"width":full_width, "height":full_height})
+        image_blocks.append(image_chops)
+
+    # for block in session["viz"][page_no].img_blocks:
+    #     bImage = io.BytesIO()
+    #     block.save(bImage, format='PNG')
+    #     image_blocks.append({ "src":bImage.getvalue().encode('base64')
+    #                         , "width":block.size[0], "height":block.size[1] } )
         
     for strip in session["viz"][page_no].img_patches:
         bImage = io.BytesIO()
@@ -78,6 +91,7 @@ def interact(page_no=0):
         , "width":strip.size[0], "height":strip.size[1] } )
 
     return render_template('interact.html', image_blocks=image_blocks
+        , image_dim=image_dim
         , word_blocks=json.dumps(session["viz"][page_no].word_blocks)
         , image_patches=image_patches
         , bounding_boxes=session["viz"][page_no].bounding_boxes
