@@ -152,7 +152,17 @@ class InlineViz:
         # iterate through the bounding boxes and crop them out accounting for the first and the last chop
         # to keep headers and footers
         for i, box in enumerate(self.bounding_boxes):
-            y_end = box['y']+box['h']+self.line_buffer
+            if i != len(self.bounding_boxes)-1:
+                if pad_bottom:
+                    # use space between bounding boxes as padding
+                    y_end = self.bounding_boxes[i+1]['y']-self.line_buffer
+                else:
+                    # otherwise just go to bottom of bounding box
+                    y_end = box['y']+box['h']+self.line_buffer            
+            else:
+                # last one goes to bottom
+                y_end = height
+
             if i == 0:
                 # check if there is room to make space above first line
                 if box['y'] > self.line_buffer:
@@ -163,14 +173,8 @@ class InlineViz:
                     tmpImageCrop = img.crop((0, box['y']-self.line_buffer, width, y_end))
                 else:
                     # include the header in first block
-                    tmpImageCrop = img.crop((0, 0, width, y_end))                    
-            elif i == len(self.bounding_boxes)-1:
-                # include footer in last block
-                tmpImageCrop = img.crop((0, box['y']-self.line_buffer, width, height))
+                    tmpImageCrop = img.crop((0, 0, width, y_end))
             else:
-                if pad_bottom:
-                    # use space between bounding boxes as padding
-                    y_end = self.bounding_boxes[i+1]['y']-self.line_buffer
                 tmpImageCrop = img.crop((0, box['y']-self.line_buffer, width, y_end))
             
             self.img_blocks.append(tmpImageCrop)

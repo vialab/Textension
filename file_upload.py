@@ -73,7 +73,7 @@ def interact(page_no=0):
         for chop in block:
             bImage = io.BytesIO()
             chop.save(bImage, format="PNG")
-            image_chops.append({ "src":bImage.getvalue().encode('base64')
+            image_chops.append({ "src":base64.b64encode(bImage.getvalue())
                             , "width":chop.size[0], "height":chop.size[1] })
         
         full_width, full_height = session["viz"][page_no].img_blocks[idx].size
@@ -85,7 +85,7 @@ def interact(page_no=0):
         for word in chop:
             bImage = io.BytesIO()
             word.save(bImage, format="PNG")
-            image_chops.append({ "src":bImage.getvalue().encode('base64')
+            image_chops.append({ "src":base64.b64encode(bImage.getvalue())
                             , "width":word.size[0]
                             , "height":word.size[1] })
         image_text.append(image_chops)
@@ -99,7 +99,7 @@ def interact(page_no=0):
     for strip in session["viz"][page_no].img_patches:
         bImage = io.BytesIO()
         strip.save(bImage, format='PNG')
-        image_patches.append({ "src":bImage.getvalue().encode('base64')
+        image_patches.append({ "src":base64.b64encode(bImage.getvalue())
         , "width":strip.size[0], "height":strip.size[1] } )
 
     return render_template('interact.html', image_blocks=image_blocks

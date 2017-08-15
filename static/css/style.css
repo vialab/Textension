@@ -134,17 +134,26 @@ input:checked + .slider:before {
     padding: 0;
     margin: 0 auto;
     transition: all 0.5s ease;
-    overflow: hidden;
+    /* overflow: hidden; */
+    white-space: nowrap;
 }
 
 .vis .img-block img {
+    height: 100%;
+    z-index: -1;
+}
+
+.vis .img-block:not(.img-patch) img {
+    float: left;
+}
+
+.vis .img-block.img-patch img {
     position:absolute;
     padding: 0;
     margin: 0;
-    height: 100%;
     left: 0;
-    top: 0;
-    z-index: -1;
+    top: 0; 
+    width: 100%;
 }
 
 .img-block canvas {
