@@ -72,8 +72,14 @@
         </div>
         {% endif %}
         <div class="img-block" id="{{i}}" style="height:{{ image_dim[i]['height'] }}px;width:{{ image_dim[i]['width'] }}px;">
+          {% set x = {'width':0} %}          
           {% for y in range(image_blocks[i]|length) %}
-          <img style="margin-left:{{image_blocks[i][y]['x']}}" src="data:image/png;base64,{{image_blocks[i][y]['src']}}"/>
+          {% if y > 0 %}
+          <img class="img-text" style="left:{{x.width}}px;" src="data:image/png;base64,{{image_text[i][y-1]['src']}}"/>
+          {% if x.update({'width': x.width+image_text[i][y-1]['width']}) %} {% endif %}
+          {% endif %}
+          <img class="img-space" style="left:{{x.width}}px;" src="data:image/png;base64,{{image_blocks[i][y]['src']}}"/>
+          {% if x.update({'width': x.width+image_blocks[i][y]['width']}) %} {% endif %}
           {% endfor %}
           <canvas class="text-confidence"></canvas>
           <canvas class="entity-location"></canvas>

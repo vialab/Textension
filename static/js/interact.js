@@ -20,7 +20,7 @@ $(document).ready(function() {
         i--;
         toggleSpace($("#"+i.toString()+".img-patch"))
     });
-    
+
     drawConfidence();
     $("canvas.text-confidence").hide();
 

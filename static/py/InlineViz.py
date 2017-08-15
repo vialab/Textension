@@ -33,13 +33,15 @@ class InlineViz:
         self.line_buffer = _line_buffer # space buffer cropping between bounding boxes
         self.img_patches = [] # strips between lines of text
         self.img_blocks = [] # lines of text
-        self.img_chops = [] # lines of text chopped by word
+        self.img_chops = [] # spaces between words
+        self.img_text = [] # text blocks
         self.word_blocks = [] # meta info for word in each line/block
         self.ocr_text = [] # OCR'd text
         self.ocr_translated = [] # OCR'd text translated
         self.bounding_boxes = [] # bounding boxes of text lines
         self.space_height = 5 # minimum space height to crop between text lines
         self.is_inverted = False # indicator for text and background color inversion
+        self.has_header = False
 
     def decompose(self):
         """ Use OCR to find bounding boxes of each line in document and dissect 
@@ -155,8 +157,9 @@ class InlineViz:
                 # check if there is room to make space above first line
                 if box['y'] > self.line_buffer:
                     # seperate the header from first block
+                    self.has_header = True
                     tmpImageCrop = img.crop((0, 0, width, box['y']-self.line_buffer))
-                    self.img_blocks.append(tmpImageCrop)            
+                    self.img_blocks.append(tmpImageCrop)
                     tmpImageCrop = img.crop((0, box['y']-self.line_buffer, width, y_end))
                 else:
                     # include the header in first block
@@ -287,7 +290,8 @@ class InlineViz:
          does not include text for injection protection"""
         img = image.convert("RGB")
         word_boxes = []
-        bounding_boxes = []        
+        bounding_boxes = []
+        img_crops = []
         with PyTessBaseAPI() as api:
             api.SetImage(img)
 
@@ -300,6 +304,10 @@ class InlineViz:
                 label = ""
                 if len(entities.ents) > 0:
                     label = entities.ents[-1].label_
+
+                x_start = box['x']-self.line_buffer
+                x_end = box['x'] + box['w'] + self.line_buffer
+                img_crops.append(img.crop((x_start, 0, x_end, img.size[1])))
                 word = { "x":box["x"]
                     , "y":box["y"]
                     , "width":box["w"]
@@ -307,28 +315,38 @@ class InlineViz:
                     , "confidence":conf 
                     , "label": label
                 }
+
                 bounding_boxes.append(box)
                 word_boxes.append(word)
+
+            self.img_text.append(img_crops)
         return word_boxes, bounding_boxes
 
-    def chopImageBlock(self, boxes, img):
+    def chopImageBlockSpace(self, boxes, img):
         """ Crop words in each line and capture space chops """
         width, height = img.size
         x_start = 0
         img_chop = []
         for i, box in enumerate(boxes):
-            if i == len(boxes)-1:
-                x_end = width
-            else:
-                x_end = box['x']-self.line_buffer
-
+            x_end = box['x']-self.line_buffer
             img_chop.append(img.crop((x_start, 0, x_end, height)))
             x_start = box['x'] + box['w'] + self.line_buffer
+        
+        x_end = width
+        if x_start < x_end:
+            img_chop.append(img.crop((x_start, 0, x_end, height)))
+        else:
+            x_start = boxes[-1]['x'] - self.line_buffer
+            img_chop.append(img.crop((x_start, 0, x_end, height)))
+                
         return img_chop
 
     def getWordBlocks(self):
         """ Get bounding boxes for single words in a line """
         for idx, img in enumerate(self.img_blocks):
             word_block, boxes = self.getWordInfo(img)
-            self.img_chops.append(self.chopImageBlock(boxes, img))
+            if idx == 0 and self.has_header:
+                self.img_chops.append([img,])
+            else:
+                self.img_chops.append(self.chopImageBlockSpace(boxes, img))
             self.word_blocks.append(word_block)

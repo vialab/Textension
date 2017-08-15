@@ -134,6 +134,7 @@ input:checked + .slider:before {
     padding: 0;
     margin: 0 auto;
     transition: all 0.5s ease;
+    overflow: hidden;
 }
 
 .vis .img-block img {
@@ -154,6 +155,10 @@ input:checked + .slider:before {
 
 .img-patch {
     overflow: hidden;
+}
+
+.img-patch img {
+    width: 100%;
 }
 
 .img-patch .img-patch-text {

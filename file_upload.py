@@ -64,6 +64,7 @@ def interact(page_no=0):
         return redirect(url_for("index"))
 
     image_blocks = []
+    image_text = []
     image_dim = []
     image_patches = []
 
@@ -74,9 +75,20 @@ def interact(page_no=0):
             chop.save(bImage, format="PNG")
             image_chops.append({ "src":bImage.getvalue().encode('base64')
                             , "width":chop.size[0], "height":chop.size[1] })
+        
         full_width, full_height = session["viz"][page_no].img_blocks[idx].size
         image_dim.append({"width":full_width, "height":full_height})
         image_blocks.append(image_chops)
+    
+    for idx, chop in enumerate(session["viz"][page_no].img_text):
+        image_chops = []
+        for word in chop:
+            bImage = io.BytesIO()
+            word.save(bImage, format="PNG")
+            image_chops.append({ "src":bImage.getvalue().encode('base64')
+                            , "width":word.size[0]
+                            , "height":word.size[1] })
+        image_text.append(image_chops)
 
     # for block in session["viz"][page_no].img_blocks:
     #     bImage = io.BytesIO()
@@ -91,12 +103,14 @@ def interact(page_no=0):
         , "width":strip.size[0], "height":strip.size[1] } )
 
     return render_template('interact.html', image_blocks=image_blocks
+        , image_text=image_text
         , image_dim=image_dim
         , word_blocks=json.dumps(session["viz"][page_no].word_blocks)
         , image_patches=image_patches
         , bounding_boxes=session["viz"][page_no].bounding_boxes
         , ocr=json.dumps([h.unescape(line) for line in session["viz"][page_no].ocr_text])
-        , translation=json.dumps([h.unescape(line) for line in session["viz"][page_no].ocr_translated]))
+        , translation=json.dumps([h.unescape(line) for line in session["viz"][page_no].ocr_translated])
+        , page_no=page_no)
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
