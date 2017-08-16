@@ -108,10 +108,17 @@
         type: "POST",
         url: "/hook",
         data:{
-          imageBase64: data
+          imageBase64: data, 
+          spread:$("#option-spread").val(),
+          cut:$("#option-cut").val(),
+          noise:$("#option-noise").val(),
+          buffer:$("#option-buffer").val(),
+          width:$("#option-width").val(),
+          height:$("#option-height").val(),
+          translate: $('#option-translate').is(":checked")
         }
       }).done(function() {
-        console.log('sent');
+        window.location.href = "/interact"
       });
 
 

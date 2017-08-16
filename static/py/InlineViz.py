@@ -9,6 +9,9 @@ import random
 import glob
 import numpy as np
 import cv2
+import base64
+import io
+import googleMaps as gm
 from opacityConversion import *
 
 class InlineViz:
@@ -34,6 +37,7 @@ class InlineViz:
         self.img_patches = [] # strips between lines of text
         self.img_blocks = [] # lines of text
         self.img_chops = [] # spaces between words
+        self.chop_dimension = [] # full dimensions of each chop
         self.img_text = [] # text blocks
         self.word_blocks = [] # meta info for word in each line/block
         self.ocr_text = [] # OCR'd text
@@ -89,7 +93,7 @@ class InlineViz:
         # merge everything back together to a composite image
         for i in range(0, len(self.img_blocks)):
             if i == 0:
-                self.img_comp = self.img_blocks[i]
+                self.img_comp = self.img_blocks[i]["img"]
             else:
                 self.img_comp = self.mergeImages(self.img_comp,self.img_patches[i-1],"vertical")
                 self.img_comp = self.mergeImages(self.img_comp,self.img_blocks[i],"vertical")
@@ -133,14 +137,15 @@ class InlineViz:
                 expand = False
 
             img_patch = self.createNewPatch(img, y_start, y_end, expand)
-            self.img_patches.append(img_patch)
+            self.img_patches.append(self.getImageDict(img_patch))
 
     def createNewPatch(self, img, y_start, y_end, expand=True):
         """ Crop, randomize, and expand a strip """
         textureCrop = img.crop((0, y_start, self.img_width, y_end))
         img_strip = self.randomizeStrip(textureCrop)
         img_patch = self.mergeImageList(img_strip)
-        img_patch = self.expandStrip(img_patch)
+        if expand:
+            img_patch = self.expandStrip(img_patch)
         return img_patch
 
     def cropImageBlocks(self, pad_bottom=True):
@@ -169,7 +174,7 @@ class InlineViz:
                     # seperate the header from first block
                     self.has_header = True
                     tmpImageCrop = img.crop((0, 0, width, box['y']-self.line_buffer))
-                    self.img_blocks.append(tmpImageCrop)
+                    self.img_blocks.append(self.getImageDict(tmpImageCrop))
                     tmpImageCrop = img.crop((0, box['y']-self.line_buffer, width, y_end))
                 else:
                     # include the header in first block
@@ -177,7 +182,7 @@ class InlineViz:
             else:
                 tmpImageCrop = img.crop((0, box['y']-self.line_buffer, width, y_end))
             
-            self.img_blocks.append(tmpImageCrop)
+            self.img_blocks.append(self.getImageDict(tmpImageCrop))
 
     #This merges two image files using PIL
     def mergeImages(self, image1, image2, orientation):
@@ -277,9 +282,12 @@ class InlineViz:
         
         minLineLength=100
         lines = cv2.HoughLinesP(image=edges,rho=1,theta=np.pi/180, threshold=200,lines=np.array([]), minLineLength=minLineLength,maxLineGap=100)
-
+        
+        if lines is None:
+            return []
+        
+        lineLst =[]            
         a,b,c = lines.shape
-        lineLst =[]
         for i in range(a):
 
             if abs(lines[i][0][0] - lines[i][0][2]) == 0:
@@ -291,7 +299,7 @@ class InlineViz:
 
     def getWordInfo(self, image):
         """ Get word boxes with confidence level in an image -
-         does not include text for injection protection"""
+         does not include text for injection protection """
         img = image.convert("RGB")
         word_boxes = []
         bounding_boxes = []
@@ -303,6 +311,8 @@ class InlineViz:
             for i, (im, box, _, _) in enumerate(boxes):
                 api.SetRectangle(box["x"], box["y"], box["w"], box["h"])
                 text = api.GetUTF8Text()
+                if text.strip() == u"":
+                    continue
                 entities = self.nlp(text)
                 conf = api.MeanTextConf()
                 label = ""
@@ -311,7 +321,9 @@ class InlineViz:
 
                 x_start = box['x']-self.line_buffer
                 x_end = box['x'] + box['w'] + self.line_buffer
-                img_crops.append(img.crop((x_start, 0, x_end, img.size[1])))
+                img_dict = self.getImageDict(img.crop((x_start, 0, x_end, img.size[1])))
+                img_crops.append(img_dict)
+
                 word = { "x":box["x"]
                     , "y":box["y"]
                     , "width":box["w"]
@@ -320,6 +332,10 @@ class InlineViz:
                     , "label": label
                 }
 
+                if label == "GPE":
+                    img_map = gm.getMap(text)
+                    word["map"] = self.encodeBase64(img_map)
+
                 bounding_boxes.append(box)
                 word_boxes.append(word)
 
@@ -327,30 +343,45 @@ class InlineViz:
         return word_boxes, bounding_boxes
 
     def chopImageBlockSpace(self, boxes, img):
-        """ Crop words in each line and capture space chops """
+        """ Crop word spaces in each line """
         width, height = img.size
         x_start = 0
         img_chop = []
         for i, box in enumerate(boxes):
             x_end = box['x']-self.line_buffer
-            img_chop.append(img.crop((x_start, 0, x_end, height)))
+            img_dict = self.getImageDict(img.crop((x_start, 0, x_end, height)))
+            img_chop.append(img_dict)
             x_start = box['x'] + box['w'] + self.line_buffer
         
         x_end = width
-        if x_start < x_end:
-            img_chop.append(img.crop((x_start, 0, x_end, height)))
-        else:
+        if not (x_start < x_end):
             x_start = boxes[-1]['x'] - self.line_buffer
-            img_chop.append(img.crop((x_start, 0, x_end, height)))
+        
+        img_dict = self.getImageDict(img.crop((x_start, 0, x_end, height)))
+        img_chop.append(img_dict)
                 
         return img_chop
 
     def getWordBlocks(self):
         """ Get bounding boxes for single words in a line """
-        for idx, img in enumerate(self.img_blocks):
+        for idx, img_dict in enumerate(self.img_blocks):
+            img = img_dict["img"]
             word_block, boxes = self.getWordInfo(img)
             if idx == 0 and self.has_header:
-                self.img_chops.append([img,])
+                self.img_chops.append([self.getImageDict(img),])
             else:
                 self.img_chops.append(self.chopImageBlockSpace(boxes, img))
+            self.chop_dimension.append({"width":img.size[0],"height":img.size[1]})
             self.word_blocks.append(word_block)
+
+    def getImageDict(self, image):
+        img_dict = { "img":image
+                    , "width":image.size[0]
+                    , "height":image.size[1]
+                    , "src":self.encodeBase64(image) }
+        return img_dict
+
+    def encodeBase64(self, image):
+        bImage = io.BytesIO()
+        image.save(bImage, format="PNG")
+        return base64.b64encode(bImage.getvalue())

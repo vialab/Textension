@@ -57,57 +57,34 @@ def return_file():
 @app.route('/interact')
 @app.route('/interact/<page_no>')
 def interact(page_no=0):
-    # with open('./viz.pkl', 'r') as f:
-    #     session["viz"] = [pickle.load(f)]
-
     if "viz" not in session:
         return redirect(url_for("index"))
 
     image_blocks = []
     image_text = []
-    image_dim = []
     image_patches = []
 
-    for idx, block in enumerate(session["viz"][page_no].img_chops):
-        image_chops = []
+    for block in session["viz"][page_no].img_chops:
+        image_block = []
         for chop in block:
-            bImage = io.BytesIO()
-            chop.save(bImage, format="PNG")
-            image_chops.append({ "src":base64.b64encode(bImage.getvalue())
-                            , "width":chop.size[0], "height":chop.size[1] })
-        
-        full_width, full_height = session["viz"][page_no].img_blocks[idx].size
-        image_dim.append({"width":full_width, "height":full_height})
-        image_blocks.append(image_chops)
+            image_block.append(dict((i,chop[i]) for i in chop if i!="img"))
+        image_blocks.append(image_block)
     
-    for idx, chop in enumerate(session["viz"][page_no].img_text):
-        image_chops = []
-        for word in chop:
-            bImage = io.BytesIO()
-            word.save(bImage, format="PNG")
-            image_chops.append({ "src":base64.b64encode(bImage.getvalue())
-                            , "width":word.size[0]
-                            , "height":word.size[1] })
-        image_text.append(image_chops)
+    for block in session["viz"][page_no].img_text:
+        image_block = []
+        for text in block:
+            image_block.append(dict((i,text[i]) for i in text if i!="img"))
+        image_text.append(image_block)
 
-    # for block in session["viz"][page_no].img_blocks:
-    #     bImage = io.BytesIO()
-    #     block.save(bImage, format='PNG')
-    #     image_blocks.append({ "src":bImage.getvalue().encode('base64')
-    #                         , "width":block.size[0], "height":block.size[1] } )
-        
-    for strip in session["viz"][page_no].img_patches:
-        bImage = io.BytesIO()
-        strip.save(bImage, format='PNG')
-        image_patches.append({ "src":base64.b64encode(bImage.getvalue())
-        , "width":strip.size[0], "height":strip.size[1] } )
+    for patch in session["viz"][page_no].img_patches:
+        image_patches.append(dict((i,patch[i]) for i in patch if i!="img"))
 
     return render_template('interact.html', image_blocks=image_blocks
         , image_text=image_text
-        , image_dim=image_dim
-        , word_blocks=json.dumps(session["viz"][page_no].word_blocks)
         , image_patches=image_patches
+        , image_dim=session["viz"][page_no].chop_dimension
         , bounding_boxes=session["viz"][page_no].bounding_boxes
+        , word_blocks=json.dumps(session["viz"][page_no].word_blocks)                
         , ocr=json.dumps([h.unescape(line) for line in session["viz"][page_no].ocr_text])
         , translation=json.dumps([h.unescape(line) for line in session["viz"][page_no].ocr_translated])
         , page_no=page_no)
@@ -120,6 +97,7 @@ def upload_file():
 
     if request.method == 'POST':
         file = request.files['file']
+
         if file and allowed_file(file.filename):
             saveVizSessionArgs(request.form)
             file_extension = file.filename.split(".")[-1].lower()
@@ -152,46 +130,51 @@ def upload_file():
                 viz_list.append(viz)
 
             session["viz"] = viz_list
-            with open("./vis.pkl", "w+") as f:
-                pickle.dump(viz_list, f)
+            # with open("./vis.pkl", "w+") as f:
+            #     pickle.dump(viz_list, f)
     return redirect(url_for("index"))
 
 def saveVizSessionArgs(form):
     """ Save visualization parameters into session"""
     if "options" not in session:
         session["options"] = default_options
-    
+        
+    options_form = session["options"]
+
     for option in form:
-        if option not in session["options"]:
+        if option not in options_form:
             # don't save unnecessary data
             continue
         if option == "translate":
             if form[option] == u"true":
-                session["options"][option] = True
+                options_form[option] = True
             else:
-                session["options"][option] = False
+                options_form[option] = False
 
-        session["options"][option] = form[option]
+        options_form[option] = form[option]
+
+    session["options"] = options_form
 
 #This gets the camera image
 @app.route('/hook', methods=['POST'])
-
 def get_image():
-    image_b64 = request.values['imageBase64']
-    image_data = re.sub('^data:image/.+;base64,', '', image_b64).decode('base64')
-    image_PIL = Image.open(cStringIO.StringIO(image_data))
-    image_np = np.array(image_PIL)
-    im = Image.fromarray(image_np)
-    im.save(os.path.join(app.config['UPLOAD_FOLDER'],'test.png'))
+    viz_list=[]
+    
+    saveVizSessionArgs(request.values)
+    image_b64 = re.sub("data:image/png;base64,", "", request.values["imageBase64"])
+    bImage = io.BytesIO(base64.b64decode(image_b64))
 
-    for filename in os.listdir('./uploads/'):
-        if not filename3.startswith('.'):
-            findBoundingBoxes('./uploads/'+filename)
-
-    #print 'Image received: {}'.format(image_np.shape)
-    #return ''
-
-
+    viz = iv.InlineViz(bImage
+                    , _translate=session["options"]["translate"]
+                    , _spread=session["options"]["spread"]
+                    , _pixel_cut_width=session["options"]["cut"]
+                    , _noise_threshold=session["options"]["noise"]
+                    , _line_buffer=session["options"]["buffer"]
+                    , _max_size=(session["options"]["width"],session["options"]["height"]))
+    viz.decompose()
+    viz_list.append(viz)
+    session["viz"] = viz_list
+    return redirect(url_for("index"))
 
 if __name__ == "__main__":
     sess.init_app(app)

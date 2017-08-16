@@ -138,6 +138,7 @@
   	<div class="row">
   		<div class="col-md-12">
         <section>
+          
           <div id="dropzone">
             <form action="/upload" class="dropzone needsclick dz-clickable" id="demo-upload">
               <div class="dz-message needsclick">
@@ -145,6 +146,33 @@
               </div>
             </form>
           </div>
+
+          <div class="row">
+              <div class="col-md-6 text-right vertical-center">
+                <div class="frame">
+                </div>
+                <div class="camera">
+                  <video id="video">Video stream not available.</video>
+                </div>
+              </div>
+              <div class="col-md-6 text-left vertical-center">
+                <div class="output">
+                  <img id="photo" alt="The screen capture will appear in this box.">
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4">
+              </div>
+              <div class="col-md-4 text-center">
+                <button id="startbutton"><span class="glyphicon glyphicon-picture"></span> Take a picture</button>
+              </div>
+              <div class="col-md-4">
+                <canvas id="canvas">
+                </canvas>
+              </div>
+            </div>
+
           <div class="row">
             <div class="col-md-12 text-center">
               <table>
@@ -198,30 +226,7 @@
         </section>
   		</div>
   	</div>
-  	<!--<div class="row">
-  		<div class="col-md-6 text-right vertical-center">
-        <div class="camera">
-          <video id="video">Video stream not available.</video>
-        </div>
-  		</div>
-  		<div class="col-md-6 text-left vertical-center">
-        <div class="output">
-          <img id="photo" alt="The screen capture will appear in this box.">
-        </div>
-  		</div>
-  	</div>
-  	<div class="row">
-  		<div class="col-md-4">
-  		</div>
-  		<div class="col-md-4 text-center">
-        <button id="startbutton"><span class="glyphicon glyphicon-picture"></span> Take a picture</button>
-  		</div>
-  		<div class="col-md-4">
-        <canvas id="canvas">
-        </canvas>
-  		</div>
-  	</div>
-  </div>-->
+  </div>
 
 
   <script src="./static/lib/dropzone/dropzone.js"></script>

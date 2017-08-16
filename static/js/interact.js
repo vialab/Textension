@@ -137,6 +137,9 @@ function drawLocations() {
                 ctx.beginPath();
                 ctx.fillStyle = "rgba(53, 153, 66, 0.5)";
                 ctx.fillRect(word_blocks[idx][i]["x"], word_blocks[idx][i]["y"], word_blocks[idx][i]["width"], 20);
+                var img = new Image();
+                img.src = word_blocks[idx][i]["map"];
+                ctx.drawImage(img, word_blocks[idx][i]["x"], word_blocks[idx][i]["y"]-20);
             }
         }
     });

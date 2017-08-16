@@ -127,6 +127,14 @@ input:checked + .slider:before {
     position: relative;
     width: auto;
     margin: 0 auto;
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
 }
 
 .vis .img-block {
@@ -134,8 +142,9 @@ input:checked + .slider:before {
     padding: 0;
     margin: 0 auto;
     transition: all 0.5s ease;
-    /* overflow: hidden; */
+    overflow: hidden;
     white-space: nowrap;
+    display: flex;
 }
 
 .vis .img-block img {
@@ -144,7 +153,7 @@ input:checked + .slider:before {
 }
 
 .vis .img-block:not(.img-patch) img {
-    float: left;
+    
 }
 
 .vis .img-block.img-patch img {
