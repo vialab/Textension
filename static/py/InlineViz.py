@@ -333,7 +333,7 @@ class InlineViz:
                 }
 
                 if label == "GPE":
-                    img_map = gm.getMap(text)
+                    img_map = gm.getMap(text, word["width"], word["height"])
                     word["map"] = self.encodeBase64(img_map)
 
                 bounding_boxes.append(box)

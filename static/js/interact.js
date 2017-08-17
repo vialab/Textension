@@ -17,7 +17,6 @@ $(document).ready(function() {
         if(i == 0) {
             return;
         }
-        i--;
         toggleSpace($("#"+i.toString()+".img-patch"))
     });
 
@@ -130,16 +129,21 @@ function drawLocations() {
     $(".img-block:not(.img-patch)").each(function(idx) {
         var canvas = $("canvas.entity-location", this)[0];
         var ctx = canvas.getContext("2d");
+        var height = $(this).height();
         ctx.canvas.width = $(this).width();
-        ctx.canvas.height = $(this).height();
+        ctx.canvas.height = height*2;
+        ctx.canvas.style.top = "-" + height.toString() + "px";
         for(var i=0; i<word_blocks[idx].length; i++) {
             if(word_blocks[idx][i]["label"] == "GPE") {
                 ctx.beginPath();
                 ctx.fillStyle = "rgba(53, 153, 66, 0.5)";
-                ctx.fillRect(word_blocks[idx][i]["x"], word_blocks[idx][i]["y"], word_blocks[idx][i]["width"], 20);
+                ctx.fillRect(word_blocks[idx][i]["x"], word_blocks[idx][i]["y"] + height, word_blocks[idx][i]["width"], height);
                 var img = new Image();
-                img.src = word_blocks[idx][i]["map"];
-                ctx.drawImage(img, word_blocks[idx][i]["x"], word_blocks[idx][i]["y"]-20);
+                img.coords = {x:word_blocks[idx][i]["x"],y:0};
+                img.onload = function() {
+                    ctx.drawImage(this, this.coords.x, this.coords.y);
+                };
+                img.src = "data:image/png;base64,"+word_blocks[idx][i]["map"];                 
             }
         }
     });
