@@ -150,8 +150,8 @@ def saveVizSessionArgs(form):
                 options_form[option] = True
             else:
                 options_form[option] = False
-
-        options_form[option] = form[option]
+            continue
+        options_form[option] = int(form[option])
 
     session["options"] = options_form
 
@@ -159,11 +159,15 @@ def saveVizSessionArgs(form):
 @app.route('/hook', methods=['POST'])
 def get_image():
     viz_list=[]
-    
     saveVizSessionArgs(request.values)
     image_b64 = re.sub("data:image/png;base64,", "", request.values["imageBase64"])
     bImage = io.BytesIO(base64.b64decode(image_b64))
-
+    img = Image.open(bImage)
+    img = img.crop((133,5,499,img.size[1]-5))
+    bImage = io.BytesIO()
+    img.save(bImage, "PNG")
+    img.save("test.png","PNG")    
+    bImage.seek(0)
     viz = iv.InlineViz(bImage
                     , _translate=session["options"]["translate"]
                     , _spread=session["options"]["spread"]
