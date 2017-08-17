@@ -168,7 +168,10 @@ input:checked + .slider:before {
     position: absolute;
     margin: 0;
     padding: 0;
-    pointer-events: none;
+}
+
+canvas.entity-location {
+    pointer-events: none;    
 }
 
 .img-patch {

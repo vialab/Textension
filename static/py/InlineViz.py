@@ -131,12 +131,7 @@ class InlineViz:
             y_start = box['y']-self.space_height
             y_end = box['y']-self.line_buffer
 
-            expand = True
-            # don't need to expand the last patch
-            if idx == len(self.bounding_boxes)-1:
-                expand = False
-
-            img_patch = self.createNewPatch(img, y_start, y_end, expand)
+            img_patch = self.createNewPatch(img, y_start, y_end, True)
             self.img_patches.append(self.getImageDict(img_patch))
 
     def createNewPatch(self, img, y_start, y_end, expand=True):
