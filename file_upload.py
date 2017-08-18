@@ -30,6 +30,7 @@ h = HTMLParser()
 
 default_options = {
     "spread":20,
+    "hires":True,   
     "cut":5,
     "noise":25,
     "buffer":1,
@@ -111,6 +112,7 @@ def upload_file():
                     page.seek(0)
                     viz = iv.InlineViz(page, _translate=session["options"]["translate"]
                                 , _spread=session["options"]["spread"]
+                                , _hi_res=session["options"]["hires"]
                                 , _pixel_cut_width=session["options"]["cut"]
                                 , _noise_threshold=session["options"]["noise"]
                                 , _line_buffer=session["options"]["buffer"]
@@ -121,6 +123,7 @@ def upload_file():
                 # just an image
                 viz = iv.InlineViz(file.stream
                                 , _translate=session["options"]["translate"]
+                                , _hi_res=session["options"]["hires"]
                                 , _spread=session["options"]["spread"]
                                 , _pixel_cut_width=session["options"]["cut"]
                                 , _noise_threshold=session["options"]["noise"]
@@ -145,7 +148,7 @@ def saveVizSessionArgs(form):
         if option not in options_form:
             # don't save unnecessary data
             continue
-        if option == "translate":
+        if option == "translate" or option == "hires":
             if form[option] == u"true":
                 options_form[option] = True
             else:
@@ -170,6 +173,7 @@ def get_image():
     bImage.seek(0)
     viz = iv.InlineViz(bImage
                     , _translate=session["options"]["translate"]
+                    , _hi_res=session["options"]["hires"]
                     , _spread=session["options"]["spread"]
                     , _pixel_cut_width=session["options"]["cut"]
                     , _noise_threshold=session["options"]["noise"]

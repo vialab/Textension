@@ -13,6 +13,7 @@ import base64
 import io
 import googleMaps as gm
 from opacityConversion import *
+from math import ceil, floor
 
 class InlineViz:
     """ Inline Viz wrapper object that performs all algorithm functions and 
@@ -22,7 +23,7 @@ class InlineViz:
     img_file = None
     nlp = spacy.load("en")
 
-    def __init__(self, stream, _translate=False, _max_size=(1024,1024), _pixel_cut_width=5, _noise_threshold=25, _spread=0, _line_buffer=1):
+    def __init__(self, stream, _translate=False, _max_size=(1024,1024), _pixel_cut_width=5, _noise_threshold=25, _spread=0, _line_buffer=1, _hi_res=True, _rgb_text=(0,0,0), _rgb_bg=(255,255,255), _anti_alias=True):
         """ Initialize a file to work with """
         self.max_size = _max_size # maximum size of image for resizing
         self.img_file = Image.open(stream) # image itselfs
@@ -31,6 +32,7 @@ class InlineViz:
         self.line_list = self.detectLines(self.img_file) # X coordinates for vertical lines
         self.translate = _translate # indicator for translating OCR'd text
         self.spread = _spread # multiplier for strip size
+        self.hi_res = _hi_res # pixel shuffling toggle for every iteration of spread        
         self.pixel_cut_width = _pixel_cut_width # horizontal pixel cut size for randomization
         self.noise_threshold = _noise_threshold # vertical line detection threshold
         self.line_buffer = _line_buffer # space buffer cropping between bounding boxes
@@ -45,7 +47,10 @@ class InlineViz:
         self.bounding_boxes = [] # bounding boxes of text lines
         self.space_height = 5 # minimum space height to crop between text lines
         self.is_inverted = False # indicator for text and background color inversion
-        self.has_header = False
+        self.has_header = False # if header is included with first text img block
+        self.rgb_text = _rgb_text # text color RGB anchor for background color detection
+        self.rgb_bg = _rgb_bg # background color RGB anchor for text color detection
+        self.anti_alias = _anti_alias # color sampling for anti-aliasing of artifacts
 
     def decompose(self):
         """ Use OCR to find bounding boxes of each line in document and dissect 
@@ -65,22 +70,53 @@ class InlineViz:
                 self.ocr_text.append(api.GetUTF8Text())
 
         if self.translate:
-            self.translateText()
-        self.space_height = self.getMinSpaceHeight() # get the minimum patch height
-        self.generateExpandedPatches() # strip and expand line spaces
+            self.translateText() # translate the text to french
         self.cropImageBlocks() # slice original image into lines
         self.getWordBlocks() # get all word meta info per block
+        self.space_height = self.getMinSpaceHeight() # get the minimum patch height        
+        self.generateExpandedPatches() # strip and expand line spaces        
         # self.generateFullCompositeImage() # merge everything together
 
     def expandStrip(self, img_strip):
         """ Expand an image strip using pixel randomization and quilting """
         img_comp = [img_strip]
+        pixel_block = self.randomizeStrip(img_strip)
+        if self.anti_alias:
+            pixel_block = self.removeArtifacts(pixel_block)
+        img_block = []
         for x in range(1, self.spread):
-            img_block = self.randomizeStrip(img_strip)
+            if x > 1 and not self.hi_res:
+                img_comp.append(img_expand)
+                continue
+                
+            for block in pixel_block:
+                #Create a new image from random pixel choices
+                img_pixel = Image.new('RGB', (block["cut_width"], img_strip.size[1]))
+
+                if block["noise"]:
+                    random.shuffle(block["pixel_list"])
+                    
+                img_pixel.putdata(block["pixel_list"])
+                img_block.append(img_pixel)
+
             img_expand = self.mergeImageList(img_block, "horizontal")
             img_comp.append(img_expand)
         
         return self.mergeImageList(img_comp, "vertical")
+
+    def removeArtifacts(self, pixel_block):
+        aa_block = []
+        for block in pixel_block:
+            pixel_list = []
+            for i, pixel_color in enumerate(block["pixel_list"]):
+                if block["noise"] and not self.isBackgroundNoiseColor(pixel_color):
+                    new_color = self.getSampledBackgroundColor(i, block["pixel_list"], block["cut_width"])
+                    pixel_list.append(new_color)
+                else:
+                    pixel_list.append(pixel)
+            aa_block.append({ "pixel_list":pixel_list, "cut_width":block["cut_width"], "noise":block["noise"] })
+        return aa_block
+
 
     def translateText(self):
         """ Translate text that has been OCR'd from this image """
@@ -120,6 +156,9 @@ class InlineViz:
         and then expand the strip based on spread """
         tmp = Image.new('RGBA', (self.img_width, self.img_height), (0,0,0,0))
         img = self.img_file.convert("RGBA")
+        # if aa enabled, sample a text block to get background and text colors
+        if self.anti_alias:
+            self.sampleBackgroundTextColor(self.img_text[0][0]["img"])
 
         # Create the expanded patches
         for idx, box in enumerate(self.bounding_boxes):
@@ -136,9 +175,7 @@ class InlineViz:
 
     def createNewPatch(self, img, y_start, y_end, expand=True):
         """ Crop, randomize, and expand a strip """
-        textureCrop = img.crop((0, y_start, self.img_width, y_end))
-        img_strip = self.randomizeStrip(textureCrop)
-        img_patch = self.mergeImageList(img_strip)
+        img_patch = img.crop((0, y_start, self.img_width, y_end))
         if expand:
             img_patch = self.expandStrip(img_patch)
         return img_patch
@@ -228,24 +265,26 @@ class InlineViz:
         return compImage
 
     def calculateColorDistance(self, color_1, color_2):
-        """ Calculates euclidean color distance of two colors not normalized (for simplicity) """
-        distance = (color_2[0]-color_1[0])**2 + (color_2[1]-color_1[1])**2 + (color_2[2]-color_1[2])**2
-        return distance
+        """ Calculates euclidean color distance modified for perception using weighted RGB color spaces """
+        rm = 0.5*(color_1[0]+color_2[0])
+        d = sum((2+rm,4,3-rm)*(color_1-color_2)**2)**0.5
+        return d
 
     def randomizeStrip(self, im):
         """ Return blocks of randomized pixels in a single strip """
         rgb_im = im.convert('RGB')
         imWidth, imHeight = im.size
-        noise = True
         img_block = []
-        cut_width = 0        
+        cut_width = 0
+        pixel_block = []
         for i in range(0,imWidth,self.pixel_cut_width):
+            noise = True
             for t in self.line_list:
                 if abs(t-i) <= self.noise_threshold:
                     noise = False
 
             z = []
-            pixelList = []
+            pixel_list = []
             for y in range(imHeight):
                 cut_width = 0                
                 for x in range(self.pixel_cut_width):
@@ -253,21 +292,13 @@ class InlineViz:
                         break
                     cut_width += 1
                     r, g, b = rgb_im.getpixel((i+x, y))
-                    pixelList.append(tuple([r,g,b]))
+                    pixel_list.append((r,g,b))
 
             if cut_width == 0:
                 continue
+            pixel_block.append({"pixel_list":pixel_list, "cut_width":cut_width, "noise":noise})
 
-            #Create a new image from random pixel choices
-            im2 = Image.new('RGB', (cut_width, imHeight))
-
-            if noise:
-                random.shuffle(pixelList)
-                
-            im2.putdata(pixelList)
-            img_block.append(im2)
-
-        return img_block
+        return pixel_block
 
     def detectLines(self, img):
         """ Use CV2 to estimate vertical line threshold for randomization """
@@ -299,6 +330,7 @@ class InlineViz:
         word_boxes = []
         bounding_boxes = []
         img_crops = []
+        
         with PyTessBaseAPI() as api:
             api.SetImage(img)
 
@@ -380,3 +412,76 @@ class InlineViz:
         bImage = io.BytesIO()
         image.save(bImage, format="PNG")
         return base64.b64encode(bImage.getvalue())
+
+    def sampleBackgroundTextColor(self, image):
+        """ Returns background color and text color using min color distance from extremes """
+        rgb_im = image.convert("RGB")
+        width, height = image.size
+        _rgb_bg = self.rgb_bg
+        _rgb_text = self.rgb_text
+        min_bg = 999999
+        min_text = 999999
+
+        for y in range(0, height):
+            for x in range(0, width):
+                r, g, b = rgb_im.getpixel((x, y))
+                dist_bg = self.calculateColorDistance((r,g,b), self.rgb_bg)
+                dist_text = self.calculateColorDistance((r,g,b), self.rgb_text)
+                if dist_bg < min_bg:
+                    _rgb_bg = (r,g,b)
+                    min_bg = dist_bg
+                if dist_text < min_text:
+                    _rgb_text = (r,g,b)
+                    min_bg = dist_text
+
+        self.rgb_bg = _rgb_bg
+        self.rgb_text = _rgb_text
+
+    def isBackgroundNoiseColor(self, color):
+        """ Test if color closer to bg or text color """
+        dist_bg = self.calculateColorDistance(color, self.rgb_bg)
+        dist_text = self.calculateColorDistance(color, self.rgb_text)
+        if dist_text > dist_bg:
+            return True
+        else:
+            return False
+
+    def calculateAverageColor(self, color_list):
+        """ Calculate average RGB values """
+        rgb = [sum(color) for color in zip(*color_list)]
+        r = rgb[0] / len(color_list)
+        g = rgb[1] / len(color_list)
+        b = rgb[2] / len(color_list)
+        return (r, g, b)
+
+    def getSampledBackgroundColor(self, idx, pixel_list, width):
+        """ Find averaged nearest NWSE background colors """
+        color_list = []
+        W = floor(idx/width) * width
+        E = ceil(idx/width) * width
+        S = len(pixel_list) - (E - idx)
+        # we assume nearest N and E are already background colors
+        # still need to account for edge cases
+        if (idx - width) > 0: # N
+            color_list.append(pixel_list[idx-width])
+        if idx > W: # W
+            color_list.append(pixel_list[idx-1])
+        # get next E and S by iteration
+        if E > idx:
+            for i in range(idx, E):
+                if self.isBackgroundNoiseColor(pixel_list[i]):
+                    color_list.append(pixel_list[i])
+                    break
+        if S > idx:
+            for i in range(idx, S, width):
+                if self.isBackgroundNoiseColor(pixel_list[i]):
+                    color_list.append(pixel_list[i])
+                    break
+        
+        if len(color_list) > 0:
+            return self.calculateAverageColor(color_list)
+        else: # if all else fails return bg color
+            return self.rgb_bg
+
+
+
