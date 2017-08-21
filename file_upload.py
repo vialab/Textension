@@ -30,13 +30,14 @@ h = HTMLParser()
 
 default_options = {
     "spread":20,
-    "hires":True,   
+    "hires":True,
     "cut":5,
     "noise":25,
     "buffer":1,
     "width":1024,
     "height":1024,
-    "translate": False
+    "translate": False,
+    "antialias": True
 }
 
 def allowed_file(filename):
@@ -113,6 +114,7 @@ def upload_file():
                     viz = iv.InlineViz(page, _translate=session["options"]["translate"]
                                 , _spread=session["options"]["spread"]
                                 , _hi_res=session["options"]["hires"]
+                                , _anti_alias=session["options"]["antialias"]
                                 , _pixel_cut_width=session["options"]["cut"]
                                 , _noise_threshold=session["options"]["noise"]
                                 , _line_buffer=session["options"]["buffer"]
@@ -124,6 +126,7 @@ def upload_file():
                 viz = iv.InlineViz(file.stream
                                 , _translate=session["options"]["translate"]
                                 , _hi_res=session["options"]["hires"]
+                                , _anti_alias=session["options"]["antialias"]
                                 , _spread=session["options"]["spread"]
                                 , _pixel_cut_width=session["options"]["cut"]
                                 , _noise_threshold=session["options"]["noise"]
@@ -148,7 +151,7 @@ def saveVizSessionArgs(form):
         if option not in options_form:
             # don't save unnecessary data
             continue
-        if option == "translate" or option == "hires":
+        if option == "translate" or option == "hires" or option == "antialias":
             if form[option] == u"true":
                 options_form[option] = True
             else:
@@ -174,6 +177,7 @@ def get_image():
     viz = iv.InlineViz(bImage
                     , _translate=session["options"]["translate"]
                     , _hi_res=session["options"]["hires"]
+                    , _anti_alias=session["options"]["antialias"]
                     , _spread=session["options"]["spread"]
                     , _pixel_cut_width=session["options"]["cut"]
                     , _noise_threshold=session["options"]["noise"]

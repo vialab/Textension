@@ -6,6 +6,7 @@ currY = 0,
 dot_flag = false,
 x = "black",
 y = 2,
+map_height = 150,
 drawing = false,
 haslistener=false;
 
@@ -35,9 +36,11 @@ $(document).ready(function() {
     $("canvas.entity-location").hide();
     $("#location").on("click", function() {
         if($(this).is(":checked")) {
-            $("canvas.entity-location").show();            
+            openSpaces();
+            $("canvas.entity-location").show();
         } else {
-            $("canvas.entity-location").hide();            
+            closeSpaces();
+            $("canvas.entity-location").hide(); 
         }
     });
 
@@ -88,7 +91,13 @@ $(document).ready(function() {
 function toggleSpace($elem) {
     if($elem.hasClass("squeeze")) {
         $elem.removeClass("squeeze");
-        $elem.height($elem.data("img-height"));
+        space_height = $elem.data("img-height");
+        if($("#location").is(":checked")) {
+            if($elem.data("map-height") > 0) {
+                space_height = $elem.data("map-height");
+            }
+        }
+        $elem.height(space_height);
     } else {
         $elem.height(0);
         $elem.addClass("squeeze");        
@@ -99,7 +108,13 @@ function openSpaces() {
     if(drawing) return;
     $(".img-patch").removeClass("squeeze");
     $(".img-patch").each(function() {
-        $(this).height($(this).data("img-height"));
+        space_height = $(this).data("img-height");
+        if($("#location").is(":checked")) {
+            if($(this).data("map-height") > 0) {
+                space_height = $(this).data("map-height");
+            }
+        }
+        $(this).height(space_height);
     });
 }
 
@@ -131,19 +146,19 @@ function drawLocations() {
         var ctx = canvas.getContext("2d");
         var height = $(this).height();
         ctx.canvas.width = $(this).width();
-        ctx.canvas.height = height*2;
-        ctx.canvas.style.top = "-" + height.toString() + "px";
+        ctx.canvas.height = height + map_height;
+        ctx.canvas.style.top = "-" + map_height + "px";
         for(var i=0; i<word_blocks[idx].length; i++) {
             if(word_blocks[idx][i]["label"] == "GPE") {
                 ctx.beginPath();
                 ctx.fillStyle = "rgba(53, 153, 66, 0.5)";
-                ctx.fillRect(word_blocks[idx][i]["x"], word_blocks[idx][i]["y"] + height, word_blocks[idx][i]["width"], height);
+                ctx.fillRect(word_blocks[idx][i]["x"], word_blocks[idx][i]["y"] + map_height, word_blocks[idx][i]["width"], height);
                 var img = new Image();
-                img.coords = {x:word_blocks[idx][i]["x"],y:0};
+                img.coords = {x:word_blocks[idx][i]["map_x"],y:0};
                 img.onload = function() {
                     ctx.drawImage(this, this.coords.x, this.coords.y);
                 };
-                img.src = "data:image/png;base64,"+word_blocks[idx][i]["map"];                 
+                img.src = "data:image/png;base64,"+word_blocks[idx][i]["map"];
             }
         }
     });

@@ -163,9 +163,19 @@
               <td>Hi-Res</td>
               <td>
                 {% if session['options']['hires']==True %}
-                  <input id="option-s" type="checkbox" form="demo-upload" checked/>
+                  <input id="option-hires" type="checkbox" form="demo-upload" checked/>
                 {% else %}
                   <input id="option-hires" type="checkbox" form="demo-upload"/>                        
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <td>Anti-Aliasing</td>
+              <td>
+                {% if session['options']['antialias']==True %}
+                  <input id="option-antialias" type="checkbox" form="demo-upload" checked/>
+                {% else %}
+                  <input id="option-antialias" type="checkbox" form="demo-upload"/>                        
                 {% endif %}
               </td>
             </tr>
@@ -258,6 +268,7 @@
       myDropzone.on("sending", function(file, xhr, formData) {
         formData.append("spread", $('#option-spread').val());
         formData.append("hires", $('#option-hires').is(":checked"));
+        formData.append("antialias", $('#option-antialias').is(":checked"));
         formData.append("translate", $('#option-translate').is(":checked"));
         formData.append("cut", $('#option-cut').val());
         formData.append("noise", $('#option-noise').val());

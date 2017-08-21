@@ -116,7 +116,8 @@
           width:$("#option-width").val(),
           height:$("#option-height").val(),
           translate: $('#option-translate').is(":checked"),
-          hires: $('#option-hires').is(":checked")
+          hires: $('#option-hires').is(":checked"),
+          antialias: $('#option-antialias').is(":checked")
         }
       }).done(function() {
         window.location.href = "/interact"
