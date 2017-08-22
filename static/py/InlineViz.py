@@ -23,7 +23,7 @@ class InlineViz:
     img_file = None
     nlp = spacy.load("en")
 
-    def __init__(self, stream, _translate=False, _max_size=(1024,1024), _pixel_cut_width=5, _noise_threshold=25, _spread=0, _line_buffer=1, _hi_res=True, _rgb_text=(0,0,0), _rgb_bg=(255,255,255), _anti_alias=True, _map_height=150):
+    def __init__(self, stream, _translate=False, _max_size=(1024,1024), _pixel_cut_width=5, _noise_threshold=25, _spread=0, _line_buffer=1, _hi_res=True, _rgb_text=(0,0,0), _rgb_bg=(255,255,255), _anti_alias=True, _map_height=150, _blur=1):
         """ Initialize a file to work with """
         self.max_size = _max_size # maximum size of image for resizing
         self.img_file = Image.open(stream) # image itselfs
@@ -52,12 +52,15 @@ class InlineViz:
         self.rgb_bg = _rgb_bg # background color RGB anchor for text color detection
         self.anti_alias = _anti_alias # color sampling for anti-aliasing of artifacts
         self.map_height = _map_height # height of maps for insertion
+        self.blur = _blur # intensity of median blurring for patches
 
     def decompose(self):
         """ Use OCR to find bounding boxes of each line in document and dissect 
         into workable parts """
+        img_bw = self.binarizeSharpenImage(self.img_file)
+
         with PyTessBaseAPI() as api:
-            api.SetImage(self.img_file)
+            api.SetImage(img_bw)
             # Interate over lines using OCR
             boxes = api.GetComponentImages(RIL.TEXTLINE, True)
             
@@ -187,7 +190,7 @@ class InlineViz:
                         break
 
             img_patch = self.createNewPatch(img, y_start, y_end, True)
-            img_patch = self.getImageDict(img_patch)
+            img_patch = self.getImageDict(self.smoothImage(img_patch))
             if idx < len(self.img_chops):
                 if self.img_chops[idx+1][0]["has_map"]:
                     img_patch["map_height"] = self.map_height
@@ -206,6 +209,8 @@ class InlineViz:
         # This creates a composite image with the original image and the transparent overlay
         img = Image.alpha_composite(self.img_file.convert("RGBA"), tmp)
         width, height = img.size
+        if width == 0:
+            return
         # iterate through the bounding boxes and crop them out accounting for the first and the last chop
         # to keep headers and footers
         for i, box in enumerate(self.bounding_boxes):
@@ -232,7 +237,9 @@ class InlineViz:
                     # include the header in first block
                     tmpImageCrop = img.crop((0, 0, width, y_end))
             else:
-                tmpImageCrop = img.crop((0, box['y']-self.line_buffer, width, y_end))
+                y_start = box['y']-self.line_buffer
+                if box['y'] > self.line_buffer and y_end > y_start:
+                    tmpImageCrop = img.crop((0, box['y']-self.line_buffer, width, y_end))
             
             self.img_blocks.append(self.getImageDict(tmpImageCrop))
 
@@ -353,9 +360,11 @@ class InlineViz:
         bounding_boxes = []
         img_crops = []
         has_map = False
-        with PyTessBaseAPI() as api:
-            api.SetImage(img)
+        
+        img_bw = self.binarizeSharpenImage(image)
 
+        with PyTessBaseAPI() as api:
+            api.SetImage(img_bw)
             boxes = api.GetComponentImages(RIL.WORD, True)
             for i, (im, box, _, _) in enumerate(boxes):
                 api.SetRectangle(box["x"], box["y"], box["w"], box["h"])
@@ -384,9 +393,10 @@ class InlineViz:
                 if label == "GPE":
                     map_width = self.bounding_boxes[idx]["w"]
                     img_map = gm.getMap(text, map_width, self.map_height)
-                    word["map"] = self.encodeBase64(img_map)
-                    word["map_x"] = self.bounding_boxes[idx]["x"]
-                    has_map = True
+                    if img_map is not None:
+                        word["map"] = self.encodeBase64(img_map)
+                        word["map_x"] = self.bounding_boxes[idx]["x"]
+                        has_map = True
 
                 bounding_boxes.append(box)
                 word_boxes.append(word)
@@ -399,8 +409,12 @@ class InlineViz:
         width, height = img.size
         x_start = 0
         img_chop = []
+        if height == 0:
+            return img_chop
         for i, box in enumerate(boxes):
             x_end = box['x']-self.line_buffer
+            if x_end <= x_start:
+                continue
             img_dict = self.getImageDict(img.crop((x_start, 0, x_end, height)))
             img_chop.append(img_dict)
             x_start = box['x'] + box['w'] + self.line_buffer
@@ -408,9 +422,9 @@ class InlineViz:
         x_end = width
         if not (x_start < x_end):
             x_start = boxes[-1]['x'] - self.line_buffer
-        
-        img_dict = self.getImageDict(img.crop((x_start, 0, x_end, height)))
-        img_chop.append(img_dict)
+        if x_start < x_end:
+            img_dict = self.getImageDict(img.crop((x_start, 0, x_end, height)))
+            img_chop.append(img_dict)
                 
         return img_chop
 
@@ -515,5 +529,30 @@ class InlineViz:
         color_list.append(self.rgb_bg) # bias towards the background color
         return self.calculateAverageColor(color_list)
 
+    def binarizeSharpenImage(self, image):
+        """ Prepare image for OCR by converting to grayscale, sharpening, and then binarizing """
+        # Read as gray scale
+        img_array = np.asarray(image)
+        img_gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
+        # sharpen by multiplying pixels by two
+        kernel = np.zeros( (9,9), np.float32)
+        kernel[4,4] = 2.0
+        box_filter = np.ones( (9,9), np.float32) / 81.0
+        kernel = kernel - box_filter
+        img_gray = cv2.filter2D(img_gray, -1, kernel)
+        # convert from grayscale to black and white
+        bw_threshold, img_bw = cv2.threshold(img_gray, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)        
+        img_bw = Image.fromarray(img_bw)
+        return img_bw
 
-
+    def smoothImage(self, image):
+        """ Use blurring to smooth an image """
+        if self.blur > 0:
+            img_array = np.asarray(image)
+            img_cv = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+            img_cv = cv2.medianBlur(img_cv, self.blur)
+            img_cv = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB)
+            img_pil = Image.fromarray(img_cv)
+            return img_pil
+        else:
+            return image
