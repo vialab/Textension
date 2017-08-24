@@ -170,7 +170,7 @@ input:checked + .slider:before {
     padding: 0;
 }
 
-canvas.entity-location {
+canvas.entity-location, canvas.ngram-usage {
     pointer-events: none;    
 }
 

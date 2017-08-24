@@ -111,6 +111,7 @@
           imageBase64: data, 
           spread:$("#option-spread").val(),
           cut:$("#option-cut").val(),
+          blur:$("#option-blur").val(),
           noise:$("#option-noise").val(),
           buffer:$("#option-buffer").val(),
           width:$("#option-width").val(),

@@ -37,7 +37,8 @@ default_options = {
     "width":1024,
     "height":1024,
     "translate": False,
-    "antialias": True
+    "antialias": True,
+    "blur":0
 }
 
 def allowed_file(filename):
@@ -118,6 +119,7 @@ def upload_file():
                                 , _pixel_cut_width=session["options"]["cut"]
                                 , _noise_threshold=session["options"]["noise"]
                                 , _line_buffer=session["options"]["buffer"]
+                                , _blur=session["options"]["blur"]
                                 , _max_size=(session["options"]["width"],session["options"]["height"]))
                     viz.decompose()
                     viz_list.append(viz)
@@ -131,6 +133,7 @@ def upload_file():
                                 , _pixel_cut_width=session["options"]["cut"]
                                 , _noise_threshold=session["options"]["noise"]
                                 , _line_buffer=session["options"]["buffer"]
+                                , _blur=session["options"]["blur"]
                                 , _max_size=(session["options"]["width"],session["options"]["height"]))
                 viz.decompose()
                 viz_list.append(viz)
@@ -182,6 +185,7 @@ def get_image():
                     , _pixel_cut_width=session["options"]["cut"]
                     , _noise_threshold=session["options"]["noise"]
                     , _line_buffer=session["options"]["buffer"]
+                    , _blur=session["options"]["blur"]
                     , _max_size=(session["options"]["width"],session["options"]["height"]))
     viz.decompose()
     viz_list.append(viz)

@@ -23,12 +23,21 @@ $(document).ready(function() {
 
     drawConfidence();
     $("canvas.text-confidence").hide();
-
     $("#confidence").on("click", function() {
         if($(this).is(":checked")) {
             $("canvas.text-confidence").show();            
         } else {
             $("canvas.text-confidence").hide();            
+        }
+    });
+
+    drawNGramUsage();
+    $("canvas.ngram-usage").hide();
+    $("#ngram").on("click", function() {
+        if($(this).is(":checked")) {
+            $("canvas.ngram-usage").show();            
+        } else {
+            $("canvas.ngram-usage").hide();            
         }
     });
 
@@ -135,6 +144,27 @@ function drawConfidence() {
             ctx.beginPath();
             ctx.fillStyle = "rgba(244, 167, 66, " + opacity + ")";
             ctx.fillRect(word_blocks[idx][i]["x"], word_blocks[idx][i]["y"], word_blocks[idx][i]["width"], 20);
+        }
+    });
+}
+
+function drawNGramUsage() {
+    $(".img-block.img-patch").each(function(idx_curr) {
+        var idx = idx_curr+1;
+        var canvas = $("canvas.ngram-usage", this)[0];
+        var ctx = canvas.getContext("2d");
+        ctx.canvas.width = $(this).width();
+        ctx.canvas.height = $(this).data("img-height");
+        for(var i=0; i<word_blocks[idx].length; i++) {
+            if( typeof(word_blocks[idx][i]["ngram"]) != "undefined" ) {
+                ctx.beginPath();                
+                var img = new Image();
+                img.coords = {x:word_blocks[idx][i]["x"],y:0};
+                img.onload = function() {
+                    ctx.drawImage(this, this.coords.x, this.coords.y);
+                };
+                img.src = "data:image/png;base64,"+word_blocks[idx][i]["ngram"];
+            }
         }
     });
 }

@@ -12,6 +12,8 @@ import cv2
 import base64
 import io
 import googleMaps as gm
+import getngrams as ng
+import matplotlib.pyplot as plt
 from opacityConversion import *
 from math import ceil, floor
 
@@ -23,7 +25,7 @@ class InlineViz:
     img_file = None
     nlp = spacy.load("en")
 
-    def __init__(self, stream, _translate=False, _max_size=(1024,1024), _pixel_cut_width=5, _noise_threshold=25, _spread=0, _line_buffer=1, _hi_res=True, _rgb_text=(0,0,0), _rgb_bg=(255,255,255), _anti_alias=True, _map_height=150, _blur=1):
+    def __init__(self, stream, _translate=False, _max_size=(1024,1024), _pixel_cut_width=5, _noise_threshold=25, _spread=0, _line_buffer=1, _hi_res=True, _rgb_text=(0,0,0), _rgb_bg=(255,255,255), _anti_alias=True, _map_height=150, _blur=0):
         """ Initialize a file to work with """
         self.max_size = _max_size # maximum size of image for resizing
         self.img_file = Image.open(stream) # image itselfs
@@ -75,11 +77,27 @@ class InlineViz:
 
         if self.translate:
             self.translateText() # translate the text to french
+        self.space_height = self.getMinSpaceHeight() # get the minimum patch height                    
         self.cropImageBlocks() # slice original image into lines
         self.getWordBlocks() # get all word meta info per block
-        self.space_height = self.getMinSpaceHeight() # get the minimum patch height        
         self.generateExpandedPatches() # strip and expand line spaces        
         # self.generateFullCompositeImage() # merge everything together
+
+    def getNgramPlotImage(self, word, size, start_date=1800, end_date=2000):
+        """ Get a plot of word usage from google ngrams """
+        return None
+        url, url_req, df = ng.getNgrams(word, "eng_2012", start_date, end_date, 3, False)
+        if df.empty or len(df.columns) < 2:
+            return None
+        df.plot(x="year", figsize=(1,1), legend=False)
+        plt.axis("off")
+        img_bytes = io.BytesIO()
+        plt.savefig(img_bytes, format='png')
+        plt.close()
+        img_bytes.seek(0)
+        img_pil = Image.open(img_bytes) 
+        img_pil = img_pil.resize(size, Image.ANTIALIAS)
+        return img_pil
 
     def expandStrip(self, img_strip):
         """ Expand an image strip using pixel randomization and quilting """
@@ -381,7 +399,6 @@ class InlineViz:
                 x_end = box['x'] + box['w'] + self.line_buffer
                 img_dict = self.getImageDict(img.crop((x_start, 0, x_end, img.size[1])))
                 img_crops.append(img_dict)
-
                 word = { "x":box["x"]
                     , "y":box["y"]
                     , "width":box["w"]
@@ -389,7 +406,10 @@ class InlineViz:
                     , "confidence":conf 
                     , "label": label
                 }
-
+                plot_ngram = self.getNgramPlotImage(text, (box["w"],((self.space_height - self.line_buffer) * self.spread)))
+                if plot_ngram is not None:
+                    word["ngram"] = self.encodeBase64(plot_ngram)
+                    
                 if label == "GPE":
                     map_width = self.bounding_boxes[idx]["w"]
                     img_map = gm.getMap(text, map_width, self.map_height)

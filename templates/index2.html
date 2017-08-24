@@ -190,6 +190,10 @@
               </td>
             </tr>
             <tr>
+              <td>Blur</td>
+              <td><input id="option-blur" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['blur'] }}"/></td>
+            </tr>
+            <tr>
               <td>Pixel Cut Width</td>
               <td><input id="option-cut" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['cut'] }}"/></td>
             </tr>
@@ -271,6 +275,7 @@
         formData.append("antialias", $('#option-antialias').is(":checked"));
         formData.append("translate", $('#option-translate').is(":checked"));
         formData.append("cut", $('#option-cut').val());
+        formData.append("blur", $('#option-blur').val());
         formData.append("noise", $('#option-noise').val());
         formData.append("buffer", $('#option-buffer').val()); 
         formData.append("width", $('#option-width').val()); 
