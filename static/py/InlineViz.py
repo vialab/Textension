@@ -47,6 +47,7 @@ class InlineViz:
         self.ocr_text = [] # OCR'd text
         self.ocr_translated = [] # OCR'd text translated
         self.bounding_boxes = [] # bounding boxes of text lines
+        self.ngram_plot = [] # ngram plots
         self.space_height = 5 # minimum space height to crop between text lines
         self.is_inverted = False # indicator for text and background color inversion
         self.has_header = False # if header is included with first text img block
@@ -83,20 +84,32 @@ class InlineViz:
         self.generateExpandedPatches() # strip and expand line spaces        
         # self.generateFullCompositeImage() # merge everything together
 
-    def getNgramPlotImage(self, word, size, start_date=1800, end_date=2000):
+    def getNgramPlotImage(self, word_list, size, start_date=1800, end_date=2000):
         """ Get a plot of word usage from google ngrams """
-        return None
-        url, url_req, df = ng.getNgrams(word, "eng_2012", start_date, end_date, 3, False)
+        query = ""
+        for word in word_list:
+            query = word["text"] + ","
+        query = query.rstrip(",")
+        url, url_req, df = ng.getNgrams(query, "eng_2012", start_date, end_date, 3, False)
         if df.empty or len(df.columns) < 2:
             return None
-        df.plot(x="year", figsize=(1,1), legend=False)
-        plt.axis("off")
-        img_bytes = io.BytesIO()
-        plt.savefig(img_bytes, format='png')
-        plt.close()
-        img_bytes.seek(0)
-        img_pil = Image.open(img_bytes) 
-        img_pil = img_pil.resize(size, Image.ANTIALIAS)
+
+        x = df["year"].values.tolist()
+        usage_data = {}
+        for word in word_list:
+            if word["text"] in df.columns:
+                usage_data[word["text"]] = df[word["text"]].values.tolist()
+
+        for key in usage_data:
+            df.plot(x="year", figsize=(1,1), legend=False)
+            plt.axis("off")
+            img_bytes = io.BytesIO()
+            plt.savefig(img_bytes, format='png')
+            plt.close()
+            img_bytes.seek(0)
+            img_pil = Image.open(img_bytes) 
+            img_pil = img_pil.resize(size, Image.ANTIALIAS)
+            
         return img_pil
 
     def expandStrip(self, img_strip):
@@ -378,6 +391,7 @@ class InlineViz:
         bounding_boxes = []
         img_crops = []
         has_map = False
+        ngram_data = []
         
         img_bw = self.binarizeSharpenImage(image)
 
@@ -406,9 +420,22 @@ class InlineViz:
                     , "confidence":conf 
                     , "label": label
                 }
-                plot_ngram = self.getNgramPlotImage(text, (box["w"],((self.space_height - self.line_buffer) * self.spread)))
-                if plot_ngram is not None:
-                    word["ngram"] = self.encodeBase64(plot_ngram)
+                
+                ngram = {
+                    "idx_block":idx,
+                    "idx_word": len(word_boxes),
+                    "size":(box["w"],((self.space_height - self.line_buffer) * self.spread)
+                    "text":text.strip()
+                }
+                ngram_data.append(ngram)
+                # plot_ngram = self.getNgramPlotImage(text, (box["w"],((self.space_height - self.line_buffer) * self.spread)))
+                # if plot_ngram is not None:
+                #     ngram = {
+                #         "idx_block":idx,
+                #         "idx_word": len(word_boxes),
+                #         "ngram":self.encodeBase64(plot_ngram)
+                #     }
+                #     self.ngram_plot.append(ngram)
                     
                 if label == "GPE":
                     map_width = self.bounding_boxes[idx]["w"]

@@ -155,15 +155,16 @@ function drawNGramUsage() {
         var ctx = canvas.getContext("2d");
         ctx.canvas.width = $(this).width();
         ctx.canvas.height = $(this).data("img-height");
-        for(var i=0; i<word_blocks[idx].length; i++) {
-            if( typeof(word_blocks[idx][i]["ngram"]) != "undefined" ) {
+        for(var i=0; i<ngram_plot.length; i++) {
+            if(ngram_plot[i]["idx_block"] == idx) {
+                idx_word = ngram_plot[i]["idx_word"];
                 ctx.beginPath();                
                 var img = new Image();
-                img.coords = {x:word_blocks[idx][i]["x"],y:0};
+                img.coords = {x:word_blocks[idx][idx_word]["x"],y:0};
                 img.onload = function() {
                     ctx.drawImage(this, this.coords.x, this.coords.y);
                 };
-                img.src = "data:image/png;base64,"+word_blocks[idx][i]["ngram"];
+                img.src = "data:image/png;base64,"+ngram_plot[i]["ngram"];
             }
         }
     });
