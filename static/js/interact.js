@@ -31,11 +31,45 @@ $(document).ready(function() {
         }
     });
 
+    drawUniqueness();
+    $("#uniqueness-range").hide();
+    $("#uniqueness").on("click", function() {
+        if($(this).is(":checked")) {
+            openSpaces();
+            setUniqueness( $("#uniqueness-range input").val() );
+            $("#uniqueness-range").show();
+        } else {
+            $("div.uniqueness-chart span").height(0);
+            $("#uniqueness-range").hide();
+        }
+    });
+
+    var rangeSlider = function(){
+        var slider = $('.range-slider'),
+            range = $('.range-slider__range'),
+            value = $('.range-slider__value');
+          
+        slider.each(function(){
+      
+          value.each(function(){
+            var value = $(this).prev().attr('value');
+            $(this).html(value);
+          });
+      
+          range.on('input', function(){
+            $(this).next(value).html(this.value);
+          });
+        });
+      };
+      
+      rangeSlider();
+
     drawNGramUsage();
     $("canvas.ngram-usage").hide();
     $("#ngram").on("click", function() {
         if($(this).is(":checked")) {
-            $("canvas.ngram-usage").show();            
+            openSpaces();            
+            $("canvas.ngram-usage").show();        
         } else {
             $("canvas.ngram-usage").hide();            
         }
@@ -48,8 +82,8 @@ $(document).ready(function() {
             openSpaces();
             $("canvas.entity-location").show();
         } else {
-            closeSpaces();
-            $("canvas.entity-location").hide(); 
+            $("canvas.entity-location").hide();
+            openSpaces();
         }
     });
 
@@ -131,6 +165,57 @@ function closeSpaces() {
     if(drawing) return;    
     $(".img-patch").height(0);
     $(".img-patch").addClass("squeeze");    
+}
+
+function drawUniqueness() {
+    $(".img-block.img-patch").each(function(idx_curr) {
+        var idx = idx_curr+1;
+        var $chart = $("div.uniqueness-chart", this);
+        for(var i=0; i<ngram_plot.length; i++) {
+            if(ngram_plot[i]["idx_block"] == idx) {
+                var idx_word = ngram_plot[i]["idx_word"];
+                width = word_blocks[idx][idx_word]["width"].toString();
+                left = word_blocks[idx][idx_word]["x"].toString();
+                $chart.append("<span id='unique-" + idx.toString() + "-" + idx_word.toString()
+                    + "' style='height:0px;bottom:0px;left:" + left + "px;width:" + width + "px;'></span>");
+            }
+        }
+    });
+}
+
+function argsort(to_sort) {
+    for (var i = 0; i < to_sort.length; i++) {
+      to_sort[i] = [to_sort[i], i];
+    }
+    to_sort.sort(function(left, right) {
+      return left[0] > right[0] ? -1 : 1;
+    });
+    to_sort.sort_indices = [];
+    for (var j = 0; j < to_sort.length; j++) {
+      to_sort.sort_indices.push(to_sort[j][1]);
+      to_sort[j] = to_sort[j][0];
+    }
+    return to_sort;
+}
+
+function setUniqueness(dateval) {
+    var idx_date = dateval - 1800;
+    var usage_list = [];
+    for(var i=0; i<ngram_plot.length; i++) {
+        usage_list.push(ngram_plot[i]["usage"][idx_date]);
+    }
+    usage_list = argsort(usage_list);
+
+    for(var rank=0; rank<usage_list.length; rank++) {
+        var i = usage_list.sort_indices[rank];
+        var idx_block = ngram_plot[i]["idx_block"];
+        var idx_word = ngram_plot[i]["idx_word"];
+        var id = "unique-" + idx_block.toString() + "-" + idx_word.toString();
+        var patch_height = $("#"+id).closest("div.img-patch").data("img-height");
+        var new_height = (patch_height/usage_list.length) * rank;
+        if(new_height == 0) { new_height = 1; }
+        $("#"+id).height(new_height);
+    }
 }
 
 function drawConfidence() {

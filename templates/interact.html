@@ -40,6 +40,22 @@
         </td>
       </tr>
       <tr>
+        <td>Uniqueness:</td>
+        <td>
+          <label class="switch">
+            <input id="uniqueness" type="checkbox"/>
+            <span class="slider round"></span>
+          </label>
+        </td>
+      </tr>
+      <tr id="uniqueness-range">
+        <td>YEAR:
+            <div class="range-slider">
+              <input class="range-slider__range" type="range" value="1800" min="1800" max="2000" onchange="setUniqueness(this.value)"><span class="range-slider__value">1800</span>
+            </div>
+        </td>
+      </tr>
+      <tr>
         <td>OCR:</td>
         <td>
           <label class="switch">
@@ -79,6 +95,7 @@
           <img src="data:image/png;base64,{{ image_patches[i-1]['src'] }}"/>
           <input style="margin-left:{{ bounding_boxes[i-1]['x'] }}px;width:{{bounding_boxes[i-1]['w']}}px;" class="img-patch-text" type="text" />
           <canvas class="ngram-usage"></canvas>
+          <div class="uniqueness-chart"></div>
         </div>
         {% endif %}
         <div class="img-block" id="{{i}}" style="height:{{ image_dim[i]['height'] }}px;">

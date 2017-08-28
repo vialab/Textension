@@ -48,6 +48,7 @@ class InlineViz:
         self.ocr_translated = [] # OCR'd text translated
         self.bounding_boxes = [] # bounding boxes of text lines
         self.ngram_plot = [] # ngram plots
+        self.ngram_data = [] # ngram text data for retrieval
         self.space_height = 5 # minimum space height to crop between text lines
         self.is_inverted = False # indicator for text and background color inversion
         self.has_header = False # if header is included with first text img block
@@ -81,36 +82,63 @@ class InlineViz:
         self.space_height = self.getMinSpaceHeight() # get the minimum patch height                    
         self.cropImageBlocks() # slice original image into lines
         self.getWordBlocks() # get all word meta info per block
+        self.getNgramPlotImageList() # get ngram charts for all our word info
         self.generateExpandedPatches() # strip and expand line spaces        
         # self.generateFullCompositeImage() # merge everything together
 
-    def getNgramPlotImage(self, word_list, size, start_date=1800, end_date=2000):
-        """ Get a plot of word usage from google ngrams """
+    def getNgramPlotImageList(self, start_date=1800, end_date=2000):
+        """ Download list of word usages from google ngrams and save a plot as an image """
         query = ""
-        for word in word_list:
-            query = word["text"] + ","
-        query = query.rstrip(",")
-        url, url_req, df = ng.getNgrams(query, "eng_2012", start_date, end_date, 3, False)
-        if df.empty or len(df.columns) < 2:
-            return None
-
-        x = df["year"].values.tolist()
         usage_data = {}
-        for word in word_list:
-            if word["text"] in df.columns:
-                usage_data[word["text"]] = df[word["text"]].values.tolist()
+        plot_list = {}
+        query_set = []
+        
+        # create full query for google
+        for idx, ngram in enumerate(self.ngram_data):
+            query_set.append(ngram)
+            query = query + ngram["text"] + ","
+            # send request every 15 words due to google restraints
+            if (idx % 15) == 0 or (idx+1) == len(self.ngram_data):
+                query = query.rstrip(",")
+                url, url_req, df = ng.getNgrams(query, "eng_2012", start_date, end_date, 3, False)
+                # get y values for each dataset
+                for ngram in query_set:
+                    if ngram["text"] in df.columns:
+                        usage_data[ngram["text"]] = df[ngram["text"]].values.tolist()
+                # then start a new query set
+                query = ""
+                query_set = []
 
-        for key in usage_data:
-            df.plot(x="year", figsize=(1,1), legend=False)
-            plt.axis("off")
+        # create years x-axis
+        x = list(range(start_date,end_date+1))
+        # plot each y value dataset against years
+        for ngram in self.ngram_data:
+            key = ngram["text"]
+            if key not in usage_data:
+                continue
+            fig = plt.figure(figsize=(1,1), dpi=80)
+            plt.plot(x, usage_data[key])                        
+            ax = fig.gca()
+            ax.axis("off")
+            # save figure to image dictionary
             img_bytes = io.BytesIO()
-            plt.savefig(img_bytes, format='png')
+            plt.savefig(img_bytes, format='png', transparent=True)
             plt.close()
             img_bytes.seek(0)
             img_pil = Image.open(img_bytes) 
-            img_pil = img_pil.resize(size, Image.ANTIALIAS)
-            
-        return img_pil
+            img_pil = img_pil.resize(ngram["size"], Image.ANTIALIAS)
+            plot_list[key] = self.encodeBase64(img_pil)
+        # put it all together for front-end use
+        for ngram in self.ngram_data:
+            key = ngram["text"]
+            if key in plot_list:
+                img_plot = {
+                    "idx_block":ngram["idx_block"]
+                    , "idx_word":ngram["idx_word"]
+                    , "ngram":plot_list[key]
+                    , "usage":usage_data[key]
+                }
+                self.ngram_plot.append(img_plot)
 
     def expandStrip(self, img_strip):
         """ Expand an image strip using pixel randomization and quilting """
@@ -391,8 +419,6 @@ class InlineViz:
         bounding_boxes = []
         img_crops = []
         has_map = False
-        ngram_data = []
-        
         img_bw = self.binarizeSharpenImage(image)
 
         with PyTessBaseAPI() as api:
@@ -422,20 +448,12 @@ class InlineViz:
                 }
                 
                 ngram = {
-                    "idx_block":idx,
-                    "idx_word": len(word_boxes),
-                    "size":(box["w"],((self.space_height - self.line_buffer) * self.spread)
-                    "text":text.strip()
+                    "idx_block":idx
+                    , "idx_word": len(word_boxes)
+                    , "size":(box["w"],((self.space_height - self.line_buffer) * self.spread))
+                    , "text":text.strip()
                 }
-                ngram_data.append(ngram)
-                # plot_ngram = self.getNgramPlotImage(text, (box["w"],((self.space_height - self.line_buffer) * self.spread)))
-                # if plot_ngram is not None:
-                #     ngram = {
-                #         "idx_block":idx,
-                #         "idx_word": len(word_boxes),
-                #         "ngram":self.encodeBase64(plot_ngram)
-                #     }
-                #     self.ngram_plot.append(ngram)
+                self.ngram_data.append(ngram)
                     
                 if label == "GPE":
                     map_width = self.bounding_boxes[idx]["w"]
@@ -449,6 +467,7 @@ class InlineViz:
                 word_boxes.append(word)
 
             self.img_text.append(img_crops)
+
         return word_boxes, bounding_boxes, has_map
 
     def chopImageBlockSpace(self, boxes, img):

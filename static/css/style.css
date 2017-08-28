@@ -97,6 +97,7 @@ input:checked + .slider:before {
     right: 15px;
     bottom: 15px;
     width: 25%;
+    min-width: 200px;
     max-width: 300px;
     padding: 25px;
     z-index: 5;
@@ -141,6 +142,7 @@ input:checked + .slider:before {
     position: relative;
     padding: 0;
     margin: 0 auto;
+    -webkit-transition: all 0.5s ease;
     transition: all 0.5s ease;
     white-space: nowrap;
     display: flex;
@@ -164,6 +166,24 @@ input:checked + .slider:before {
     width: 100%;
 }
 
+.vis .img-block.img-patch div.uniqueness-chart {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    left: 0px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.vis .img-block.img-patch div.uniqueness-chart span {
+    position: absolute;
+    background-color: rgba(0,100,200,0.5);
+    border: none;
+    -webkit-transition: all 1s ease;
+    transition: all 1s ease;
+}
+
+
 .img-block canvas {
     position: absolute;
     margin: 0;
@@ -171,7 +191,8 @@ input:checked + .slider:before {
 }
 
 canvas.entity-location, canvas.ngram-usage {
-    pointer-events: none;    
+    pointer-events: none;
+    z-index: 0;
 }
 
 .img-patch {
@@ -187,6 +208,7 @@ canvas.entity-location, canvas.ngram-usage {
     background-color: rgba(0,0,0,0);
     border: none;
     box-shadow: none;
+    z-index: 1;
 }
 
 .img-patch .img-patch-text:focus {
