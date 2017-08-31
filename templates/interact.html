@@ -1,5 +1,37 @@
 {% extends "base.html" %}
 {%block content%}
+  <div class="modal fade" id="text-edit" tabindex="-1" role="dialog" aria-labelledby="text-edit-title" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="text-edit-title">Edit Text</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <input id="img-text-id" type="hidden"/>
+          <div class="row">
+            <div class="col-sm-12 text-center">  
+              <input id="edit-text" type="text"/>
+            </div>
+          </div>
+          <br/>
+          <br/>
+          <div class="row">
+            <div class="col-sm-12 text-center">
+              <div id="sample-text-box"></div>          
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" onclick="saveText();">Edit Text</button>
+          <button type="button" id="text-visibility" class="btn btn-primary" onclick="toggleTextVisibility();">Remove Text</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
   <nav id="main-nav" class="navbar navbar-default navbar-fixed-top navbar-custom no-print">
       <div class="nav-links">
           <ul class="nav navbar-nav">
@@ -31,7 +63,7 @@
         </td>
       </tr>
       <tr>
-        <td>NGram Usage:</td>
+        <td>NGRAM USAGE:</td>
         <td>
           <label class="switch">
             <input id="ngram" type="checkbox"/>
@@ -40,7 +72,7 @@
         </td>
       </tr>
       <tr>
-        <td>Uniqueness:</td>
+        <td>UNIQUENESS:</td>
         <td>
           <label class="switch">
             <input id="uniqueness" type="checkbox"/>
@@ -48,8 +80,8 @@
           </label>
         </td>
       </tr>
-      <tr id="uniqueness-range">
-        <td>YEAR:
+      <tr id="uniqueness-range" style="display:none;">
+        <td colspan="2" style="padding: 0 0 15px 0;">YEAR:
             <div class="range-slider">
               <input class="range-slider__range" type="range" value="1800" min="1800" max="2000" onchange="setUniqueness(this.value)"><span class="range-slider__value">1800</span>
             </div>
@@ -84,12 +116,21 @@
           </label>
         </td>
       </tr>
+      <tr>
+        <td>REMOVE WORDS:</td>
+        <td>
+          <label class="switch">
+            <input id="remove-word" type="checkbox"/>
+            <span class="slider round"></span>
+          </label>
+        </td>
+      </tr>
     </table>
   </div>
   <div class="stage container-fluid">
   	 <div class="row">
   		<div class="vis no-print">
-        {% for i in range(image_blocks|length) %}
+        {% for i in range(image_text|length) %}
         {% if i > 0 and (image_patches|length) > 0 %}
         <div class="img-block img-patch squeeze" id="{{i}}" data-img-height="{{ image_patches[i-1]['height'] }}" data-map-height="{{ image_patches[i-1]['map_height'] }}" style="width:{{ image_patches[i-1]['width'] }}px;height:0px;">
           <img src="data:image/png;base64,{{ image_patches[i-1]['src'] }}"/>
@@ -98,15 +139,9 @@
           <div class="uniqueness-chart"></div>
         </div>
         {% endif %}
-        <div class="img-block" id="{{i}}" style="height:{{ image_dim[i]['height'] }}px;">
-          {% set x = {'width':0} %}          
-          {% for y in range(image_blocks[i]|length) %}
-          {% if y > 0 %}
-          <img class="img-text" src="data:image/png;base64,{{image_text[i][y-1]['src']}}"/>
-          {% if x.update({'width': x.width+image_text[i][y-1]['width']}) %} {% endif %}
-          {% endif %}
-          <img class="img-space" src="data:image/png;base64,{{image_blocks[i][y]['src']}}"/>
-          {% if x.update({'width': x.width+image_blocks[i][y]['width']}) %} {% endif %}
+        <div class="img-block" id="{{i}}" style="height:{{ image_dim[i]['height'] }}px;background-image: url('data:image/png;base64,{{ image_patches[i-1]['src'] }}');">
+          {% for y in range(image_text[i]|length) %}
+          <span class="text-box"><div style="width:{{image_text[i][y]['width']}}px;" class="custom-text text-center"></div><img id="text-{{i}}-{{y}}" class="img-text" src="data:image/png;base64,{{image_text[i][y]['src']}}"/></span>
           {% endfor %}
           <canvas class="text-confidence"></canvas>
           <canvas class="entity-location"></canvas>
@@ -119,22 +154,22 @@
     <div id="text-options">
       <span id="text-color-select"></span>
       <div style="height:30px;padding-left:40px;">TEXT COLOR</div>
-      <div class="draw-color" style="background:green;" id="green" onclick="textColor(this)"></div>
-      <div class="draw-color" style="background:blue;" id="blue" onclick="textColor(this)"></div>
-      <div class="draw-color" style="background:red;" id="red" onclick="textColor(this)"></div>
-      <div class="draw-color" style="background:yellow;" id="yellow" onclick="textColor(this)"></div>
-      <div class="draw-color" style="background:orange;" id="orange" onclick="textColor(this)"></div>
+      <div class="draw-color" style="background:#D93240;" id="#D93240" onclick="textColor(this)"></div>
+      <div class="draw-color" style="background:#638CA6;" id="#638CA6" onclick="textColor(this)"></div>
+      <div class="draw-color" style="background:#BFD4D9;" id="#BFD4D9" onclick="textColor(this)"></div>
+      <div class="draw-color" style="background:#0F5959;" id="#0F5959" onclick="textColor(this)"></div>
+      <div class="draw-color" style="background:#17A697;" id="#17A697" onclick="textColor(this)"></div>
       <div class="draw-color" style="background:black;" id="black" onclick="textColor(this)"></div>
       <div class="draw-color" style="background:white;" id="white" onclick="textColor(this)"></div>
     </div>
     <div id="draw-options">
       <span id="draw-color-select"></span>
       <div style="height:30px;padding-left:40px;">PEN COLOR</div>
-      <div class="draw-color" style="background:green;" id="green" onclick="color(this)"></div>
-      <div class="draw-color" style="background:blue;" id="blue" onclick="color(this)"></div>
-      <div class="draw-color" style="background:red;" id="red" onclick="color(this)"></div>
-      <div class="draw-color" style="background:yellow;" id="yellow" onclick="color(this)"></div>
-      <div class="draw-color" style="background:orange;" id="orange" onclick="color(this)"></div>
+      <div class="draw-color" style="background:#D93240;" id="#D93240" onclick="color(this)"></div>
+      <div class="draw-color" style="background:#638CA6;" id="#638CA6" onclick="color(this)"></div>
+      <div class="draw-color" style="background:#BFD4D9;" id="#BFD4D9" onclick="color(this)"></div>
+      <div class="draw-color" style="background:#0F5959;" id="#0F5959" onclick="color(this)"></div>
+      <div class="draw-color" style="background:#17A697;" id="#17A697" onclick="color(this)"></div>
       <div class="draw-color" style="background:black;" id="black" onclick="color(this)"></div>
       <div class="draw-color" style="background:white;" id="white" onclick="color(this)"></div>
       <br/>

@@ -8,11 +8,12 @@ x = "black",
 y = 2,
 map_height = 150,
 drawing = false,
+removing = false,
 haslistener=false;
 
 $(document).ready(function() {
     $(".img-block:not(.img-patch)").on("click", function() {
-        if(drawing) return;
+        if(drawing || removing) return;
 
         var i = parseInt($(this).attr("id"));
         if(i == 0) {
@@ -20,6 +21,7 @@ $(document).ready(function() {
         }
         toggleSpace($("#"+i.toString()+".img-patch"))
     });
+    injectMetaData();
 
     drawConfidence();
     $("canvas.text-confidence").hide();
@@ -48,21 +50,21 @@ $(document).ready(function() {
         var slider = $('.range-slider'),
             range = $('.range-slider__range'),
             value = $('.range-slider__value');
-          
+            
         slider.each(function(){
-      
-          value.each(function(){
+        
+            value.each(function(){
             var value = $(this).prev().attr('value');
             $(this).html(value);
-          });
-      
-          range.on('input', function(){
+            });
+        
+            range.on('input', function(){
             $(this).next(value).html(this.value);
-          });
+            });
         });
-      };
+    };
       
-      rangeSlider();
+    rangeSlider();
 
     drawNGramUsage();
     $("canvas.ngram-usage").hide();
@@ -89,6 +91,9 @@ $(document).ready(function() {
 
     $("#draw-tool").on("click", function() {
         if($(this).is(":checked")) {
+            if($("#remove-word").is(":checked")) {
+                $("#remove-word").click();
+            }
             drawing = true;
             $("canvas#draw-board").removeClass("overlay");
             $("#draw-options").show();
@@ -129,7 +134,135 @@ $(document).ready(function() {
             });
         }
     });
-}); 
+
+    $("#remove-word").on("click", function() {
+        if($(this).is(":checked")) {
+            if( $("#draw-tool").is(":checked") ) {
+                $("#draw-tool").click();
+            }
+            closeSpaces();
+            removing = true;
+        } else {
+            removing = false;
+        }
+    });
+
+    $(".img-block:not(.img-patch) img").on("click", function() {
+        if(drawing || !removing) return;
+        if(removing) {
+            var text_id = $(this).attr("id");
+            $("#img-text-id").val(text_id);
+            var edit_text = $(".custom-text", $("#"+text_id).parent()).html();
+            $("#edit-text").val(edit_text);
+            updateSampleText();
+            $("#sample-text-box").height($(this).height());
+            $("#sample-text-box").width($(this).width());
+            $("#text-edit").modal("show");
+            if($(this).css("opacity") > 0) {
+                $("#text-visibility").html("Hide Text");
+            } else {
+                $("#text-visibility").html("Show Text");
+            }
+        }
+    });
+
+    $("#edit-text").on("input", function() {
+        updateSampleText();
+    });
+});
+
+function replacePronouns(on) {
+    var himher = "him";
+    var heshe = "he";
+    var hishers = "his";
+    var new_himher = "her";
+    var new_heshe = "she";
+    var new_hishers = "hers";
+    if(!on) {
+        himher = "her";
+        heshe = "she";
+        hishers = "hers";
+        new_himher = "he";
+        new_heshe = "he";
+        new_hishers = "his";
+    }
+    var $blocks = $(".img-text:data(ocr)").filter(function() {
+        return $(this).data("ocr") == himher
+            || $(this).data("ocr") == new_himher
+            || $(this).data("ocr") == heshe
+            || $(this).data("ocr") == new_heshe
+            || $(this).data("ocr") == hishers
+            || $(this).data("ocr") == new_hishers;
+    });
+
+    for(var i=0; i<$blocks.length; i++) {
+        $("#img-text-id").val($blocks[i].attr("id"));
+        var old_text = $blocks[i].data("ocr");
+        var new_text = "";
+        switch(old_text) {
+            case himher:
+                new_text = new_himher;
+                break;
+            case heshe:
+                new_text = new_heshe;
+                break;
+            case hishers:
+                new_text = new_hishers;
+                break;
+            case new_himher:
+                new_text = himher;
+                break;
+            case new_heshe:
+                new_text = heshe;
+                break;
+            case new_hishers:
+                new_text = hishers;
+                break;
+        }
+        $("#edit-text").val(new_text);
+        saveText();
+    }
+}
+
+function injectMetaData() {
+    for(var i=0; i<word_blocks.length; i++) {
+        for(var y=0; i<word_blocks[i].length; i++) {
+            var text = word_blocks[i][y]["text"];
+            var idx_block = word_blocks[i][y]["idx_block"];
+            var idx_word = word_blocks[i][y]["idx_word"];
+            var text_id = "text-" + idx_block.toString() + "-" + idx_word.toString();
+            $("#" + text_id).attr("data-ocr", text);
+        }
+    }
+}
+
+function updateSampleText() {
+    var text = $("#edit-text").val();
+    $("#sample-text-box").html(text);
+}
+
+function saveText() {
+    var text = $("#edit-text").val();    
+    var text_id = $("#img-text-id").val();
+    $(".custom-text", $("#"+text_id).parent()).html(text);
+    $("#"+text_id).css("opacity", 0);
+    $("#text-visibility").html("Show Text");
+}
+
+function toggleTextVisibility() {
+    var text_id = $("#img-text-id").val();
+    var $elem = $("#" + text_id);
+    if($elem.css("opacity") > 0) {
+        $elem.css("opacity",0);
+        $("#text-visibility").html("Show Text");        
+    } else {
+        $elem.css("opacity",1);
+        $("#text-visibility").html("Hide Text");     
+        $(".custom-text", $("#"+text_id).parent()).html("");   
+        $("#edit-text").val("");
+        updateSampleText();
+    }
+}
 
 function toggleSpace($elem) {
     if($elem.hasClass("squeeze")) {
@@ -148,7 +281,7 @@ function toggleSpace($elem) {
 }
 
 function openSpaces() {
-    if(drawing) return;
+    if(drawing || removing) return;
     $(".img-patch").removeClass("squeeze");
     $(".img-patch").each(function() {
         space_height = $(this).data("img-height");
@@ -162,25 +295,30 @@ function openSpaces() {
 }
 
 function closeSpaces() {
-    if(drawing) return;    
+    if(drawing || removing) return;    
     $(".img-patch").height(0);
     $(".img-patch").addClass("squeeze");    
 }
 
 function drawUniqueness() {
+    var min_width = 9999;
     $(".img-block.img-patch").each(function(idx_curr) {
         var idx = idx_curr+1;
         var $chart = $("div.uniqueness-chart", this);
         for(var i=0; i<ngram_plot.length; i++) {
             if(ngram_plot[i]["idx_block"] == idx) {
                 var idx_word = ngram_plot[i]["idx_word"];
-                width = word_blocks[idx][idx_word]["width"].toString();
-                left = word_blocks[idx][idx_word]["x"].toString();
+                var width = word_blocks[idx][idx_word]["width"].toString();
+                var left = word_blocks[idx][idx_word]["x"].toString();
+                if(width<min_width) {
+                    min_width = width;
+                }
                 $chart.append("<span id='unique-" + idx.toString() + "-" + idx_word.toString()
                     + "' style='height:0px;bottom:0px;left:" + left + "px;width:" + width + "px;'></span>");
             }
         }
     });
+    $(".img-block.img-patch div.uniqueness-chart span").width(min_width);
 }
 
 function argsort(to_sort) {
@@ -208,11 +346,21 @@ function setUniqueness(dateval) {
 
     for(var rank=0; rank<usage_list.length; rank++) {
         var i = usage_list.sort_indices[rank];
+        var norm_rank = rank;
+        if (rank > 0) {
+            var last_rank = rank-1;
+            var last_idx = usage_list.sort_indices[last_rank];
+            while(ngram_plot[i]["usage"][idx_date] == ngram_plot[last_idx]["usage"][idx_date] && last_rank > 0) {
+                last_rank--;
+                last_idx = usage_list.sort_indices[last_rank];
+            }
+            norm_rank = last_rank;
+        }
         var idx_block = ngram_plot[i]["idx_block"];
         var idx_word = ngram_plot[i]["idx_word"];
         var id = "unique-" + idx_block.toString() + "-" + idx_word.toString();
         var patch_height = $("#"+id).closest("div.img-patch").data("img-height");
-        var new_height = (patch_height/usage_list.length) * rank;
+        var new_height = (patch_height/usage_list.length) * norm_rank;
         if(new_height == 0) { new_height = 1; }
         $("#"+id).height(new_height);
     }
@@ -316,26 +464,27 @@ function init() {
 function textColor(obj) {
     $("#text-color-select").css("background-color", obj.id);
     $(".img-patch-text").css("color", obj.id);
+    $(".custom-text").css("color", obj.id);
 }
 
 function color(obj) {
     $("#draw-color-select").css("background-color", obj.id);
 
     switch (obj.id) {
-        case "green":
-            x = "green";
+        case "#D93240":
+            x = "#D93240";
             break;
-        case "blue":
-            x = "blue";
+        case "#638CA6":
+            x = "#638CA6";
             break;
-        case "red":
-            x = "red";
+        case "#BFD4D9":
+            x = "#BFD4D9";
             break;
-        case "yellow":
-            x = "yellow";
+        case "#0F5959":
+            x = "#0F5959";
             break;
-        case "orange":
-            x = "orange";
+        case "#17A697":
+            x = "#17A697";
             break;
         case "black":
             x = "black";

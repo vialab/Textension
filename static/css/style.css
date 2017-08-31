@@ -150,7 +150,7 @@ input:checked + .slider:before {
 
 .vis .img-block img {
     height: 100%;
-    z-index: -1;
+    z-index: 0;
 }
 
 .vis .img-block:not(.img-patch) img {
@@ -253,6 +253,21 @@ canvas.entity-location, canvas.ngram-usage {
     height: 0px;
     overflow: visible;
     pointer-events: none;
+}
+
+#sample-text-box {
+    border: 1px dashed black;
+    margin: 0 auto;
+}
+
+.text-box {
+    position: relative;
+}
+
+.custom-text { 
+    position: absolute;
+    left: 0;
+    white-space:nowrap;
 }
 
 @media print {

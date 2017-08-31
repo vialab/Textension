@@ -98,7 +98,7 @@ class InlineViz:
             query_set.append(ngram)
             query = query + ngram["text"] + ","
             # send request every 15 words due to google restraints
-            if (idx % 15) == 0 or (idx+1) == len(self.ngram_data):
+            if (idx % 10) == 0 or (idx+1) == len(self.ngram_data):
                 query = query.rstrip(",")
                 url, url_req, df = ng.getNgrams(query, "eng_2012", start_date, end_date, 3, False)
                 # get y values for each dataset
@@ -250,8 +250,8 @@ class InlineViz:
 
             img_patch = self.createNewPatch(img, y_start, y_end, True)
             img_patch = self.getImageDict(self.smoothImage(img_patch))
-            if idx < len(self.img_chops):
-                if self.img_chops[idx+1][0]["has_map"]:
+            if idx < len(self.img_text):
+                if "has_map" in self.img_text[idx+1][0]:
                     img_patch["map_height"] = self.map_height
             self.img_patches.append(img_patch)
 
@@ -416,7 +416,6 @@ class InlineViz:
          does not include text for injection protection """
         img = image.convert("RGB")
         word_boxes = []
-        bounding_boxes = []
         img_crops = []
         has_map = False
         img_bw = self.binarizeSharpenImage(image)
@@ -427,26 +426,37 @@ class InlineViz:
             for i, (im, box, _, _) in enumerate(boxes):
                 api.SetRectangle(box["x"], box["y"], box["w"], box["h"])
                 text = api.GetUTF8Text()
+                # crop the image block for display
+                x_start = box["x"]-self.line_buffer                
+                if i == 0:
+                    x_start = 0
+                    
+                if i == len(boxes)-1:
+                    x_end = img.size[0]
+                else:
+                    x_end = boxes[i+1][1]["x"]-self.line_buffer
+
+                if x_end < x_start:
+                    # ran into overlapping boxes problems so include rest of image in crop and break
+                    x_end = img.size[0]
+                    img_dict = self.getImageDict(img.crop((x_start, 0, x_end, img.size[1])))
+                    img_crops.append(img_dict)
+                    break
+
+                img_dict = self.getImageDict(img.crop((x_start, 0, x_end, img.size[1])))
+                img_crops.append(img_dict)
+
                 if text.strip() == u"":
                     continue
+
+                # if we have text to analyze, run entity recognition
                 entities = self.nlp(text)
                 conf = api.MeanTextConf()
                 label = ""
                 if len(entities.ents) > 0:
                     label = entities.ents[-1].label_
 
-                x_start = box['x']-self.line_buffer
-                x_end = box['x'] + box['w'] + self.line_buffer
-                img_dict = self.getImageDict(img.crop((x_start, 0, x_end, img.size[1])))
-                img_crops.append(img_dict)
-                word = { "x":box["x"]
-                    , "y":box["y"]
-                    , "width":box["w"]
-                    , "height":box["h"]
-                    , "confidence":conf 
-                    , "label": label
-                }
-                
+                # capture other meta info for ngrams
                 ngram = {
                     "idx_block":idx
                     , "idx_word": len(word_boxes)
@@ -454,7 +464,19 @@ class InlineViz:
                     , "text":text.strip()
                 }
                 self.ngram_data.append(ngram)
-                    
+                
+                # capture word meta info
+                word = { 
+                    "idx_block":idx
+                    , "idx_word": len(word_boxes)
+                    , "x":box["x"]
+                    , "y":box["y"]
+                    , "width":box["w"]
+                    , "height":box["h"]
+                    , "confidence":conf 
+                    , "label": label
+                    , "text": text.strip()
+                }
                 if label == "GPE":
                     map_width = self.bounding_boxes[idx]["w"]
                     img_map = gm.getMap(text, map_width, self.map_height)
@@ -462,13 +484,9 @@ class InlineViz:
                         word["map"] = self.encodeBase64(img_map)
                         word["map_x"] = self.bounding_boxes[idx]["x"]
                         has_map = True
-
-                bounding_boxes.append(box)
                 word_boxes.append(word)
-
-            self.img_text.append(img_crops)
-
-        return word_boxes, bounding_boxes, has_map
+        
+        return img_crops, word_boxes, has_map
 
     def chopImageBlockSpace(self, boxes, img):
         """ Crop word spaces in each line """
@@ -491,25 +509,23 @@ class InlineViz:
         if x_start < x_end:
             img_dict = self.getImageDict(img.crop((x_start, 0, x_end, height)))
             img_chop.append(img_dict)
-                
         return img_chop
 
     def getWordBlocks(self):
         """ Get bounding boxes for single words in a line """
         for idx, img_dict in enumerate(self.img_blocks):
             img = img_dict["img"]
-            word_block, boxes, has_map = self.getWordInfo(idx, img)
-            if idx == 0 and self.has_header:
-                chop = self.getImageDict(img)
-                chop["has_map"] = has_map
-                self.img_chops.append([chop,])
-            else:
-                chops = self.chopImageBlockSpace(boxes, img)
-                for chop in chops:
-                    chop["has_map"] = has_map
-                self.img_chops.append(chops)
+            img_crops, word_block, has_map = self.getWordInfo(idx, img)
+            if has_map:
+                for crop in img_crops:
+                    crop["has_map"] = True
+            if len(img_crops) == 0:
+                # if we have no bounding boxes detected (i.e. no images)
+                # use original image
+                img_crops.append(img_dict)
             self.chop_dimension.append({"width":img.size[0],"height":img.size[1]})
             self.word_blocks.append(word_block)
+            self.img_text.append(img_crops)
 
     def getImageDict(self, image):
         img_dict = { "img":image

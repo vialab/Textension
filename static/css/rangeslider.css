@@ -4,13 +4,14 @@
   
   .range-slider__range {
     -webkit-appearance: none;
-    width: calc(100% - (73px));
+    width: calc(100% - (73px)) !important;
     height: 10px;
     border-radius: 5px;
     background: #d7dcdf;
     outline: none;
     padding: 0;
     margin: 0;
+    display: inline-block !important;
   }
   .range-slider__range::-webkit-slider-thumb {
     -webkit-appearance: none;

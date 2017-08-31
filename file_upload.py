@@ -67,11 +67,11 @@ def interact(page_no=0):
     image_text = []
     image_patches = []
 
-    for block in session["viz"][page_no].img_chops:
-        image_block = []
-        for chop in block:
-            image_block.append(dict((i,chop[i]) for i in chop if i!="img"))
-        image_blocks.append(image_block)
+    # for block in session["viz"][page_no].img_chops:
+    #     image_block = []
+    #     for chop in block:
+    #         image_block.append(dict((i,chop[i]) for i in chop if i!="img"))
+    #     image_blocks.append(image_block)
     
     for block in session["viz"][page_no].img_text:
         image_block = []
