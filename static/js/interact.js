@@ -209,6 +209,14 @@ $(document).ready(function() {
     });
 });
 
+function openNav() {
+    $(".tool-box").width(282);
+}
+
+function closeNav() {
+    $(".tool-box").width(0);
+}
+
 function fixPronouns() {
     var $blocks = $(".img-text[data-ocr]").filter(function() {
         return $(this).data("ocr") == "him"

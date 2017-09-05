@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="./static/lib/dropzone/dropzone.css">
   <link rel="stylesheet" href="./static/lib/dropzone/style.css">
   <link rel="stylesheet" type="text/css" href="./static/lib/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="./static/css/style.css">
 
 
 
@@ -141,118 +142,145 @@
       height: 470px;
       border: 2px dashed red;
     }
+
+    #app-content {
+      width: 60%;
+      margin: 50px 0 0 150px;
+    }
+
+
   </style>
 </head>
 
 <body>
   <div class="container-fluid">
-  	<div class="row">     
-      <div class="col-md-6 text-center">
-        <table>
-          <thead>
-            <tr>
-              <th>Advanced Settings</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Spread</td>
-              <td><input id="option-spread" type="number" class="form-control" form="demo-upload" value="{{ session['options']['spread'] }}"/></td>
-            </tr>
-            <tr>
-              <td>Hi-Res</td>
-              <td>
-                {% if session['options']['hires']==True %}
-                  <input id="option-hires" type="checkbox" form="demo-upload" checked/>
-                {% else %}
-                  <input id="option-hires" type="checkbox" form="demo-upload"/>                        
-                {% endif %}
-              </td>
-            </tr>
-            <tr>
-              <td>Anti-Aliasing</td>
-              <td>
-                {% if session['options']['antialias']==True %}
-                  <input id="option-antialias" type="checkbox" form="demo-upload" checked/>
-                {% else %}
-                  <input id="option-antialias" type="checkbox" form="demo-upload"/>                        
-                {% endif %}
-              </td>
-            </tr>
-            <tr>
-              <td>Translate</td>
-              <td>
-                {% if session['options']['translate']==True %}
-                  <input id="option-translate" type="checkbox" form="demo-upload" checked/>
-                {% else %}
-                  <input id="option-translate" type="checkbox" form="demo-upload"/>                        
-                {% endif %}
-              </td>
-            </tr>
-            <tr>
-              <td>Blur</td>
-              <td><input id="option-blur" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['blur'] }}"/></td>
-            </tr>
-            <tr>
-              <td>Pixel Cut Width</td>
-              <td><input id="option-cut" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['cut'] }}"/></td>
-            </tr>
-            <tr>
-              <td>Noise Threshold</td>
-              <td><input id="option-noise" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['noise'] }}"/></td>
-            </tr>
-            <tr>
-              <td>Line Buffer</td>
-              <td><input id="option-buffer" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['buffer'] }}"/></td>
-            </tr>
-            <tr>
-              <td>Max Width</td>
-              <td><input id="option-width" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['width'] }}"/></td>
-            </tr>
-            <tr>
-              <td>Max Height</td>
-              <td><input id="option-height" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['height'] }}"/></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="col-md-6">          
-        <div id="dropzone">
-          <form action="/upload" class="dropzone needsclick dz-clickable" id="demo-upload">
-            <div class="dz-message needsclick">
-              Drop files here or click to upload.<br>
+    <div class="tool-box">
+      <a data-toggle="tab" href="#menu-file">File</a>
+      <a data-toggle="tab" href="#menu-camera">Camera</a>
+      <a data-toggle="tab" href="#menu-settings">Settings</a>
+    </div>
+
+    <div id="app-content">      
+      <div class="tab-content">
+
+        <div id="menu-file" class="tab-pane fade in active">
+          <div class="row">
+            <div class="col-md-12 text-center">          
+              <div id="dropzone">
+                <form action="/upload" class="dropzone needsclick dz-clickable" id="demo-upload">
+                  <div class="dz-message needsclick">
+                    Drop files here or click to upload.<br>
+                  </div>
+                </form>
+              </div>
             </div>
-          </form>
-        </div>
-      </div>
-  	</div>
-    <br/>
-    <br/>
-    <div class="row">
-      <div class="col-md-12 text-center vertical-center">
-        <div class="camera">
-          <div id="camera-overlay">
-            <div id="camera-frame">This is where you want the book to be.</div>
           </div>
-          <video id="video">Video stream not available.</video>
         </div>
-      </div>
-    </div>
 
-    <div class="row">
-      <div class="col-md-12 text-center">
-          <button id="startbutton"><span class="glyphicon glyphicon-picture"></span>Take a picture</button>
-      </div>
-    </div>
 
-    <div class="row">
-      <div class="col-md-12 text-center vertical-center">
-        <div class="output">
-          <img id="photo" alt="The screen capture will appear in this box.">
+        <div id="menu-camera" class="tab-pane fade">
+          <div class="row">
+            <div class="col-md-12 text-center vertical-center">
+              <div class="camera">
+                <div id="camera-overlay">
+                  <div id="camera-frame">This is where you want the book to be.</div>
+                </div>
+                <video id="video">Video stream not available.</video>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12 text-center">
+              <button id="startbutton"><span class="glyphicon glyphicon-picture"></span>Take a picture</button>
+            </div>
+          </div>
+        
+          <div class="row">
+            <div class="col-md-12 text-center vertical-center">
+              <div class="output">
+                <img id="photo" alt="The screen capture will appear in this box.">
+              </div>
+            </div>
+            <div class="col=md-12">
+              <canvas id="canvas"></canvas>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="col=md-12">
-        <canvas id="canvas"></canvas>
+
+
+        <div id="menu-settings" class="tab-pane fade">          
+          <div class="row">     
+            <div class="col-md-12 text-center">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Settings</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Spread</td>
+                    <td><input id="option-spread" type="number" class="form-control" form="demo-upload" value="{{ session['options']['spread'] }}"/></td>
+                  </tr>
+                  <tr>
+                    <td>Hi-Res</td>
+                    <td>
+                      {% if session['options']['hires']==True %}
+                        <input id="option-hires" type="checkbox" form="demo-upload" checked/>
+                      {% else %}
+                        <input id="option-hires" type="checkbox" form="demo-upload"/>                        
+                      {% endif %}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Anti-Aliasing</td>
+                    <td>
+                      {% if session['options']['antialias']==True %}
+                        <input id="option-antialias" type="checkbox" form="demo-upload" checked/>
+                      {% else %}
+                        <input id="option-antialias" type="checkbox" form="demo-upload"/>                        
+                      {% endif %}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Translate</td>
+                    <td>
+                      {% if session['options']['translate']==True %}
+                        <input id="option-translate" type="checkbox" form="demo-upload" checked/>
+                      {% else %}
+                        <input id="option-translate" type="checkbox" form="demo-upload"/>                        
+                      {% endif %}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Blur</td>
+                    <td><input id="option-blur" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['blur'] }}"/></td>
+                  </tr>
+                  <tr>
+                    <td>Pixel Cut Width</td>
+                    <td><input id="option-cut" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['cut'] }}"/></td>
+                  </tr>
+                  <tr>
+                    <td>Noise Threshold</td>
+                    <td><input id="option-noise" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['noise'] }}"/></td>
+                  </tr>
+                  <tr>
+                    <td>Line Buffer</td>
+                    <td><input id="option-buffer" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['buffer'] }}"/></td>
+                  </tr>
+                  <tr>
+                    <td>Max Width</td>
+                    <td><input id="option-width" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['width'] }}"/></td>
+                  </tr>
+                  <tr>
+                    <td>Max Height</td>
+                    <td><input id="option-height" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['height'] }}"/></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
