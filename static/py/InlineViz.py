@@ -57,6 +57,7 @@ class InlineViz:
         self.anti_alias = _anti_alias # color sampling for anti-aliasing of artifacts
         self.map_height = _map_height # height of maps for insertion
         self.blur = _blur # intensity of median blurring for patches
+        self.binarize = False # toggle binarization for pre-processing tesseract input
 
     def decompose(self):
         """ Use OCR to find bounding boxes of each line in document and dissect 
@@ -424,8 +425,6 @@ class InlineViz:
             api.SetImage(img_bw)
             boxes = api.GetComponentImages(RIL.WORD, True)
             for i, (im, box, _, _) in enumerate(boxes):
-                api.SetRectangle(box["x"], box["y"], box["w"], box["h"])
-                text = api.GetUTF8Text()
                 # crop the image block for display
                 x_start = box["x"]-self.line_buffer                
                 if i == 0:
@@ -443,6 +442,8 @@ class InlineViz:
                     img_crops.append(img_dict)
                     break
 
+                api.SetRectangle(x_start, box["y"], (x_end-x_start), box["h"])
+                text = api.GetUTF8Text()
                 img_dict = self.getImageDict(img.crop((x_start, 0, x_end, img.size[1])))
                 img_crops.append(img_dict)
 
@@ -468,7 +469,7 @@ class InlineViz:
                 # capture word meta info
                 word = { 
                     "idx_block":idx
-                    , "idx_word": len(word_boxes)
+                    , "word_pos": i
                     , "x":box["x"]
                     , "y":box["y"]
                     , "width":box["w"]
@@ -613,6 +614,8 @@ class InlineViz:
 
     def binarizeSharpenImage(self, image):
         """ Prepare image for OCR by converting to grayscale, sharpening, and then binarizing """
+        if not self.binarize:
+            return image.convert("RGB")
         # Read as gray scale
         img_array = np.asarray(image)
         img_gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)

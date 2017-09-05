@@ -11,7 +11,7 @@ drawing = false,
 removing = false,
 haslistener=false;
 
-$(document).ready(function() {
+$(document).ready(function() {   
     $(".img-block:not(.img-patch)").on("click", function() {
         if(drawing || removing) return;
 
@@ -50,7 +50,6 @@ $(document).ready(function() {
         var slider = $('.range-slider'),
             range = $('.range-slider__range'),
             value = $('.range-slider__value');
-            
         slider.each(function(){
         
             value.each(function(){
@@ -147,6 +146,43 @@ $(document).ready(function() {
         }
     });
 
+    $("#replace-pronoun").on("click", function() {
+        if($(this).is(":checked")) {
+            $(".gender-pronoun").show();
+        } else {
+            fixPronouns();
+            if($("#male-pronoun").is("checked")) {
+                $("#male-pronoun").click();
+            }
+            if($("#female-pronoun").is("checked")) {
+                $("#female-pronoun").click();
+            }
+            $(".gender-pronoun").hide();
+        }
+    });
+
+    $("#male-pronoun").on("click", function() {
+        if($(this).is(":checked")) {
+            if($("#female-pronoun").is("checked")) {
+                $("#female-pronoun").click();
+            }
+            replacePronouns(false);
+        } else {
+            fixPronouns();
+        }
+    });
+
+    $("#female-pronoun").on("click", function() {
+        if($(this).is(":checked")) {
+            if($("#male-pronoun").is("checked")) {
+                $("#male-pronoun").click();
+            }
+            replacePronouns(true);
+        } else {
+            fixPronouns();
+        }
+    });
+
     $(".img-block:not(.img-patch) img").on("click", function() {
         if(drawing || !removing) return;
         if(removing) {
@@ -155,6 +191,8 @@ $(document).ready(function() {
             var edit_text = $(".custom-text", $("#"+text_id).parent()).html();
             $("#edit-text").val(edit_text);
             updateSampleText();
+            $("#edit-text").height($(this).height());
+            $("#edit-text").width($(this).width());
             $("#sample-text-box").height($(this).height());
             $("#sample-text-box").width($(this).width());
             $("#text-edit").modal("show");
@@ -171,33 +209,49 @@ $(document).ready(function() {
     });
 });
 
+function fixPronouns() {
+    var $blocks = $(".img-text[data-ocr]").filter(function() {
+        return $(this).data("ocr") == "him"
+            || $(this).data("ocr") == "her"
+            || $(this).data("ocr") == "he"
+            || $(this).data("ocr") == "she"
+            || $(this).data("ocr") == "his"
+            || $(this).data("ocr") == "hers";
+    });
+    for(var i = 0; i < $blocks.length; i++) {
+        var $elem = $($blocks[i]);
+        var text_id = $elem.attr("id");
+        if($elem.css("opacity") < 1) {
+            $elem.css("opacity",1);
+            $(".custom-text", $("#"+text_id).parent()).html("");
+        }
+    }
+}
+
 function replacePronouns(on) {
-    var himher = "him";
+    var himher = "his/him";
     var heshe = "he";
     var hishers = "his";
     var new_himher = "her";
     var new_heshe = "she";
-    var new_hishers = "hers";
+    var new_hishers = "her(s)";
     if(!on) {
         himher = "her";
         heshe = "she";
         hishers = "hers";
-        new_himher = "he";
+        new_himher = "his/him";
         new_heshe = "he";
         new_hishers = "his";
     }
-    var $blocks = $(".img-text:data(ocr)").filter(function() {
+    var $blocks = $(".img-text[data-ocr]").filter(function() {
         return $(this).data("ocr") == himher
-            || $(this).data("ocr") == new_himher
             || $(this).data("ocr") == heshe
-            || $(this).data("ocr") == new_heshe
-            || $(this).data("ocr") == hishers
-            || $(this).data("ocr") == new_hishers;
+            || $(this).data("ocr") == hishers;
     });
 
     for(var i=0; i<$blocks.length; i++) {
-        $("#img-text-id").val($blocks[i].attr("id"));
-        var old_text = $blocks[i].data("ocr");
+        $("#img-text-id").val($($blocks[i]).attr("id"));
+        var old_text = $($blocks[i]).data("ocr");
         var new_text = "";
         switch(old_text) {
             case himher:
@@ -209,15 +263,6 @@ function replacePronouns(on) {
             case hishers:
                 new_text = new_hishers;
                 break;
-            case new_himher:
-                new_text = himher;
-                break;
-            case new_heshe:
-                new_text = heshe;
-                break;
-            case new_hishers:
-                new_text = hishers;
-                break;
         }
         $("#edit-text").val(new_text);
         saveText();
@@ -226,11 +271,11 @@ function replacePronouns(on) {
 
 function injectMetaData() {
     for(var i=0; i<word_blocks.length; i++) {
-        for(var y=0; i<word_blocks[i].length; i++) {
+        for(var y=0; y<word_blocks[i].length; y++) {
             var text = word_blocks[i][y]["text"];
             var idx_block = word_blocks[i][y]["idx_block"];
-            var idx_word = word_blocks[i][y]["idx_word"];
-            var text_id = "text-" + idx_block.toString() + "-" + idx_word.toString();
+            var word_pos = word_blocks[i][y]["word_pos"];
+            var text_id = "text-" + idx_block.toString() + "-" + word_pos.toString();
             $("#" + text_id).attr("data-ocr", text);
         }
     }

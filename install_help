@@ -1,0 +1,17 @@
+flask
+numpy
+scikit-learn
+scipy
+spacy (model en)
+pypdf2
+pdfminer
+wand
+image
+google-api-python-client
+matplotlib
+opencv-python
+pandas
+pyocr
+textstat
+
+sudo apt-get install build-essential python-dev python-tk tesseract-ocr libtesseract-dev libleptonica-dev
