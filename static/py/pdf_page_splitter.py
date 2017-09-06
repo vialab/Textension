@@ -28,5 +28,5 @@ def pdfSplitPageStream(file_stream):
         img_blob = img.make_blob(format="jpeg")
         img_bytes = BytesIO(img_blob)
         pdf_pages.append(img_bytes)
-    
+        
     return pdf_pages

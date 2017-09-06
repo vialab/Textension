@@ -33,102 +33,103 @@
     </div>
   </div>
   <span id="tool-box-toggle" onclick="openNav()">☰</span>
-  <div class="tool-box no-print" style="width:0px;">
+  <div class="tool-box no-print" style="width:auto;">
     <a href="/">Home</a>
     <a href="javascript:void(0)" class="close-btn" onclick="closeNav()">&times;</a>
     <a href="#" onclick="javasript:openSpaces();">Open Spaces</a>
     <a href="#" onclick="javasript:closeSpaces();">Close Spaces</a>
+    <a href="#" onclick="print();">Print</a>    
+    <br/>
+    <label class="switch">
+      <input id="location" type="checkbox"/>
+      <span class="check-btn">
+        <table>
+          <tr><td><i class="fa fa-map-marker" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
+          <tr><td>Locations</td></tr>
+        </table>
+      </span>
+    </label>
+    <label class="switch">
+      <input id="confidence" type="checkbox"/>
+      <span class="check-btn"><table>
+          <tr><td><i class="fa fa-thumbs-up" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
+          <tr><td>OCR Confidence</td></tr>
+        </table>
+      </span>
+    </label>
+    <br/>
+    <label class="switch">
+      <input id="ngram" type="checkbox"/>
+      <span class="check-btn">
+          <table>
+            <tr><td><i class="fa fa-line-chart" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
+            <tr><td>N-Gram Usage</td></tr>
+          </table>
+      </span>
+    </label>
+    <label class="switch">
+      <input id="uniqueness" type="checkbox"/>
+      <span class="check-btn">
+          <table>
+            <tr><td><i class="fa fa-bar-chart" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
+            <tr><td>Uniqueness</td></tr>
+          </table>
+      </span>
+    </label>
+    <div class="range-slider" id="uniqueness-range" style="display:none;">
+      <input class="range-slider__range" type="range" value="1800" min="1800" max="2000" onchange="setUniqueness(this.value)"><span class="range-slider__value">1800</span>
+    </div>
+    <br/>
+    <label class="switch">
+      <input id="draw-tool" type="checkbox"/>
+      <span class="check-btn">
+          <table>
+            <tr><td><i class="fa fa-pencil" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
+            <tr><td>Draw Mode</td></tr>
+          </table>
+      </span>
+    </label>
+    <label class="switch">
+      <input id="remove-word" type="checkbox"/>
+      <span class="check-btn">
+          <table>
+            <tr><td><i class="fa fa-eraser" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
+            <tr><td>Remove Words</td></tr>
+          </table>
+      </span>
+    </label>
+    <br/>
+    <label class="switch">
+      <input id="ocr-text" type="checkbox"/>
+      <span class="check-btn">
+          <table>
+            <tr><td><i class="fa fa-eye" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
+            <tr><td>OCR</td></tr>
+          </table>
+      </span>
+    </label>
+    <label class="switch">
+      <input id="replace-pronoun" type="checkbox"/>
+      <span class="check-btn">
+          <table>
+            <tr><td><i class="fa fa-transgender" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
+            <tr><td>Swap Pronouns</td></tr>
+          </table>
+      </span>
+    </label>
+    <br/>
+    {% if session["options"]["translate"]==True %}
+    <label class="switch">
+      <input id="translate-text" type="checkbox"/>
+      <span class="check-btn">
+          <table>
+            <tr><td><i class="fa fa-commenting" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
+            <tr><td>Translate</td></tr>
+          </table>
+      </span>
+    </label>  
+    {% endif %}
     <table>
-      <tr>
-        <td>Locations:</td>
-        <td>
-          <label class="switch">
-            <input id="location" type="checkbox"/>
-            <span class="slider round"></span>
-          </label>
-        </td>
-      </tr>
-      <tr>
-        <td>Text Confidence:</td>
-        <td>
-          <label class="switch">
-            <input id="confidence" type="checkbox"/>
-            <span class="slider round"></span>
-          </label>
-        </td>
-      </tr>
-      <tr>
-        <td>N-Gram Usage:</td>
-        <td>
-          <label class="switch">
-            <input id="ngram" type="checkbox"/>
-            <span class="slider round"></span>
-          </label>
-        </td>
-      </tr>
-      <tr>
-        <td>Uniqueness:</td>
-        <td>
-          <label class="switch">
-            <input id="uniqueness" type="checkbox"/>
-            <span class="slider round"></span>
-          </label>
-        </td>
-      </tr>
-      <tr id="uniqueness-range" style="display:none;">
-        <td colspan="2" style="padding: 0 0 15px 0;">YEAR:
-            <div class="range-slider">
-              <input class="range-slider__range" type="range" value="1800" min="1800" max="2000" onchange="setUniqueness(this.value)"><span class="range-slider__value">1800</span>
-            </div>
-        </td>
-      </tr>
-      <tr>
-        <td>OCR:</td>
-        <td>
-          <label class="switch">
-            <input id="ocr-text" type="checkbox"/>
-            <span class="slider round"></span>
-          </label>
-        </td>
-      </tr>
-      {% if session["options"]["translate"]==True %}
-      <tr>
-        <td>Translate:</td>
-        <td>
-          <label class="switch">
-            <input id="translate-text" type="checkbox"/>
-            <span class="slider round"></span>
-          </label>
-        </td>
-      </tr>
-      {% endif %}
-      <tr>
-        <td>Draw Mode:</td>
-        <td>
-          <label class="switch">
-            <input id="draw-tool" type="checkbox"/>
-            <span class="slider round"></span>
-          </label>
-        </td>
-      </tr>
-      <tr>
-        <td>Remove Words:</td>
-        <td>
-          <label class="switch">
-            <input id="remove-word" type="checkbox"/>
-            <span class="slider round"></span>
-          </label>
-        </td>
-      </tr>
-      <tr>
-        <td>Replace Pronouns:</td>
-        <td>
-          <label class="switch">
-            <input id="replace-pronoun" type="checkbox"/>
-            <span class="slider round"></span>
-          </label>
-        </td>
-      </tr>
       <tr class="gender-pronoun" style="display: none;">
         <td>Male:</td>
         <td>
@@ -148,7 +149,6 @@
         </td>
       </tr>
     </table>
-    <a href="#" onclick="print();">Print</a>    
   </div>
   <div class="stage container-fluid">
   	 <div class="row">
@@ -212,4 +212,5 @@
   <script type='text/javascript' src="https://cdn.jsdelivr.net/g/canvas2image@0.1(base64.js+canvas2image.min.js+canvas2image.js)"></script>  
   <script type='text/javascript' src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
   <script src="./static/js/interact.js"></script>
+  <script src="./static/js/linguistic.js"></script>
 {%endblock%}

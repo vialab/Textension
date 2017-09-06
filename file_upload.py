@@ -2,7 +2,7 @@ import sys
 sys.path.append('./static/py')
 import io
 import os
-from flask import Flask, request, redirect, url_for,send_from_directory,render_template,jsonify, send_file, session
+from flask import Flask, request, redirect, url_for,send_from_directory,render_template,jsonify, send_file, session, jsonify
 from werkzeug import secure_filename
 import numpy as np
 from PIL import Image
@@ -56,6 +56,11 @@ def index():
 def return_file():
     return send_file("./file_processing/ocr_document.pdf"
                     , attachment_filename="ocr_document.pdf")
+
+@app.route('/define/<word>')
+def define(word):
+    
+    return jsonify(stuff)
 
 @app.route('/interact')
 @app.route('/interact/<page_no>')

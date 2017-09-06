@@ -11,7 +11,8 @@ drawing = false,
 removing = false,
 haslistener=false;
 
-$(document).ready(function() {   
+$(document).ready(function() {
+    closeNav();
     $(".img-block:not(.img-patch)").on("click", function() {
         if(drawing || removing) return;
 
@@ -210,11 +211,12 @@ $(document).ready(function() {
 });
 
 function openNav() {
-    $(".tool-box").width(282);
+    $(".tool-box").css({"transform":"translateX(0px)"});
 }
 
 function closeNav() {
-    $(".tool-box").width(0);
+    var width = "-" + ($(".tool-box").width()+5).toString() + "px";
+    $(".tool-box").css({"transform":"translateX(" + width + ")"});
 }
 
 function fixPronouns() {
