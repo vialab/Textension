@@ -7,15 +7,22 @@ dot_flag = false,
 x = "black",
 y = 2,
 map_height = 150,
-drawing = false,
-removing = false,
-haslistener=false;
+haslistener=false,
+timeout_id = 0,
+mouse_down = false;
+
+var mode = {
+    "draw": false,
+    "eraser": false,
+    "define": false,
+    "grammar": false,
+    "context": false
+};
 
 $(document).ready(function() {
     closeNav();
     $(".img-block:not(.img-patch)").on("click", function() {
-        if(drawing || removing) return;
-
+        if (getActiveMode() != "") return;
         var i = parseInt($(this).attr("id"));
         if(i == 0) {
             return;
@@ -89,22 +96,85 @@ $(document).ready(function() {
         }
     });
 
+    // ACTIVE TOOLS
     $("#draw-tool").on("click", function() {
         if($(this).is(":checked")) {
-            if($("#remove-word").is(":checked")) {
-                $("#remove-word").click();
-            }
-            drawing = true;
+            setActiveMode("draw");
             $("canvas#draw-board").removeClass("overlay");
             $("#draw-options").show();
             if(!haslistener) init();
         } else {
-            drawing = false;
-            $("canvas#draw-board").addClass("overlay");
-            $("#draw-options").hide();
+            setActiveMode("");
         }
     });
 
+    $("#eraser-tool").on("click", function() {
+        if($(this).is(":checked")) {
+            closeSpaces();
+            setActiveMode("eraser");
+        } else {
+            setActiceMode("");
+        }
+    });
+
+    $("#define-tool").on("click", function() {
+        if($(this).is(":checked")) {
+            setActiveMode("define");
+        } else {
+            setActiveMode("");            
+        }
+    });
+
+    $("#grammar-tool").on("click", function() {
+        if($(this).is(":checked")) {
+            setActiveMode("grammar");
+        } else {
+            setActiveMode("");            
+        }
+    });
+
+    $(".img-block:not(.img-patch) img").on("click", function() {
+        switch(getActiveMode()) {
+            case "eraser":
+                eraseWord($(this));
+                break;
+            case "grammar":
+            case "draw":
+            default:
+                return;
+        }
+    });
+    // $("span.text-box").on("hover", function() {
+    //     switch(getActiveMode()) {
+    //         case "define":
+    //             $(this).css("box-shadow", "0px 0px 0px 10px black inset");
+    //             setTimeout(function() {
+    //                 $(this).css("box-shadow", "none");
+    //             }, 500);
+    //             break;
+    //     }
+    // });
+
+    $(".img-block:not(.img-patch) img").on("mousedown", function() {
+        switch(getActiveMode()) {
+            case "define":
+                mouse_down = true;
+                timeout_id = setTimeout(defineWord($(this)), 1000);
+                break;
+        }            
+    }).on("mouseup mouseleave", function() {
+        switch(getActiveMode()) {
+            case "define":
+                mouse_down = false;
+                $(this).popover("hide");
+                clearTimeout(timeout_id);
+                break;
+            default:
+                return;
+        }
+    });
+    // END ACTIVE TOOLS
+    
     $("#translate-text").on("click", function() {
         if($(this).is(":checked")) {
             if( $("#ocr-text").is(":checked") ) {
@@ -132,18 +202,6 @@ $(document).ready(function() {
             $(".img-patch-text").each(function(idx) {
                 $(this).val("");
             });
-        }
-    });
-
-    $("#remove-word").on("click", function() {
-        if($(this).is(":checked")) {
-            if( $("#draw-tool").is(":checked") ) {
-                $("#draw-tool").click();
-            }
-            closeSpaces();
-            removing = true;
-        } else {
-            removing = false;
         }
     });
 
@@ -184,31 +242,76 @@ $(document).ready(function() {
         }
     });
 
-    $(".img-block:not(.img-patch) img").on("click", function() {
-        if(drawing || !removing) return;
-        if(removing) {
-            var text_id = $(this).attr("id");
-            $("#img-text-id").val(text_id);
-            var edit_text = $(".custom-text", $("#"+text_id).parent()).html();
-            $("#edit-text").val(edit_text);
-            updateSampleText();
-            $("#edit-text").height($(this).height());
-            $("#edit-text").width($(this).width());
-            $("#sample-text-box").height($(this).height());
-            $("#sample-text-box").width($(this).width());
-            $("#text-edit").modal("show");
-            if($(this).css("opacity") > 0) {
-                $("#text-visibility").html("Hide Text");
-            } else {
-                $("#text-visibility").html("Show Text");
-            }
-        }
-    });
-
     $("#edit-text").on("input", function() {
         updateSampleText();
     });
 });
+
+function setActiveMode(new_mode) {
+    for(var type in mode) {
+        if(mode.hasOwnProperty(type)) {
+            if (new_mode == type) {
+                mode[type] = true;
+                continue;
+            }
+            if(mode[type]) {
+                mode[type] = false;
+                disableMode(type);
+            }
+        }
+    }
+}
+
+function disableMode(type) {
+    switch(type) {
+        case "draw":
+            $("#draw-tool").click();        
+            $("canvas#draw-board").addClass("overlay");
+            $("#draw-options").hide();
+            break;
+        case "eraser":
+            $("#eraser-tool").click();
+            break;
+        case "define":
+            $("#define-tool").click();
+            break;
+        case "grammar":
+            $("#grammar-tool").click();
+            break;
+        case "context":
+            $("#context-tool").click();
+            break;
+    }
+}
+
+function getActiveMode() {
+    for(var key in mode) {
+        if(mode.hasOwnProperty(key)) {
+            if(mode[key]) {
+                return key;
+            }
+        }
+    }
+    return "";
+}
+
+function eraseWord($elem) {
+    var text_id = $elem.attr("id");
+    $("#img-text-id").val(text_id);
+    var edit_text = $(".custom-text", $("#"+text_id).parent()).html();
+    $("#edit-text").val(edit_text);
+    updateSampleText();
+    $("#edit-text").height($elem.height());
+    $("#edit-text").width($elem.width());
+    $("#sample-text-box").height($elem.height());
+    $("#sample-text-box").width($elem.width());
+    $("#text-edit").modal("show");
+    if($elem.css("opacity") > 0) {
+        $("#text-visibility").html("Hide Text");
+    } else {
+        $("#text-visibility").html("Show Text");
+    }
+}
 
 function openNav() {
     $(".tool-box").css({"transform":"translateX(0px)"});
@@ -336,7 +439,7 @@ function toggleSpace($elem) {
 }
 
 function openSpaces() {
-    if(drawing || removing) return;
+    if(getActiveMode() != "") return;
     $(".img-patch").removeClass("squeeze");
     $(".img-patch").each(function() {
         space_height = $(this).data("img-height");
@@ -350,7 +453,7 @@ function openSpaces() {
 }
 
 function closeSpaces() {
-    if(drawing || removing) return;    
+    if(getActiveMode() != "") return;    
     $(".img-patch").height(0);
     $(".img-patch").addClass("squeeze");    
 }

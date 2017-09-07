@@ -1,11 +1,11 @@
 /* The switch - the box around the slider */
 .switch {
-  position: relative;
-  display: inline-flex;
-  width: 120px;
-  height: 120px;
-  align-items: center;
-  justify-content: center;
+    position: relative;
+    display: inline-flex;
+    width: 120px;
+    height: 120px;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Hide default HTML checkbox */
@@ -13,22 +13,22 @@
 
 /* The slider */
 .check-btn {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  color: rgba(255,255,255,0.4);
-  background-color: rgb(0,75,130);
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  -webkit-transition: .4s;
-  transition: .4s;
-  font-weight: normal;
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    color: rgba(255,255,255,0.4);
+    background-color: rgb(0,75,130);
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-transition: .4s;
+    transition: .4s;
+    font-weight: normal;
 }
 
 .check-btn:hover {
@@ -37,13 +37,13 @@
 }
 
 input:checked + .check-btn {
-  background-color: #1477bd;
-  color: white;
+    background-color: #1477bd;
+    color: white;
 }
 
 input:focus + .check-btn {
-  box-shadow: 0 0 1px #1477bd;
-  color: white;
+    box-shadow: 0 0 1px #1477bd;
+    color: white;
 }
 
 #main-nav {
@@ -134,7 +134,8 @@ input:focus + .check-btn {
 }
 
 .tool-box table tr td:first-child {
-    padding: 5px;    
+    padding: 5px;
+    text-align: center;
 }
 
 .vis {
@@ -206,6 +207,10 @@ input:focus + .check-btn {
 canvas.entity-location, canvas.ngram-usage {
     pointer-events: none;
     z-index: 0;
+}
+
+canvas.text-confidence {
+    pointer-events: none;
 }
 
 .img-patch {
@@ -281,6 +286,14 @@ canvas.entity-location, canvas.ngram-usage {
     position: absolute;
     left: 0;
     white-space:nowrap;
+}
+
+.popover {
+    width: 250px;
+}
+
+.popover ol {
+    padding: 10px;
 }
 
 @media print {
