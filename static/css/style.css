@@ -1,3 +1,7 @@
+body {
+    background-color: #eee;
+}
+
 /* The switch - the box around the slider */
 .switch {
     position: relative;
@@ -6,6 +10,12 @@
     height: 120px;
     align-items: center;
     justify-content: center;
+    user-drag: none;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
 }
 
 /* Hide default HTML checkbox */
@@ -26,8 +36,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    -webkit-transition: .4s;
-    transition: .4s;
+    -webkit-transition: .5s;
+    transition: .5s;
     font-weight: normal;
 }
 
@@ -76,7 +86,8 @@ input:focus + .check-btn {
     z-index: 1;
     margin: 0 auto;
     padding: 125px 0;
-    width: 80%;
+    -webkit-transition: all 0.5s ease;
+    transition: all 0.5s ease;
 }
 
 #tool-box-toggle {
@@ -87,6 +98,7 @@ input:focus + .check-btn {
     font-size: 36px;
     color: #555;
     cursor: pointer;
+    z-index: 4;
 }
 
 #tool-box-toggle:hover {
@@ -138,9 +150,16 @@ input:focus + .check-btn {
     text-align: center;
 }
 
+#vis-container {
+    opacity: 0;
+    -webkit-transition: all 0.5s ease;
+    transition: all 0.5s ease;
+}
+
 .vis {
     position: relative;
     width: auto;
+    height: 100%;
     margin: 0 auto;
     display: -webkit-box;
     display: -moz-box;
@@ -150,6 +169,9 @@ input:focus + .check-btn {
     align-items: center;
     justify-content: center;
     flex-direction: column;
+    background-color: white;
+    box-shadow: 0 0 40px rgba(0,0,0,0.2);
+    overflow: hidden;
 }
 
 .vis .img-block {
@@ -165,6 +187,12 @@ input:focus + .check-btn {
 .vis .img-block img {
     height: 100%;
     z-index: 0;
+    user-drag: none;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
 }
 
 .vis .img-block:not(.img-patch) img {
@@ -227,6 +255,12 @@ canvas.text-confidence {
     border: none;
     box-shadow: none;
     z-index: 1;
+    user-drag: none;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
 }
 
 .img-patch .img-patch-text:focus {
@@ -237,7 +271,7 @@ canvas.text-confidence {
 #color-options {
     position: absolute;
     right: 60px;
-    top: 120px;
+    top: 60px;
 }
 
 #draw-options {
@@ -300,4 +334,72 @@ canvas.text-confidence {
     .no-print, .no-print *{
         display: none !important;
     }
+}
+
+#loading {
+    display : none;
+}
+
+#loading.show {
+    display : block;
+    position : fixed;
+    z-index: 100;
+    background-image : url('loading.gif');
+    background-color:#666;
+    opacity : 0.4;
+    background-repeat : no-repeat;
+    background-position : center;
+    left : 0;
+    bottom : 0;
+    right : 0;
+    top : 0;
+}
+
+#context-map-container {
+    position: absolute;
+    right: 0px;
+    top: 0px;
+}
+
+#context-map-container table {
+    margin-top: 10px;
+    width: 100%;
+    user-drag: none;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+#context-map-container table tr td.before {
+    text-align: right;
+}
+
+#context-map-container table tr td.after {
+    text-align: left;
+}
+
+#context-map-container tr td.context-map-title {
+    padding: 5px;
+    border-radius: 100px;
+    background-color: black;
+    text-align: center;
+    color: white;
+    font-size: 20px;
+}
+
+#context-map-container .context-map-root {
+    background-image: url("line.png");
+    background-size: 3px 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#context-map-container .context-map-root .dot {
+    height: 15px;
+    width: 15px;
+    margin: 0 auto;
+    background-color: black;
+    border-radius:15px;
 }

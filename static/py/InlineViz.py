@@ -25,7 +25,7 @@ class InlineViz:
     img_file = None
     nlp = spacy.load("en")
 
-    def __init__(self, stream, _translate=False, _max_size=(1024,1024), _pixel_cut_width=5, _noise_threshold=25, _spread=0, _line_buffer=1, _hi_res=True, _rgb_text=(0,0,0), _rgb_bg=(255,255,255), _anti_alias=True, _map_height=150, _blur=0):
+    def __init__(self, stream, _translate=False, _max_size=(1024,1024), _pixel_cut_width=5, _noise_threshold=25, _vertical_spread=5, _horizontal_spread=5, _line_buffer=1, _hi_res=True, _rgb_text=(0,0,0), _rgb_bg=(255,255,255), _anti_alias=True, _map_height=150, _blur=0):
         """ Initialize a file to work with """
         self.max_size = _max_size # maximum size of image for resizing
         self.img_file = Image.open(stream) # image itselfs
@@ -33,14 +33,15 @@ class InlineViz:
         self.img_width, self.img_height = self.img_file.convert("RGBA").size # resized width and height
         self.line_list = self.detectLines(self.img_file) # X coordinates for vertical lines
         self.translate = _translate # indicator for translating OCR'd text
-        self.spread = _spread # multiplier for strip size
-        self.hi_res = _hi_res # pixel shuffling toggle for every iteration of spread        
+        self.vertical_spread = _vertical_spread # multiplier for strip size
+        self.horizontal_spread = _horizontal_spread # multiplier for space size
+        self.hi_res = _hi_res # pixel shuffling toggle for every iteration of vertical_spread        
         self.pixel_cut_width = _pixel_cut_width # horizontal pixel cut size for randomization
         self.noise_threshold = _noise_threshold # vertical line detection threshold
         self.line_buffer = _line_buffer # space buffer cropping between bounding boxes
         self.img_patches = [] # strips between lines of text
         self.img_blocks = [] # lines of text
-        self.img_chops = [] # spaces between words
+        self.img_space = [] # spaces between words
         self.chop_dimension = [] # full dimensions of each chop
         self.img_text = [] # text blocks
         self.word_blocks = [] # meta info for word in each line/block
@@ -84,7 +85,8 @@ class InlineViz:
         self.cropImageBlocks() # slice original image into lines
         self.getWordBlocks() # get all word meta info per block
         self.getNgramPlotImageList() # get ngram charts for all our word info
-        self.generateExpandedPatches() # strip and expand line spaces        
+        self.generateExpandedPatches() # strip and expand line spaces
+        self.expandWordSpaces() # expand word spaces
         # self.generateFullCompositeImage() # merge everything together
 
     def getNgramPlotImageList(self, start_date=1800, end_date=2000):
@@ -144,13 +146,13 @@ class InlineViz:
     def expandStrip(self, img_strip):
         """ Expand an image strip using pixel randomization and quilting """
         img_comp = [img_strip]
-        pixel_block = self.randomizeStrip(img_strip)
+        pixel_block = self.getPixelBlock(img_strip)
         if len(pixel_block) == 0:
             return img_strip
         if self.anti_alias:
             pixel_block = self.removeArtifacts(pixel_block)
 
-        for x in range(1, self.spread):
+        for x in range(1, self.vertical_spread):
             if x > 1 and not self.hi_res:
                 img_comp.append(img_expand)
                 continue
@@ -216,10 +218,76 @@ class InlineViz:
                 if new_space_height < space_height and new_space_height > self.line_buffer:
                     space_height = new_space_height
         return space_height
+
+    def expandWordSpaces(self):
+        """ Analyze and expand spaces between words and keep document 
+        justified with relative line width """
+        new_img_space = [] # expanded images
+        space_count = [len(line) for line in self.img_space] # number of spaces per line
+        space_width = [] # total width per line
+        min_space = 999 # amount of generated space to create at a time
+        # get min space and space width
+        for line in self.img_space:
+            line_space = [space.size[0] for space in line]
+            min_line_space = min(line_space)
+            total_width = sum(line_space)
+            space_width.append(total_width)
+            if min_line_space < min_space:
+                min_space = min_line_space
+        # how much space we want to create at a minimum
+        pixel_spread = self.horizontal_spread * min_space
+        # the widest line to justify our lines to
+        max_width = max([width+(space_count[idx]*pixel_spread) for idx, width in enumerate(space_width)])
+        
+        for idx, line in enumerate(self.img_space):
+            img_space_list = []
+            # compare this line to our max and calculate additional 
+            # pixels per space on top of pixel spread
+            missing_space = max_width-space_width[idx]
+            add_space = int(floor(missing_space / space_count[idx]))
+            # round down and add rest of pixels to last space
+            extra_space = missing_space - add_space
+
+            for idx, space in enumerate(line):
+                target_width = add_space
+                if idx == len(line)-1:
+                    # make sure we add extra space at end
+                    target_width = target_width+extra_space
+                # get the pixel data in this space
+                rgb_im = space.convert("RGB")
+                total_width = space.size[0]
+                pixel_list = []
+                for y in range(space.size[1]):
+                    cut_width = 0                
+                    for x in range(space.size[0]):
+                        r, g, b = rgb_im.getpixel((x, y))
+                        pixel_list.append((r,g,b))
+                # shuffle the pixel data and create new image
+                img_pixel = Image.new('RGB', (space.size[0], space.size[1]))
+                random.shuffle(pixel_list)                
+                img_pixel.putdata(pixel_list)
+                img_list = [img_pixel,]
+                # duplicate and reshuffle as required
+                while total_width < target_width:
+                    if self.hi_res:
+                        img_pixel = Image.new('RGB', (space.size[0], space.size[1]))
+                        random.shuffle(pixel_list)                    
+                        img_pixel.putdata(pixel_list)
+                    img_list.append(img_pixel)
+                    total_width = total_width + space.size[0]
+                # merge together to get full space image
+                img_space = self.mergeImageList(img_list, "horizontal")
+                if total_width > target_width:
+                    # crop any excess to match our target width
+                    img_space = img_space.crop(0,0,target_width,img_space.size[1])
+                img_space_list.append(self.getImageDict(img_space))
+            new_img_space.append(img_space_list)
+        self.img_space = new_img_space
+
     
     def generateExpandedPatches(self):
         """ Crop space between lines using starting and ending co-ordinates 
-        and then expand the strip based on spread """
+        and then expand the strip based on vertical_spread """
         tmp = Image.new('RGBA', (self.img_width, self.img_height), (0,0,0,0))
         img = self.img_file.convert("RGBA")
 
@@ -359,7 +427,7 @@ class InlineViz:
         d = (d[0]+d[1]+d[2])**0.5
         return d
 
-    def randomizeStrip(self, im):
+    def getPixelBlock(self, im):
         """ Return blocks of randomized pixels in a single strip """
         rgb_im = im.convert('RGB')
         imWidth, imHeight = im.size
@@ -391,6 +459,7 @@ class InlineViz:
 
     def detectLines(self, img):
         """ Use CV2 to estimate vertical line threshold for randomization """
+        img = img.convert("RGB")
         img_array = np.asarray(img)
         gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
         edges = cv2.Canny(gray,50,150,apertureSize = 3)
@@ -401,7 +470,7 @@ class InlineViz:
         if lines is None:
             return []
         
-        lineLst =[]            
+        lineLst = []
         a,b,c = lines.shape
         for i in range(a):
 
@@ -418,6 +487,7 @@ class InlineViz:
         img = image.convert("RGB")
         word_boxes = []
         img_crops = []
+        img_spaces = []
         has_map = False
         img_bw = self.binarizeSharpenImage(image)
 
@@ -429,6 +499,9 @@ class InlineViz:
                 x_start = box["x"]-self.line_buffer                
                 if i == 0:
                     x_start = 0
+                    space_start = box["x"]+box["w"]
+                else:
+                    space_end = box["x"]
                     
                 if i == len(boxes)-1:
                     x_end = img.size[0]
@@ -441,6 +514,11 @@ class InlineViz:
                     img_dict = self.getImageDict(img.crop((x_start, 0, x_end, img.size[1])))
                     img_crops.append(img_dict)
                     break
+
+                if i > 0 and i < len(boxes)-1:
+                    space_crop = img.crop((space_start, 0, space_end, img.size[1]))
+                    img_spaces.append(space_crop)
+                    space_start = boxes[i+1][1]["x"]+boxes[i+1][1]["w"]
 
                 api.SetRectangle(x_start, box["y"], (x_end-x_start), box["h"])
                 text = api.GetUTF8Text()
@@ -461,7 +539,7 @@ class InlineViz:
                 ngram = {
                     "idx_block":idx
                     , "idx_word": len(word_boxes)
-                    , "size":(box["w"],((self.space_height - self.line_buffer) * self.spread))
+                    , "size":(box["w"],((self.space_height - self.line_buffer) * self.vertical_spread))
                     , "text":text.strip()
                 }
                 self.ngram_data.append(ngram)
@@ -487,22 +565,25 @@ class InlineViz:
                         has_map = True
                 word_boxes.append(word)
         
-        return img_crops, word_boxes, has_map
+        return img_crops, img_spaces, word_boxes, has_map
 
     def chopImageBlockSpace(self, boxes, img):
         """ Crop word spaces in each line """
         width, height = img.size
         x_start = 0
         img_chop = []
-        if height == 0:
+        if height == 0 or width == 0:
             return img_chop
         for i, box in enumerate(boxes):
-            x_end = box['x']-self.line_buffer
+            if i == 0:
+                x_start = box["x"] + box["w"]
+                continue
+            x_end = box["x"]
             if x_end <= x_start:
                 continue
             img_dict = self.getImageDict(img.crop((x_start, 0, x_end, height)))
             img_chop.append(img_dict)
-            x_start = box['x'] + box['w'] + self.line_buffer
+            x_start = x_end
         
         x_end = width
         if not (x_start < x_end):
@@ -516,7 +597,7 @@ class InlineViz:
         """ Get bounding boxes for single words in a line """
         for idx, img_dict in enumerate(self.img_blocks):
             img = img_dict["img"]
-            img_crops, word_block, has_map = self.getWordInfo(idx, img)
+            img_crops, img_spaces, word_block, has_map = self.getWordInfo(idx, img)
             if has_map:
                 for crop in img_crops:
                     crop["has_map"] = True
@@ -527,6 +608,7 @@ class InlineViz:
             self.chop_dimension.append({"width":img.size[0],"height":img.size[1]})
             self.word_blocks.append(word_block)
             self.img_text.append(img_crops)
+            self.img_space.append(img_spaces)
 
     def getImageDict(self, image):
         img_dict = { "img":image
@@ -616,6 +698,7 @@ class InlineViz:
         """ Prepare image for OCR by converting to grayscale, sharpening, and then binarizing """
         if not self.binarize:
             return image.convert("RGB")
+
         # Read as gray scale
         img_array = np.asarray(image)
         img_gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
@@ -633,6 +716,7 @@ class InlineViz:
     def smoothImage(self, image):
         """ Use blurring to smooth an image """
         if self.blur > 0:
+            image = image.convert("RGB")
             img_array = np.asarray(image)
             img_cv = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
             img_cv = cv2.medianBlur(img_cv, self.blur)

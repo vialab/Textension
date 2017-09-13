@@ -1,4 +1,4 @@
-var canvas, ctx, flag = false,
+var canvas, ctx, css_transition, flag = false,
 prevX = 0,
 currX = 0,
 prevY = 0,
@@ -20,7 +20,15 @@ var mode = {
 };
 
 $(document).ready(function() {
-    closeNav();
+    var width = "-" + ($(".tool-box").width()+5).toString() + "px";
+    $(".tool-box").css({"transform":"translateX(" + width + ")"});
+    
+    resizeStage();
+
+    $("#vis-container").on("transitionend webkitTransitionEnd oTransitionEnd otransitionend MSTransitionEnd", function() {
+        resizeStage();        
+    });
+
     $(".img-block:not(.img-patch)").on("click", function() {
         if (getActiveMode() != "") return;
         var i = parseInt($(this).attr("id"));
@@ -105,6 +113,7 @@ $(document).ready(function() {
             if(!haslistener) init();
         } else {
             setActiveMode("");
+            $("#draw-options").hide();            
         }
     });
 
@@ -113,7 +122,7 @@ $(document).ready(function() {
             closeSpaces();
             setActiveMode("eraser");
         } else {
-            setActiceMode("");
+            setActiveMode("");
         }
     });
 
@@ -128,6 +137,14 @@ $(document).ready(function() {
     $("#grammar-tool").on("click", function() {
         if($(this).is(":checked")) {
             setActiveMode("grammar");
+        } else {
+            setActiveMode("");            
+        }
+    });
+
+    $("#context-tool").on("click", function() {
+        if($(this).is(":checked")) {
+            setActiveMode("context");
         } else {
             setActiveMode("");            
         }
@@ -156,22 +173,31 @@ $(document).ready(function() {
     // });
 
     $(".img-block:not(.img-patch) img").on("mousedown", function() {
+        mouse_down = true;
+        var action;
         switch(getActiveMode()) {
             case "define":
-                mouse_down = true;
-                timeout_id = setTimeout(defineWord($(this)), 1000);
+                action = defineWord;
                 break;
-        }            
-    }).on("mouseup mouseleave", function() {
-        switch(getActiveMode()) {
-            case "define":
-                mouse_down = false;
-                $(this).popover("hide");
-                clearTimeout(timeout_id);
+            case "context":
+                action = createContextMap;
                 break;
             default:
                 return;
         }
+        timeout_id = setTimeout(action($(this)), 1000);
+    }).on("mouseup mouseleave", function() {
+        mouse_down = false;
+        switch(getActiveMode()) {
+            case "define":
+                $(this).popover("hide");
+                break;
+            case "context":
+                break;
+            default:
+                return;
+        }
+        clearTimeout(timeout_id);
     });
     // END ACTIVE TOOLS
     
@@ -245,7 +271,15 @@ $(document).ready(function() {
     $("#edit-text").on("input", function() {
         updateSampleText();
     });
+
+    $("#vis-container").css("opacity", 1);
+    $("#loading").removeClass("show");
 });
+
+function getMarginWidth() {
+    var margin_width = ($(".stage").width() - $("#vis-container").width()) / 2.0;
+    return margin_width;
+}
 
 function setActiveMode(new_mode) {
     for(var type in mode) {
@@ -260,26 +294,53 @@ function setActiveMode(new_mode) {
             }
         }
     }
+
+    if(new_mode != "") {
+        togglePointerEvents(true);
+    }
+}
+
+function togglePointerEvents( on ) {
+    if(on) {
+        $("input[type='text']").css("pointer-events", "none");
+    } else {
+        $("input[type='text']").css("pointer-events", "");
+    }
+}
+
+function resizeStage() {
+    var stage_height = $("#vis-container").height();
+    var stage_width = $("#vis-container").width();
+    if($("#context-map-container").height() > stage_height) {
+        stage_height = $("#context-map-container").height();
+    }        
+    $(".stage").height(stage_height * vertical_margin);
+    if($("#context-map-container table").length > 0) {
+        $(".stage").width(stage_width + ($("#context-map-container").width() * 2));
+    } else {
+        $(".stage").width(stage_width * horizontal_margin);    
+    }
 }
 
 function disableMode(type) {
+    togglePointerEvents(false);
     switch(type) {
         case "draw":
-            $("#draw-tool").click();        
+            $("#draw-tool").prop("checked",false);
             $("canvas#draw-board").addClass("overlay");
             $("#draw-options").hide();
             break;
         case "eraser":
-            $("#eraser-tool").click();
+            $("#eraser-tool").prop("checked",false);
             break;
         case "define":
-            $("#define-tool").click();
+            $("#define-tool").prop("checked",false);
             break;
         case "grammar":
-            $("#grammar-tool").click();
+            $("#grammar-tool").prop("checked",false);
             break;
         case "context":
-            $("#context-tool").click();
+            $("#context-tool").prop("checked",false);
             break;
     }
 }
@@ -314,12 +375,16 @@ function eraseWord($elem) {
 }
 
 function openNav() {
+    var width = ($(".tool-box").width()+5).toString() + "px";    
     $(".tool-box").css({"transform":"translateX(0px)"});
+    $(".stage").css({"transform":"translateX(" + width + ")"});
 }
 
 function closeNav() {
     var width = "-" + ($(".tool-box").width()+5).toString() + "px";
     $(".tool-box").css({"transform":"translateX(" + width + ")"});
+    $(".stage").css({"transform":"translateX(0px)"});
+    
 }
 
 function fixPronouns() {
@@ -434,12 +499,12 @@ function toggleSpace($elem) {
         $elem.height(space_height);
     } else {
         $elem.height(0);
-        $elem.addClass("squeeze");        
+        $elem.addClass("squeeze");
     }
 }
 
 function openSpaces() {
-    if(getActiveMode() != "") return;
+    if(getActiveMode() != "") setActiveMode("");
     $(".img-patch").removeClass("squeeze");
     $(".img-patch").each(function() {
         space_height = $(this).data("img-height");
@@ -453,9 +518,9 @@ function openSpaces() {
 }
 
 function closeSpaces() {
-    if(getActiveMode() != "") return;    
+    if(getActiveMode() != "") setActiveMode("");
     $(".img-patch").height(0);
-    $(".img-patch").addClass("squeeze");    
+    $(".img-patch").addClass("squeeze");
 }
 
 function drawUniqueness() {
@@ -532,8 +597,10 @@ function drawConfidence() {
         ctx.canvas.height = $(this).height();
         for(var i=0; i<word_blocks[idx].length; i++) {
             var opacity = (word_blocks[idx][i]["confidence"]/100.0);
+            opacity = (1.00-Math.max((Math.round(opacity * 5) / 5), 0.1)).toFixed(2) * 0.9;
             ctx.beginPath();
             ctx.fillStyle = "rgba(244, 167, 66, " + opacity + ")";
+            // ctx.fillStyle = "rgba(48, 134, 255, " + opacity + ")";
             ctx.fillRect(word_blocks[idx][i]["x"], word_blocks[idx][i]["y"], word_blocks[idx][i]["width"], 20);
         }
     });

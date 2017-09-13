@@ -14,7 +14,10 @@ function defineWord($elem) {
             $elem.popover("show");
         }
         return;
+    } else {
+        text = text.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
     };
+
     fetch(`http://www.dictionaryapi.com/api/v1/references/collegiate/xml/${text}?key=${mwd_api_key}`)
     .then(function(response) {
         response.text().then(function(data) {
@@ -32,8 +35,15 @@ function defineWord($elem) {
             }
             html += "</ol>";
             if(dt.length == 0) {
+                html = "<ol>";
                 def_title = text;
-                html = "No definition";
+                var suggestions = def_entry.find("suggestion");
+                for(var i = 0; i < suggestions.length; i++) {
+                    html += "<li>" + suggestions.eq(i).text() + "</li>";
+                    if(i==2) break;
+                }
+                html += "</ol>";
+                if(suggestions.length == 0) html = "No definition.";
             }
         
             $elem.popover({
@@ -51,14 +61,85 @@ function defineWord($elem) {
         });
     })
     .catch(error => console.error(error));
-    
-    /* should look like this:
-    WORD (pronounciation) - verb
-    1 a. Definition
-    b. Definition
-     */
 }
 
-function getDefinition(word) {
+function createContextMap($elem) {
+    var text = $elem.data("ocr");
+    if(typeof(text) == "undefined") return;
 
+    var $context_map = $("<table/>");
+    var text_id = text.replace(/[!"#$%&'()*+,.\/:;<=>?@[\\\]^`{|}~]/g, "");
+    $context_map.append("<tr><td colspan='2'></td><td class='context-map-title'>" + text + "</td><td colspan='2'></td></tr>");
+    text = text.replace(/(['"])/g, "\\$1");
+    $context_map.attr("id", text_id);
+    
+    if($("#context-map-container table#" + text_id).length > 0) {
+        $("#context-map-container table#" + text_id).remove();
+        return;
+    }
+
+    var $occurences = $(".img-block:not(.img-patch) img[data-ocr='" + text + "']");
+    $occurences.each(function() {
+        var curr_id = $(this).attr("id");
+        var arr_id = curr_id.split("-");
+        var idx_line = parseInt(arr_id[1]);
+        var idx_word = parseInt(arr_id[2]);
+        var before = [];
+        var after = []
+        
+        if(idx_word > 1) {
+            before.push($("#text-" + arr_id[1] + "-" + (idx_word-2).toString()));
+        }
+        if(idx_word > 0) {
+            before.push($("#text-" + arr_id[1] + "-" + (idx_word-1).toString()));
+        }
+        var last_id = $(".img-block:not(.img-patch)#" + idx_line.toString() + " span img").last().attr("id");
+        var arr_last_id = last_id.split("-");
+        var idx_last = parseInt(arr_last_id[2]);
+        
+        if((idx_last-idx_word) >= 2) {
+            after.push($("#text-" + arr_id[1] + "-" + (idx_word+2).toString()));
+        }
+        if((idx_last-idx_word) >= 1) {
+            after.push($("#text-" + arr_id[1] + "-" + (idx_word+1).toString()));
+        }
+        var row_html = "<tr>";
+        if(before.length == 2) {
+            row_html += "<td class='before'>";
+            row_html += before[0][0].outerHTML;
+            row_html += "</td>";
+            row_html += "<td class='before'>";
+            row_html += before[1][0].outerHTML;
+            row_html += "</td>";
+        } else {
+            row_html += "<td colspan='2' class='before'>";
+            if(before.length == 1) {
+                row_html += before[0][0].outerHTML;
+            }
+            row_html += "</td>";
+        }
+        row_html += "<td class='context-map-root'><div class='dot'></div></td>"
+        if(after.length == 2) {
+            row_html += "<td class='after'>";
+            row_html += after[1][0].outerHTML;
+            row_html += "</td>";
+            row_html += "<td class='after'>";
+            row_html += after[0][0].outerHTML;
+            row_html += "</td>";
+        } else {
+            row_html += "<td colspan='2' class='after'>";
+            if(after.length == 1) {
+                row_html += after[0][0].outerHTML;
+            }
+            row_html += "</td>";
+        }
+        row_html += "</tr>";
+        $context_map.append(row_html);
+    });
+    $context_map.click(function() {
+        $(this).remove();
+        resizeStage();
+    })
+    $("#context-map-container").append($context_map);
+    resizeStage();
 }

@@ -71,6 +71,7 @@ def interact(page_no=0):
     image_blocks = []
     image_text = []
     image_patches = []
+    image_space = []
 
     # for block in session["viz"][page_no].img_chops:
     #     image_block = []
@@ -87,9 +88,13 @@ def interact(page_no=0):
     for patch in session["viz"][page_no].img_patches:
         image_patches.append(dict((i,patch[i]) for i in patch if i!="img"))
 
+    for space in session["viz"][page_no].img_space:
+        image_space.append(dict((i,space[i]) for i in space if i!="img"))
+
     return render_template('interact.html', image_blocks=image_blocks
         , image_text=image_text
         , image_patches=image_patches
+        , image_patches=image_space
         , image_dim=session["viz"][page_no].chop_dimension
         , bounding_boxes=session["viz"][page_no].bounding_boxes
         , word_blocks=json.dumps(session["viz"][page_no].word_blocks)
