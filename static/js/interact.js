@@ -705,7 +705,7 @@ function drawUniqueness() {
             }
         }
     });
-    if(min_width < 20) {
+    if(min_width > 20) {
         min_width = 20;
     }
     $(".img-block.img-patch div.uniqueness-chart span").width(min_width);

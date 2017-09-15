@@ -13,5 +13,6 @@ opencv-python
 pandas
 pyocr
 textstat
+tesserocr
 
-sudo apt-get install build-essential python-dev python-tk tesseract-ocr libtesseract-dev libleptonica-dev
+sudo apt-get install build-essential python-dev python-tk tesseract-ocr libtesseract-dev libleptonica-dev libmagickwand-dev

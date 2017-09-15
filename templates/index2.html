@@ -155,24 +155,36 @@
       font-size: 5vw;
       font-weight: 900;
     }
-    .logo.1 {
+    .logo .first {
       color: #163e6f;
     }
-    .logo.2 {
+    .logo .last {
       color : white;
+    }
+    .tool-box-logo {
+      margin: 0 0 5% 0;
+      padding: 5% 0 10% 0;
+      background-color: rgba(255,255,255,0.5);
+    }
+    .tool-box-logo img {
+      width: 100%;
+      padding: 5%;
     }
   </style>
 </head>
 
 <body>
   <div class="logo">
-    <span class="1">TEXT</span><span class="2">ENSION</span>
+    <span class="first">TEXT</span><span class="last">ENSION</span>
   </div>
   <div class="container-fluid">
     <span id="tool-box-toggle" onclick="openNav()">☰</span>      
     <div class="tool-box">
-      <div class="tool-box-close">
+      <div class="tool-box-close" style="background-color:rgba(255,255,255,0.5);">
         <a href="javascript:void(0)" class="close-btn" onclick="closeNav()">&times;</a>
+      </div>
+      <div class="tool-box-logo">
+        <img src="./static/css/uoit_logo.png"/>
       </div>
       <div class="tool-box-link">
         <a data-toggle="tab" href="#menu-file">File</a>
@@ -186,14 +198,17 @@
 
         <div id="menu-file" class="tab-pane fade in active">
           <div class="row">
-            <div class="col-md-12 text-center">          
+            <div class="col-md-12 text-center">
+              <b>Use your own documents to process and analyze.</b><br/>You could also click to browse for a file on your computer.
               <div id="dropzone">
                 <form action="/upload" class="dropzone needsclick dz-clickable" id="demo-upload">
                   <div class="dz-message needsclick">
-                    Drop files here or click to upload.<br>
+                    <b>Drag &amp; drop a document or image here.</b>
                   </div>
                 </form>
               </div>
+            </div>
+            <div class="col-md-12 text-center">
             </div>
           </div>
         </div>
