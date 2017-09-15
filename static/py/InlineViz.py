@@ -42,6 +42,7 @@ class InlineViz:
         self.img_patches = [] # strips between lines of text
         self.img_blocks = [] # lines of text
         self.img_space = [] # spaces between words
+        self.img_patch_space = [] # spaces between words
         self.chop_dimension = [] # full dimensions of each chop
         self.img_text = [] # text blocks
         self.word_blocks = [] # meta info for word in each line/block
@@ -83,9 +84,9 @@ class InlineViz:
             self.translateText() # translate the text to french
         self.space_height = self.getMinSpaceHeight() # get the minimum patch height                    
         self.cropImageBlocks() # slice original image into lines
+        self.generateExpandedPatches() # strip and expand line spaces
         self.getWordBlocks() # get all word meta info per block
         self.getNgramPlotImageList() # get ngram charts for all our word info
-        self.generateExpandedPatches() # strip and expand line spaces
         self.expandWordSpaces() # expand word spaces
         # self.generateFullCompositeImage() # merge everything together
 
@@ -223,11 +224,15 @@ class InlineViz:
         """ Analyze and expand spaces between words and keep document 
         justified with relative line width """
         new_img_space = [] # expanded images
+        new_img_patch_space = [] # expanded images
         space_count = [len(line) for line in self.img_space] # number of spaces per line
         space_width = [] # total width per line
         min_space = 999 # amount of generated space to create at a time
         # get min space and space width
         for line in self.img_space:
+            if len(line) == 0:
+                space_width.append(0)
+                continue
             line_space = [space.size[0] for space in line]
             min_line_space = min(line_space)
             total_width = sum(line_space)
@@ -236,53 +241,83 @@ class InlineViz:
                 min_space = min_line_space
         # how much space we want to create at a minimum
         pixel_spread = self.horizontal_spread * min_space
-        # the widest line to justify our lines to
+        # calculate the largest line width to justify our line towards
         max_width = max([width+(space_count[idx]*pixel_spread) for idx, width in enumerate(space_width)])
         
-        for idx, line in enumerate(self.img_space):
+        for idx_line, line in enumerate(self.img_space):
             img_space_list = []
+            img_patch_space_list = []
+            if space_width[idx_line]==0 or space_count[idx_line]==0:
+                new_img_space.append([])
+                new_img_patch_space.append([])
+                continue
             # compare this line to our max and calculate additional 
             # pixels per space on top of pixel spread
-            missing_space = max_width-space_width[idx]
-            add_space = int(floor(missing_space / space_count[idx]))
+            missing_space = max_width-space_width[idx_line]
+            add_space = int(floor(missing_space / space_count[idx_line]))
             # round down and add rest of pixels to last space
-            extra_space = missing_space - add_space
+            extra_space = missing_space - (add_space * space_count[idx_line])
 
             for idx, space in enumerate(line):
-                target_width = add_space
+                target_width = space.size[0]+add_space
                 if idx == len(line)-1:
                     # make sure we add extra space at end
                     target_width = target_width+extra_space
                 # get the pixel data in this space
-                rgb_im = space.convert("RGB")
+                rgb_img = space.convert("RGB")
+                # assumption here, that first image block is always empty
+                rgb_img_patch = self.img_patch_space[idx_line-1][idx].convert("RGB")
                 total_width = space.size[0]
                 pixel_list = []
+                patch_pixel_list = []
                 for y in range(space.size[1]):
-                    cut_width = 0                
                     for x in range(space.size[0]):
-                        r, g, b = rgb_im.getpixel((x, y))
+                        r, g, b = rgb_img.getpixel((x, y))
                         pixel_list.append((r,g,b))
+                for y in range(rgb_img_patch.size[1]):
+                    for x in range(rgb_img_patch.size[0]):
+                        r, g, b = rgb_img_patch.getpixel((x, y))                        
+                        patch_pixel_list.append((r,g,b))
                 # shuffle the pixel data and create new image
                 img_pixel = Image.new('RGB', (space.size[0], space.size[1]))
-                random.shuffle(pixel_list)                
+                random.shuffle(pixel_list)
                 img_pixel.putdata(pixel_list)
                 img_list = [img_pixel,]
+                # do the same for patch space
+                img_patch_pixel = Image.new('RGB', (rgb_img_patch.size[0], rgb_img_patch.size[1]))
+                random.shuffle(patch_pixel_list)
+                img_patch_pixel.putdata(patch_pixel_list)
+                img_patch_list = [img_patch_pixel,]
                 # duplicate and reshuffle as required
                 while total_width < target_width:
                     if self.hi_res:
                         img_pixel = Image.new('RGB', (space.size[0], space.size[1]))
                         random.shuffle(pixel_list)                    
                         img_pixel.putdata(pixel_list)
+                        # do the same for patch space
+                        img_patch_pixel = Image.new('RGB', (rgb_img_patch.size[0], rgb_img_patch.size[1]))
+                        random.shuffle(patch_pixel_list)
+                        img_patch_pixel.putdata(patch_pixel_list)
+
                     img_list.append(img_pixel)
+                    img_patch_list.append(img_patch_pixel)
                     total_width = total_width + space.size[0]
                 # merge together to get full space image
                 img_space = self.mergeImageList(img_list, "horizontal")
+                img_patch_space = self.mergeImageList(img_patch_list, "horizontal")
                 if total_width > target_width:
                     # crop any excess to match our target width
-                    img_space = img_space.crop(0,0,target_width,img_space.size[1])
+                    img_space = img_space.crop((0,0,target_width,img_space.size[1]))
+                    img_patch_space = img_patch_space.crop((0,0,target_width,img_patch_space.size[1]))
+
                 img_space_list.append(self.getImageDict(img_space))
+                img_patch_space_list.append(self.getImageDict(img_patch_space))
+
             new_img_space.append(img_space_list)
+            new_img_patch_space.append(img_patch_space_list)
+
         self.img_space = new_img_space
+        self.img_patch_space = new_img_patch_space
 
     
     def generateExpandedPatches(self):
@@ -481,13 +516,17 @@ class InlineViz:
 
         return lineLst
 
-    def getWordInfo(self, idx, image):
+    def getWordInfo(self, idx, image, image_patch):
         """ Get word boxes with confidence level in an image -
          does not include text for injection protection """
         img = image.convert("RGB")
+        if idx > 0:
+            img_patch = image_patch.convert("RGB")
         word_boxes = []
         img_crops = []
+        img_patch_crops = []
         img_spaces = []
+        img_patch_spaces = []
         has_map = False
         img_bw = self.binarizeSharpenImage(image)
 
@@ -499,9 +538,6 @@ class InlineViz:
                 x_start = box["x"]-self.line_buffer                
                 if i == 0:
                     x_start = 0
-                    space_start = box["x"]+box["w"]
-                else:
-                    space_end = box["x"]
                     
                 if i == len(boxes)-1:
                     x_end = img.size[0]
@@ -513,17 +549,30 @@ class InlineViz:
                     x_end = img.size[0]
                     img_dict = self.getImageDict(img.crop((x_start, 0, x_end, img.size[1])))
                     img_crops.append(img_dict)
+                    if idx > 0:
+                        img_patch_dict = self.getImageDict(img_patch.crop((x_start, 0, x_end, img_patch.size[1])))
+                        img_patch_crops.append(img_patch_dict)
                     break
 
-                if i > 0 and i < len(boxes)-1:
+                if i < len(boxes)-1:
+                    # cut the spaces between the words
+                    space_start = box["x"]+box["w"]                    
+                    space_end = boxes[i+1][1]["x"]
                     space_crop = img.crop((space_start, 0, space_end, img.size[1]))
                     img_spaces.append(space_crop)
-                    space_start = boxes[i+1][1]["x"]+boxes[i+1][1]["w"]
-
+                    if idx > 0:
+                        patch_space_crop = img_patch.crop((space_start, 0, space_end, img_patch.size[1]))
+                        img_patch_spaces.append(patch_space_crop)
+                # get the text from within bounding box
                 api.SetRectangle(x_start, box["y"], (x_end-x_start), box["h"])
                 text = api.GetUTF8Text()
+                # crop out this word from original image
                 img_dict = self.getImageDict(img.crop((x_start, 0, x_end, img.size[1])))
                 img_crops.append(img_dict)
+                if idx > 0:
+                    # also crop out the same portion from patch above
+                    img_patch_dict = self.getImageDict(img_patch.crop((x_start, 0, x_end, img_patch.size[1])))
+                    img_patch_crops.append(img_patch_dict)
 
                 if text.strip() == u"":
                     continue
@@ -565,7 +614,7 @@ class InlineViz:
                         has_map = True
                 word_boxes.append(word)
         
-        return img_crops, img_spaces, word_boxes, has_map
+        return img_crops, img_patch_crops, img_spaces, img_patch_spaces, word_boxes, has_map
 
     def chopImageBlockSpace(self, boxes, img):
         """ Crop word spaces in each line """
@@ -597,7 +646,10 @@ class InlineViz:
         """ Get bounding boxes for single words in a line """
         for idx, img_dict in enumerate(self.img_blocks):
             img = img_dict["img"]
-            img_crops, img_spaces, word_block, has_map = self.getWordInfo(idx, img)
+            img_patch = None
+            if idx > 0:
+                img_patch = self.img_patches[idx-1]["img"]
+            img_crops, img_patch_crops, img_spaces, img_patch_spaces, word_block, has_map = self.getWordInfo(idx, img, img_patch)
             if has_map:
                 for crop in img_crops:
                     crop["has_map"] = True
@@ -609,6 +661,9 @@ class InlineViz:
             self.word_blocks.append(word_block)
             self.img_text.append(img_crops)
             self.img_space.append(img_spaces)
+            if idx > 0:
+                self.img_patches[idx-1] = img_patch_crops
+                self.img_patch_space.append(img_patch_spaces)
 
     def getImageDict(self, image):
         img_dict = { "img":image

@@ -64,13 +64,13 @@ function defineWord($elem) {
 }
 
 function createContextMap($elem) {
-    var text = $elem.data("ocr");
-    if(typeof(text) == "undefined") return;
+    var og_text = $elem.data("ocr");
+    if(typeof(og_text) == "undefined") return;
 
     var $context_map = $("<table/>");
-    var text_id = text.replace(/[!"#$%&'()*+,.\/:;<=>?@[\\\]^`{|}~]/g, "");
-    $context_map.append("<tr><td colspan='2'></td><td class='context-map-title'>" + text + "</td><td colspan='2'></td></tr>");
-    text = text.replace(/(['"])/g, "\\$1");
+    var text_id = og_text.replace(/[!"#$%&'()*+,.\/:;<=>?@[\\\]^`{|}~]/g, "");
+    $context_map.append("<tr><td colspan='2'></td><td class='context-map-title'>" + og_text + "</td><td colspan='2'></td></tr>");
+    var text = og_text.replace(/(['"])/g, "\\$1");
     $context_map.attr("id", text_id);
     
     if($("#context-map-container table#" + text_id).length > 0) {
@@ -118,7 +118,7 @@ function createContextMap($elem) {
             }
             row_html += "</td>";
         }
-        row_html += "<td class='context-map-root'><div class='dot'></div></td>"
+        row_html += "<td class='context-map-root'><div class='dot' style='width:" + ($elem.width()+10).toString() + "px;'>" + $elem[0].outerHTML + "</div></td>"
         if(after.length == 2) {
             row_html += "<td class='after'>";
             row_html += after[1][0].outerHTML;

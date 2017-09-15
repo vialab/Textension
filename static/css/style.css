@@ -6,8 +6,8 @@ body {
 .switch {
     position: relative;
     display: inline-flex;
-    width: 120px;
-    height: 120px;
+    width: 48%;
+    height: 16%;
     align-items: center;
     justify-content: center;
     user-drag: none;
@@ -16,6 +16,12 @@ body {
     -webkit-user-drag: none;
     -webkit-user-select: none;
     -ms-user-select: none;
+    margin: 0;
+    overflow: hidden;
+}
+
+.switch:nth-child(odd) {
+    margin-right: 5px;
 }
 
 /* Hide default HTML checkbox */
@@ -39,6 +45,8 @@ body {
     -webkit-transition: .5s;
     transition: .5s;
     font-weight: normal;
+    white-space: nowrap;
+    font-size: 1.6vh;
 }
 
 .check-btn:hover {
@@ -114,11 +122,21 @@ input:focus + .check-btn {
     background-color: #163e6f;
     color:white;
     height: 100%;
-    padding-top: 60px;
+    width: 275px;
     z-index: 5;
     box-shadow: 0px 0px 10px rgba(0,0,0,0.4);
     -webkit-transition: all 0.5s ease;
     transition: all 0.5s ease;
+}
+
+.tool-box-btn {
+    position: absolute;
+    bottom: 0;
+    display: flex;
+    flex-wrap: wrap;
+    -ms-flex-wrap: wrap;
+    height: 70%;
+    width: 100%;
 }
 
 .tool-box .close-btn {
@@ -126,6 +144,7 @@ input:focus + .check-btn {
     top: 0;
     right: 0;
     font-size: 36px;
+    font-size: 3vh;
     padding: 0 15px;
 }
 
@@ -144,6 +163,25 @@ input:focus + .check-btn {
     border: none !important;
     /* 163e6f */
 }
+
+.tool-box-close {
+    position: relative;
+    height: 5%;
+}
+
+.tool-box-link {
+    height: 20%;
+    width: 100%;
+}
+
+.tool-box-link a {
+    height: 25%;
+    font-size:18px;
+    font-size: 2vh;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
 
 .tool-box table tr td:first-child {
     padding: 5px;
@@ -219,7 +257,8 @@ input:focus + .check-btn {
 
 .vis .img-block.img-patch div.uniqueness-chart span {
     position: absolute;
-    background-color: rgba(0,100,200,0.5);
+    background-size: 100% 100%;
+    background-position: center;
     border: none;
     -webkit-transition: all 1s ease;
     transition: all 1s ease;
@@ -237,8 +276,18 @@ canvas.entity-location, canvas.ngram-usage {
     z-index: 0;
 }
 
-canvas.text-confidence {
+.text-confidence, .entity-location {
+    position: absolute;
+    left:0;
     pointer-events: none;
+    background-color: rgb(244, 167, 66);
+    opacity: 0;
+    z-index: 1;
+}
+
+.entity-location {
+    background-color: rgba(53, 153, 66, 0.5);
+    opacity: 1;    
 }
 
 .img-patch {
@@ -246,6 +295,13 @@ canvas.text-confidence {
 }
 
 .img-patch img {
+    width: 100%;
+}
+
+.img-patch-text {
+    position: absolute;
+    left: 0;
+    top: 0;
     width: 100%;
 }
 
@@ -312,8 +368,13 @@ canvas.text-confidence {
     margin: 0 auto;
 }
 
-.text-box {
+.text-box, .text-space, .patch-box {
     position: relative;
+}
+
+.text-box img, .text-space img, .patch-box img {
+    position: absolute;
+    top: 0;
 }
 
 .custom-text { 
@@ -344,7 +405,6 @@ canvas.text-confidence {
     display : block;
     position : fixed;
     z-index: 100;
-    background-image : url('loading.gif');
     background-color:#666;
     opacity : 0.4;
     background-repeat : no-repeat;
@@ -359,6 +419,20 @@ canvas.text-confidence {
     position: absolute;
     right: 0px;
     top: 0px;
+    -webkit-transition: all 0.5s ease;
+    transition: all 0.5s ease;
+}
+
+#entity-map-container {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+}
+
+#entity-map-container img {
+    position: relative;
+    -webkit-transition: all 0.5s ease;
+    transition: all 0.5s ease;
 }
 
 #context-map-container table {
@@ -394,12 +468,17 @@ canvas.text-confidence {
     background-size: 3px 100%;
     background-repeat: no-repeat;
     background-position: center;
+    padding: 0 10px;
 }
 
 #context-map-container .context-map-root .dot {
-    height: 15px;
-    width: 15px;
-    margin: 0 auto;
     background-color: black;
-    border-radius:15px;
+    margin: 5px auto;
+    padding: 5px;
+}
+
+.text-space {
+    overflow: hidden;
+    -webkit-transition: all 0.5s ease;
+    transition: all 0.5s ease;
 }

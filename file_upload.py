@@ -71,6 +71,7 @@ def interact(page_no=0):
     image_blocks = []
     image_text = []
     image_patches = []
+    image_patch_space = []
     image_space = []
 
     # for block in session["viz"][page_no].img_chops:
@@ -85,16 +86,29 @@ def interact(page_no=0):
             image_block.append(dict((i,text[i]) for i in text if i!="img"))
         image_text.append(image_block)
 
-    for patch in session["viz"][page_no].img_patches:
-        image_patches.append(dict((i,patch[i]) for i in patch if i!="img"))
+    for line in session["viz"][page_no].img_patches:
+        image_patch = []
+        for patch in line:
+            image_patch.append(dict((i,patch[i]) for i in patch if i!="img"))
+        image_patches.append(image_patch)
 
-    for space in session["viz"][page_no].img_space:
-        image_space.append(dict((i,space[i]) for i in space if i!="img"))
+    for line in session["viz"][page_no].img_patch_space:
+        patch_space = []
+        for patch in line:
+            patch_space.append(dict((i,patch[i]) for i in patch if i!="img"))
+        image_patch_space.append(patch_space)
+
+    for line in session["viz"][page_no].img_space:
+        line_space = []
+        for space in line:
+            line_space.append(dict((i,space[i]) for i in space if i!="img"))
+        image_space.append(line_space)
 
     return render_template('interact.html', image_blocks=image_blocks
         , image_text=image_text
         , image_patches=image_patches
-        , image_patches=image_space
+        , image_space=image_space
+        , image_patch_space=image_patch_space
         , image_dim=session["viz"][page_no].chop_dimension
         , bounding_boxes=session["viz"][page_no].bounding_boxes
         , word_blocks=json.dumps(session["viz"][page_no].word_blocks)
@@ -124,7 +138,7 @@ def upload_file():
                 for page in pdf_pages:
                     page.seek(0)
                     viz = iv.InlineViz(page, _translate=session["options"]["translate"]
-                                , _spread=session["options"]["spread"]
+                                , _vertical_spread=session["options"]["spread"]
                                 , _hi_res=session["options"]["hires"]
                                 , _anti_alias=session["options"]["antialias"]
                                 , _pixel_cut_width=session["options"]["cut"]
@@ -140,7 +154,7 @@ def upload_file():
                                 , _translate=session["options"]["translate"]
                                 , _hi_res=session["options"]["hires"]
                                 , _anti_alias=session["options"]["antialias"]
-                                , _spread=session["options"]["spread"]
+                                , _vertical_spread=session["options"]["spread"]
                                 , _pixel_cut_width=session["options"]["cut"]
                                 , _noise_threshold=session["options"]["noise"]
                                 , _line_buffer=session["options"]["buffer"]
@@ -192,7 +206,7 @@ def get_image():
                     , _translate=session["options"]["translate"]
                     , _hi_res=session["options"]["hires"]
                     , _anti_alias=session["options"]["antialias"]
-                    , _spread=session["options"]["spread"]
+                    , _vertical_spread=session["options"]["spread"]
                     , _pixel_cut_width=session["options"]["cut"]
                     , _noise_threshold=session["options"]["noise"]
                     , _line_buffer=session["options"]["buffer"]
