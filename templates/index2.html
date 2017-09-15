@@ -15,9 +15,9 @@
 
   <style>
     #dropzone {
-      padding: 15px 32px;
+      padding: 15px 50px;
       margin: auto;
-      width: 100%;
+      width: 80%;
     }
 
     #video{
@@ -144,20 +144,41 @@
     }
 
     #app-content {
-      width: 60%;
-      margin: 50px 0 0 150px;
+      width: 100%;
+      margin: 100px 0 0 0;
     }
 
-
+    .logo {
+      position: absolute;
+      bottom: 5%;
+      right: 5%;
+      font-size: 5vw;
+      font-weight: 900;
+    }
+    .logo.1 {
+      color: #163e6f;
+    }
+    .logo.2 {
+      color : white;
+    }
   </style>
 </head>
 
 <body>
+  <div class="logo">
+    <span class="1">TEXT</span><span class="2">ENSION</span>
+  </div>
   <div class="container-fluid">
+    <span id="tool-box-toggle" onclick="openNav()">☰</span>      
     <div class="tool-box">
-      <a data-toggle="tab" href="#menu-file">File</a>
-      <a data-toggle="tab" href="#menu-camera">Camera</a>
-      <a data-toggle="tab" href="#menu-settings">Settings</a>
+      <div class="tool-box-close">
+        <a href="javascript:void(0)" class="close-btn" onclick="closeNav()">&times;</a>
+      </div>
+      <div class="tool-box-link">
+        <a data-toggle="tab" href="#menu-file">File</a>
+        <a data-toggle="tab" href="#menu-camera">Camera</a>
+        <a data-toggle="tab" href="#menu-settings">Settings</a>
+      </div>
     </div>
 
     <div id="app-content">      
@@ -210,8 +231,8 @@
 
         <div id="menu-settings" class="tab-pane fade">          
           <div class="row">     
-            <div class="col-md-12 text-center">
-              <table>
+            <div class="text-center">
+              <table style="margin: 0 auto;">
                 <thead>
                   <tr>
                     <th>Settings</th>
@@ -288,6 +309,7 @@
 
   <script src="./static/lib/dropzone/dropzone.js"></script>
   <script src="./static/lib/capture/capture.js"></script>
+  <script src="./static/js/main.js"></script>
   <script src="./static/lib/jquery/jquery-3.2.0.min.js"></script>
   <script src="./static/lib/bootstrap/js/bootstrap.min.js"></script>
   <script>

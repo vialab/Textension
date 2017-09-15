@@ -17,17 +17,12 @@
               <input id="edit-text" type="text"/>
             </div>
           </div>
-          <br/>
-          <br/>
-          <div class="row">
-            <div class="col-sm-12 text-center">
-              <div id="sample-text-box"></div>          
-            </div>
-          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-primary" onclick="saveText();">Edit Text</button>
           <button type="button" id="text-visibility" class="btn btn-primary" onclick="toggleTextVisibility();">Remove Text</button>
+          <button type="button" class="btn btn-primary" onclick="replaceAllText();">Replace All</button>
+          <button type="button" class="btn btn-primary" onclick="undoAllText();">Undo All</button>
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
         </div>
       </div>
@@ -169,7 +164,7 @@
     {% endif %}
     </div>
   </div>
-  <div class="stage container-fluid" style="width:{{ image_dim[0]['width'] }}px;">
+  <div class="stage container-fluid">
   	 <div class="row" style="height:100%;">
   		<div class="vis no-print">
         <div id="vis-container">
@@ -186,7 +181,7 @@
             </span>
             {% endif %}
             {% endfor %}
-            <input class="img-patch-text"/>            
+            <input class="img-patch-text" style="margin-left:{{bounding_boxes[i-1]['x']}}px;"/>
             <canvas class="ngram-usage"></canvas>
             <div class="uniqueness-chart"></div>
           </div>
@@ -241,7 +236,6 @@
   </div>
 {%endblock%}
 {%block scripts%}
-  <script src="./static/js/main.js"></script>
   <script type="text/javascript">
     var ocr = {{ ocr|safe }}
     var translation = {{ translation|safe }}
@@ -249,7 +243,7 @@
     var ngram_plot = {{ ngram_plot|safe }}
     var horizontal_margin = 1.5;
     var vertical_margin = 1.2;
-</script>
+  </script>
   <script type='text/javascript' src="https://cdn.jsdelivr.net/g/canvas2image@0.1(base64.js+canvas2image.min.js+canvas2image.js)"></script>  
   <script type='text/javascript' src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
   <script src="./static/js/linguistic.js"></script>

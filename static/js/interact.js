@@ -28,7 +28,6 @@ var mode = {
 $(document).ready(function() {
     var width = "-" + ($(".tool-box").width()+5).toString() + "px";
     $(".tool-box").css({"transform":"translateX(" + width + ")"});
-    
     resizeStage();
 
     $("#vis-container").on("transitionend webkitTransitionEnd oTransitionEnd otransitionend MSTransitionEnd", function() {
@@ -253,10 +252,6 @@ $(document).ready(function() {
         }
     });
 
-    $("#edit-text").on("input", function() {
-        updateSampleText();
-    });
-
     $("#vis-container").css("opacity", 1);
     $("#loading").removeClass("show");
 });
@@ -333,7 +328,8 @@ function resizeStage() {
     if($("#context-map-container").height() > stage_height) {
         stage_height = $("#context-map-container").height();
     }        
-    $(".stage").height(stage_height * vertical_margin);
+    $(".stage").css("min-height", stage_height * vertical_margin);
+    $(".vis").css("min-height", stage_height * vertical_margin);
     var alt_width = $("#context-map-container").width();
     var entity_map_width = $("#entity-map-container").width();
     if(entity_map_width > alt_width && $("#entity-map-container").is(":visible")) {
@@ -349,7 +345,7 @@ function resizeStage() {
     } else {
         stage_width *= horizontal_margin;
     }
-    $(".stage").width(stage_width);
+    $(".stage").css("min-width", stage_width);
 }
 
 function disableMode(type) {
@@ -400,29 +396,14 @@ function eraseWord($elem) {
     $("#img-text-id").val(text_id);
     var edit_text = $(".custom-text", $("#"+text_id).parent()).html();
     $("#edit-text").val(edit_text);
-    updateSampleText();
     $("#edit-text").height($elem.height());
     $("#edit-text").width($elem.width());
-    $("#sample-text-box").height($elem.height());
-    $("#sample-text-box").width($elem.width());
     $("#text-edit").modal("show");
     if($elem.css("opacity") > 0) {
         $("#text-visibility").html("Hide Text");
     } else {
         $("#text-visibility").html("Show Text");
     }
-}
-
-function openNav() {
-    var width = ($(".tool-box").width()+5).toString() + "px";    
-    $(".tool-box").css({"transform":"translateX(0px)"});
-    // $(".stage").css({"transform":"translateX(" + width + ")"});
-}
-
-function closeNav() {
-    var width = "-" + ($(".tool-box").width()+5).toString() + "px";
-    $(".tool-box").css({"transform":"translateX(" + width + ")"});
-    // $(".stage").css({"transform":"translateX(0px)"});
 }
 
 function fixPronouns() {
@@ -497,17 +478,40 @@ function injectMetaData() {
     }
 }
 
-function updateSampleText() {
-    var text = $("#edit-text").val();
-    $("#sample-text-box").html(text);
-}
-
 function saveText() {
     var text = $("#edit-text").val();    
     var text_id = $("#img-text-id").val();
     $(".custom-text", $("#"+text_id).parent()).html(text);
     $("#"+text_id).css("opacity", 0);
     $("#text-visibility").html("Show Text");
+}
+
+function replaceAllText() {
+    var text = $("#edit-text").val();
+    var text_id = $("#img-text-id").val();
+    $(".custom-text", $("#"+text_id).parent()).html(text);
+    $("#"+text_id).css("opacity", 0);
+    $("#text-visibility").html("Show Text");
+
+    var text_ocr = $("#"+text_id).data("ocr");
+    if(text_ocr != "") {
+        $(".custom-text", $("img[data-ocr='" + text_ocr + "']").parent()).html(text);
+        $("img[data-ocr='" + text_ocr + "']").css("opacity",0);
+    }
+}
+
+function undoAllText() {
+    var text_id = $("#img-text-id").val();
+    var $elem = $("#" + text_id);
+    $elem.css("opacity",1);
+    $("#text-visibility").html("Hide Text");     
+    $(".custom-text", $("#"+text_id).parent()).html("");   
+    $("#edit-text").val("");
+    var text_ocr = $("#"+text_id).data("ocr");
+    if(text_ocr != "") {
+        $(".custom-text", $("img[data-ocr='" + text_ocr + "']").parent()).html("");
+        $("img[data-ocr='" + text_ocr + "']").css("opacity",1);
+    }
 }
 
 function toggleTextVisibility() {
@@ -521,7 +525,6 @@ function toggleTextVisibility() {
         $("#text-visibility").html("Hide Text");     
         $(".custom-text", $("#"+text_id).parent()).html("");   
         $("#edit-text").val("");
-        updateSampleText();
     }
 }
 
