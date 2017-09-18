@@ -289,6 +289,7 @@ class InlineViz:
                 img_patch_pixel.putdata(patch_pixel_list)
                 img_patch_list = [img_patch_pixel,]
                 # duplicate and reshuffle as required
+                last_width = total_width
                 while total_width < target_width:
                     if self.hi_res:
                         img_pixel = Image.new('RGB', (space.size[0], space.size[1]))
@@ -302,6 +303,9 @@ class InlineViz:
                     img_list.append(img_pixel)
                     img_patch_list.append(img_patch_pixel)
                     total_width = total_width + space.size[0]
+                    if total_width == last_width:
+                        break # break infinite loop
+                    last_width = total_width
                 # merge together to get full space image
                 img_space = self.mergeImageList(img_list, "horizontal")
                 img_patch_space = self.mergeImageList(img_patch_list, "horizontal")
