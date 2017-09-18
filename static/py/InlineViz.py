@@ -86,7 +86,7 @@ class InlineViz:
         self.cropImageBlocks() # slice original image into lines
         self.generateExpandedPatches() # strip and expand line spaces
         self.getWordBlocks() # get all word meta info per block
-        self.getNgramPlotImageList() # get ngram charts for all our word info
+        # self.getNgramPlotImageList() # get ngram charts for all our word info
         self.expandWordSpaces() # expand word spaces
         # self.generateFullCompositeImage() # merge everything together
 
