@@ -133,24 +133,6 @@
           </table>
       </span>
     </label>
-    <label class="switch">
-      <input id="grammar-tree" type="checkbox" onclick="toggleMode(this);" data-mode="grammar"/>
-      <span class="check-btn">
-          <table>
-            <tr><td><i class="fa fa-tree" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
-            <tr><td>Grammar Tree</td></tr>
-          </table>
-      </span>
-    </label>
-    <label class="switch">
-      <input id="context-tool" type="checkbox" onclick="toggleMode(this);" data-mode="context"/>
-      <span class="check-btn">
-          <table>
-            <tr><td><i class="fa fa-sliders" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
-            <tr><td>Context Map</td></tr>
-          </table>
-      </span>
-    </label>
     {% if session["options"]["translate"]==True %}
     <label class="switch">
       <input id="translate-text" type="checkbox"/>
@@ -160,8 +142,27 @@
             <tr><td>Translate</td></tr>
           </table>
       </span>
-    </label>  
+    </label>
+    {% else %}
+    <label class="switch">
+      <input id="grammar-tree" type="checkbox" onclick="toggleMode(this);" data-mode="grammar"/>
+      <span class="check-btn">
+          <table>
+            <tr><td><i class="fa fa-tree" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
+            <tr><td>Grammar Tree</td></tr>
+          </table>
+      </span>
+    </label>
     {% endif %}
+    <label class="switch">
+      <input id="context-tool" type="checkbox" onclick="toggleMode(this);" data-mode="context"/>
+      <span class="check-btn">
+          <table>
+            <tr><td><i class="fa fa-sliders" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
+            <tr><td>Context Map</td></tr>
+          </table>
+      </span>
+    </label>
     </div>
   </div>
   <div class="stage container-fluid">

@@ -737,29 +737,29 @@ function setUniqueness(dateval) {
     for(var rank=0; rank<usage_list.length; rank++) {
         var i = usage_list.sort_indices[rank];
         var norm_rank = rank;
-        // if (rank > 0) {
-        //     var last_rank = rank-1;
-        //     var last_idx = usage_list.sort_indices[last_rank];
-        //     while(ngram_plot[i]["usage"][idx_date] == ngram_plot[last_idx]["usage"][idx_date] && last_rank > 0) {
-        //         last_rank--;
-        //         last_idx = usage_list.sort_indices[last_rank];
-        //     }
-        //     norm_rank = last_rank;
-        // }
+        if (rank > 0) {
+            var last_rank = rank-1;
+            var last_idx = usage_list.sort_indices[last_rank];
+            while(ngram_plot[i]["usage"][idx_date] == ngram_plot[last_idx]["usage"][idx_date] && last_rank > 0) {
+                last_rank--;
+                last_idx = usage_list.sort_indices[last_rank];
+            }
+            norm_rank = last_rank;
+        }
         var idx_block = ngram_plot[i]["idx_block"];
         var idx_word = ngram_plot[i]["idx_word"];
         var id = "unique-" + idx_block.toString() + "-" + idx_word.toString();
         var patch_height = $("#"+id).closest("div.img-patch").data("img-height");
         var img_url = "uniqueness_0.png";
-        var image_rank = norm_rank * (usage_list.length/5);
+        var image_rank = (norm_rank/usage_list.length);
 
-        if(image_rank >= (usage_list.length/5)*4) {
+        if(image_rank >= 0.8) {
             img_url = "uniqueness_4.png";
-        } else if(image_rank >= (usage_list.length/5)*3) {
+        } else if(image_rank >= 0.6) {
             img_url = "uniqueness_3.png";
-        } else if(image_rank >= (usage_list.length/5)*2) {
+        } else if(image_rank >= 0.4) {
             img_url = "uniqueness_2.png";
-        } else if(image_rank >= (usage_list.length/5)) {
+        } else if(image_rank >= 0.2) {
             img_url = "uniqueness_1.png";
         } else {
             img_url = "uniqueness_0.png";
@@ -767,8 +767,8 @@ function setUniqueness(dateval) {
 
         $("#"+id).css("background", "url('./static/css/" + img_url + "')");
         $("#"+id).css("background-size", "100% 100%");
-        if(patch_height > 20) {
-            patch_height = 20;
+        if(patch_height > 15) {
+            patch_height = 15;
         }
         $("#"+id).height(patch_height);
     }

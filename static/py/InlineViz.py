@@ -86,7 +86,7 @@ class InlineViz:
         self.cropImageBlocks() # slice original image into lines
         self.generateExpandedPatches() # strip and expand line spaces
         self.getWordBlocks() # get all word meta info per block
-        # self.getNgramPlotImageList() # get ngram charts for all our word info
+        self.getNgramPlotImageList() # get ngram charts for all our word info
         self.expandWordSpaces() # expand word spaces
         # self.generateFullCompositeImage() # merge everything together
 
@@ -116,30 +116,30 @@ class InlineViz:
         # create years x-axis
         x = list(range(start_date,end_date+1))
         # plot each y value dataset against years
-        for ngram in self.ngram_data:
-            key = ngram["text"]
-            if key not in usage_data:
-                continue
-            fig = plt.figure(figsize=(1,1), dpi=80)
-            plt.plot(x, usage_data[key])                        
-            ax = fig.gca()
-            ax.axis("off")
-            # save figure to image dictionary
-            img_bytes = io.BytesIO()
-            plt.savefig(img_bytes, format='png', transparent=True)
-            plt.close()
-            img_bytes.seek(0)
-            img_pil = Image.open(img_bytes) 
-            img_pil = img_pil.resize(ngram["size"], Image.ANTIALIAS)
-            plot_list[key] = self.encodeBase64(img_pil)
+        # for ngram in self.ngram_data:
+        #     key = ngram["text"]
+        #     if key not in usage_data:
+        #         continue
+        #     fig = plt.figure(figsize=(1,1), dpi=80)
+        #     plt.plot(x, usage_data[key])                        
+        #     ax = fig.gca()
+        #     ax.axis("off")
+        #     # save figure to image dictionary
+        #     img_bytes = io.BytesIO()
+        #     plt.savefig(img_bytes, format='png', transparent=True)
+        #     plt.close()
+        #     img_bytes.seek(0)
+        #     img_pil = Image.open(img_bytes) 
+        #     img_pil = img_pil.resize(ngram["size"], Image.ANTIALIAS)
+        #     plot_list[key] = self.encodeBase64(img_pil)
         # put it all together for front-end use
         for ngram in self.ngram_data:
             key = ngram["text"]
-            if key in plot_list:
+            if key in usage_data:
                 img_plot = {
                     "idx_block":ngram["idx_block"]
                     , "idx_word":ngram["idx_word"]
-                    , "ngram":plot_list[key]
+                    # , "ngram":plot_list[key]
                     , "usage":usage_data[key]
                 }
                 self.ngram_plot.append(img_plot)
