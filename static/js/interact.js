@@ -737,15 +737,15 @@ function setUniqueness(dateval) {
     for(var rank=0; rank<usage_list.length; rank++) {
         var i = usage_list.sort_indices[rank];
         var norm_rank = rank;
-        if (rank > 0) {
-            var last_rank = rank-1;
-            var last_idx = usage_list.sort_indices[last_rank];
-            while(ngram_plot[i]["usage"][idx_date] == ngram_plot[last_idx]["usage"][idx_date] && last_rank > 0) {
-                last_rank--;
-                last_idx = usage_list.sort_indices[last_rank];
-            }
-            norm_rank = last_rank;
-        }
+        // if (rank > 0) {
+        //     var last_rank = rank-1;
+        //     var last_idx = usage_list.sort_indices[last_rank];
+        //     while(ngram_plot[i]["usage"][idx_date] == ngram_plot[last_idx]["usage"][idx_date] && last_rank > 0) {
+        //         last_rank--;
+        //         last_idx = usage_list.sort_indices[last_rank];
+        //     }
+        //     norm_rank = last_rank;
+        // }
         var idx_block = ngram_plot[i]["idx_block"];
         var idx_word = ngram_plot[i]["idx_word"];
         var id = "unique-" + idx_block.toString() + "-" + idx_word.toString();

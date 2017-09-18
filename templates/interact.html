@@ -169,7 +169,7 @@
   		<div class="vis no-print">
         <div id="vis-container">
           {% for i in range(image_text|length) %}
-          {% if i > 0 and (image_patches|length) > 0 %}
+          {% if i > 0 and (image_patches|length) > 0 and (image_patches[i-1]|length) > 0 %}
           <div class="img-block img-patch squeeze" id="{{i}}" data-img-height="{{ image_patches[i-1][0]['height'] }}" style="height:0px;">
             {% for y in range(image_patches[i-1]|length) %}
             <span class="patch-box" style="width:{{ image_patches[i-1][y]['width'] }}px;">
