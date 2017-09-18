@@ -265,8 +265,10 @@ class InlineViz:
                     target_width = target_width+extra_space
                 # get the pixel data in this space
                 rgb_img = space.convert("RGB")
-                # assumption here, that first image block is always empty
-                rgb_img_patch = self.img_patch_space[idx_line-1][idx].convert("RGB")
+                if idx_line == 0:
+                    rgb_img_patch = self.img_patch_space[idx_line+1][idx].convert("RGB")
+                else:
+                    rgb_img_patch = self.img_patch_space[idx_line-1][idx].convert("RGB")
                 total_width = space.size[0]
                 pixel_list = []
                 patch_pixel_list = []
@@ -280,12 +282,15 @@ class InlineViz:
                         patch_pixel_list.append((r,g,b))
                 # shuffle the pixel data and create new image
                 img_pixel = Image.new('RGB', (space.size[0], space.size[1]))
-                random.shuffle(pixel_list)
+                # don't shuffle if space is artificial
+                if idx_line > 0 and idx_line < len(self.img_space)-1 and len(self.bounding_boxes[idx_line-1]) > 1:
+                    random.shuffle(pixel_list)
                 img_pixel.putdata(pixel_list)
                 img_list = [img_pixel,]
                 # do the same for patch space
                 img_patch_pixel = Image.new('RGB', (rgb_img_patch.size[0], rgb_img_patch.size[1]))
-                random.shuffle(patch_pixel_list)
+                if idx_line > 0 and idx_line < len(self.img_space)-1 and len(self.bounding_boxes[idx_line-1]) > 1:
+                    random.shuffle(patch_pixel_list)
                 img_patch_pixel.putdata(patch_pixel_list)
                 img_patch_list = [img_patch_pixel,]
                 # duplicate and reshuffle as required
@@ -293,11 +298,13 @@ class InlineViz:
                 while total_width < target_width:
                     if self.hi_res:
                         img_pixel = Image.new('RGB', (space.size[0], space.size[1]))
-                        random.shuffle(pixel_list)                    
+                        if idx_line > 0 and idx_line < len(self.img_space)-1 and  len(self.bounding_boxes[idx_line-1]) > 1:
+                            random.shuffle(pixel_list)                    
                         img_pixel.putdata(pixel_list)
                         # do the same for patch space
                         img_patch_pixel = Image.new('RGB', (rgb_img_patch.size[0], rgb_img_patch.size[1]))
-                        random.shuffle(patch_pixel_list)
+                        if idx_line > 0 and idx_line < len(self.img_space)-1 and  len(self.bounding_boxes[idx_line-1]) > 1:
+                            random.shuffle(patch_pixel_list)
                         img_patch_pixel.putdata(patch_pixel_list)
 
                     img_list.append(img_pixel)
@@ -313,7 +320,6 @@ class InlineViz:
                     # crop any excess to match our target width
                     img_space = img_space.crop((0,0,target_width,img_space.size[1]))
                     img_patch_space = img_patch_space.crop((0,0,target_width,img_patch_space.size[1]))
-
                 img_space_list.append(self.getImageDict(img_space))
                 img_patch_space_list.append(self.getImageDict(img_patch_space))
 
@@ -533,18 +539,22 @@ class InlineViz:
         img_patch_spaces = []
         has_map = False
         img_bw = self.binarizeSharpenImage(image)
+        single_box_space = False
 
         with PyTessBaseAPI() as api:
             api.SetImage(img_bw)
             boxes = api.GetComponentImages(RIL.WORD, True)
             for i, (im, box, _, _) in enumerate(boxes):
                 # crop the image block for display
-                x_start = box["x"]-self.line_buffer                
+                x_start = box["x"]-self.line_buffer
                 if i == 0:
                     x_start = 0
                     
                 if i == len(boxes)-1:
-                    x_end = img.size[0]
+                    if len(boxes)==1:
+                        x_end = box["x"]+box["w"]+self.line_buffer
+                    else:
+                        x_end = img.size[0]
                 else:
                     x_end = boxes[i+1][1]["x"]-self.line_buffer
 
@@ -557,6 +567,23 @@ class InlineViz:
                         img_patch_dict = self.getImageDict(img_patch.crop((x_start, 0, x_end, img_patch.size[1])))
                         img_patch_crops.append(img_patch_dict)
                     break
+
+                if len(boxes)==1:
+                    # if we have only one bounding box
+                    # try to make a space after the word
+                    space_start = x_end
+                    space_end = space_start + self.pixel_cut_width
+                    if space_end > img.size[0]:
+                        space_end = img.size[0]
+                    if space_start < space_end:
+                        space_crop = img.crop((space_start, 0, space_end, img.size[1]))
+                        img_spaces.append(space_crop)
+                        single_box_space = True
+                        if idx > 0:
+                            patch_space_crop = img_patch.crop((space_start, 0, space_end, img_patch.size[1]))
+                            img_patch_spaces.append(patch_space_crop)
+                    else:
+                        x_end = img.size[0]
 
                 if i < len(boxes)-1:
                     # cut the spaces between the words
@@ -617,7 +644,16 @@ class InlineViz:
                         word["map_x"] = self.bounding_boxes[idx]["x"]
                         has_map = True
                 word_boxes.append(word)
-        
+
+            if len(boxes)==1 and single_box_space:
+                # if only one bounding box crop rest of image without text
+                x_start = boxes[0][1]["x"]+boxes[0][1]["w"]+self.line_buffer
+                x_end = img.size[0]
+                img_crop = self.getImageDict(img.crop((x_start, 0, x_end, img.size[1])))
+                img_crops.append(img_crop)
+                img_crop = self.getImageDict(img_patch.crop((x_start, 0, x_end, img_patch.size[1])))
+                img_patch_crops.append(img_crop)
+                
         return img_crops, img_patch_crops, img_spaces, img_patch_spaces, word_boxes, has_map
 
     def chopImageBlockSpace(self, boxes, img):
@@ -653,7 +689,33 @@ class InlineViz:
             img_patch = None
             if idx > 0:
                 img_patch = self.img_patches[idx-1]["img"]
+            if idx == 1:
+                # bring first image along for the ride
+                img_patch = self.mergeImages(self.img_blocks[0]["img"], img_patch, "vertical")
             img_crops, img_patch_crops, img_spaces, img_patch_spaces, word_block, has_map = self.getWordInfo(idx, img, img_patch)
+            if idx == 1:
+                # split first image from patch
+                new_patch_crops = []
+                prev_img_crops = []
+                prev_height = self.img_blocks[0]["img"].size[1]
+                for crop in img_patch_crops:
+                    img_patch_crop = crop["img"].crop((0,prev_height,crop["img"].size[0],crop["img"].size[1]))
+                    new_patch_crops.append(self.getImageDict(img_patch_crop))
+                    img_crop = crop["img"].crop((0,0,crop["img"].size[0], prev_height))
+                    prev_img_crops.append(self.getImageDict(img_crop))
+                img_patch_crops = new_patch_crops
+                self.img_text[0] = prev_img_crops
+                # split first image from space
+                new_patch_spaces = []
+                prev_img_spaces = []
+                for crop in img_patch_spaces:
+                    img_patch_crop = crop.crop((0,prev_height,crop.size[0],crop.size[1]))
+                    new_patch_spaces.append(img_patch_crop)
+                    img_crop = crop.crop((0,0,crop.size[0], prev_height))
+                    prev_img_spaces.append(img_crop)
+                img_patch_spaces = new_patch_spaces
+                self.img_space[0] = prev_img_spaces
+
             if has_map:
                 for crop in img_crops:
                     crop["has_map"] = True
