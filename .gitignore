@@ -10,3 +10,4 @@ outputs/**
 **/*.pyc
 vis.pkl
 app_session/**
+samples/**
