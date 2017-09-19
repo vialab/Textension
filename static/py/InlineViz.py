@@ -129,7 +129,7 @@ class InlineViz:
         #     plt.savefig(img_bytes, format='png', transparent=True)
         #     plt.close()
         #     img_bytes.seek(0)
-        #     img_pil = Image.open(img_bytes) 
+        #     img_pil = Image.open(img_bytes)
         #     img_pil = img_pil.resize(ngram["size"], Image.ANTIALIAS)
         #     plot_list[key] = self.encodeBase64(img_pil)
         # put it all together for front-end use
