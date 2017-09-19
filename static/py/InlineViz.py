@@ -141,6 +141,7 @@ class InlineViz:
                 img_plot = {
                     "idx_block":ngram["idx_block"]
                     , "idx_word":ngram["idx_word"]
+                    , "word_pos":ngram["word_pos"]
                     , "ngram":plot_list[key]
                     , "usage":usage_data[key]
                 }
@@ -621,6 +622,7 @@ class InlineViz:
                 ngram = {
                     "idx_block":idx
                     , "idx_word": len(word_boxes)
+                    , "word_pos": i
                     , "size":(box["w"],((self.space_height - self.line_buffer) * self.vertical_spread))
                     , "text":text.strip()
                 }

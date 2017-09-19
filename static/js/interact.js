@@ -51,7 +51,7 @@ $(document).ready(function() {
         }
     });
 
-    drawUniqueness();
+    // drawUniqueness();
     $("#uniqueness-range").hide();
     $("#uniqueness").on("click", function() {
         if($(this).is(":checked")) {
@@ -85,14 +85,14 @@ $(document).ready(function() {
       
     rangeSlider();
 
-    drawNGramUsage();
-    $("canvas.ngram-usage").hide();
+    // drawNGramUsage();
+    $(".ngram-usage").hide();
     $("#ngram").on("click", function() {
         if($(this).is(":checked")) {
             openSpaces(false);            
-            $("canvas.ngram-usage").show();
+            $(".ngram-usage").show();
         } else {
-            $("canvas.ngram-usage").hide();            
+            $(".ngram-usage").hide();            
         }
     });
 
@@ -702,30 +702,6 @@ function detectResizeStage() {
     }
 }
 
-function drawUniqueness() {
-    var min_width = 9999;
-    $(".img-block.img-patch").each(function(idx_curr) {
-        var idx = idx_curr+1;
-        var $chart = $("div.uniqueness-chart", this);
-        for(var i=0; i<ngram_plot.length; i++) {
-            if(ngram_plot[i]["idx_block"] == idx) {
-                var idx_word = ngram_plot[i]["idx_word"];
-                var width = word_blocks[idx][idx_word]["width"].toString();
-                var left = word_blocks[idx][idx_word]["x"].toString();
-                if(width<min_width) {
-                    min_width = width;
-                }
-                $chart.append("<span id='unique-" + idx.toString() + "-" + idx_word.toString()
-                    + "' style='height:0px;bottom:0px;left:" + left + "px;width:" + width + "px;'></span>");
-            }
-        }
-    });
-    if(min_width > 20) {
-        min_width = 20;
-    }
-    $(".img-block.img-patch div.uniqueness-chart span").width(min_width);
-}
-
 function argsort(to_sort) {
     for (var i = 0; i < to_sort.length; i++) {
       to_sort[i] = [to_sort[i], i];
@@ -762,7 +738,7 @@ function setUniqueness(dateval) {
             norm_rank = last_rank;
         }
         var idx_block = ngram_plot[i]["idx_block"];
-        var idx_word = ngram_plot[i]["idx_word"];
+        var idx_word = ngram_plot[i]["word_pos"];
         var id = "unique-" + idx_block.toString() + "-" + idx_word.toString();
         var patch_height = $("#"+id).closest("div.img-patch").data("img-height");
         var img_url = "uniqueness_0.png";
@@ -797,6 +773,7 @@ function drawConfidence() {
             var idx_block = word_blocks[i][j]["idx_block"];
             var idx_word = word_blocks[i][j]["word_pos"];
             var text_id = "#text-" + idx_block.toString() + "-" + idx_word.toString();
+            var patch_id = "#patch-" + idx_block.toString() + "-" + idx_word.toString();
             var $conf = $("<div/>", {"class":"text-confidence"});
             $conf.css("opacity", opacity);
             $conf.width(word_blocks[i][j]["width"]);
@@ -806,30 +783,26 @@ function drawConfidence() {
                 $conf.css("left", word_blocks[i][j]["x"] + "px");                
             }
             $(text_id).parent().append($conf);
+
+            for(var y=0; y<ngram_plot.length; y++) {
+                if(ngram_plot[y]["idx_block"] == idx_block && ngram_plot[y]["word_pos"]==idx_word) {
+                    var $img = $("<img/>",{"class":"ngram-usage"});
+                    $img.attr("src", "data:image/png;base64,"+ngram_plot[y]["ngram"]);
+                    if(idx_word==0) {
+                        $img.css("left",word_blocks[i][j]["x"]+"px");
+                    }
+                    $(patch_id).parent().append($img);
+                    break;
+                }
+            }
+            var $uniqueness = $("<span/>", {"id":"unique-" + idx_block + "-" + idx_word});
+            $uniqueness.css({"height":"0px", "width":"20px"});
+            if(idx_word==0) {
+                $uniqueness.css("left",word_blocks[i][j]["x"]+"px");
+            }
+            $(patch_id).parent().append($uniqueness);
         }
     }
-}
-
-function drawNGramUsage() {
-    $(".img-block.img-patch").each(function(idx_curr) {
-        var idx = idx_curr+1;
-        var canvas = $("canvas.ngram-usage", this)[0];
-        var ctx = canvas.getContext("2d");
-        ctx.canvas.width = $(this).width();
-        ctx.canvas.height = $(this).data("img-height");
-        for(var i=0; i<ngram_plot.length; i++) {
-            if(ngram_plot[i]["idx_block"] == idx) {
-                idx_word = ngram_plot[i]["idx_word"];
-                ctx.beginPath();                
-                var img = new Image();
-                img.coords = {x:word_blocks[idx][idx_word]["x"],y:0};
-                img.onload = function() {
-                    ctx.drawImage(this, this.coords.x, this.coords.y);
-                };
-                img.src = "data:image/png;base64,"+ngram_plot[i]["ngram"];
-            }
-        }
-    });
 }
 
 function drawLocations() {
@@ -857,27 +830,6 @@ function drawLocations() {
             }
         }
     }
-    // $(".img-block:not(.img-patch)").each(function(idx) {
-    //     var canvas = $("canvas.entity-location", this)[0];
-    //     var ctx = canvas.getContext("2d");
-    //     var height = $(this).height();
-    //     ctx.canvas.width = $(this).width();
-    //     ctx.canvas.height = height + map_height;
-    //     ctx.canvas.style.top = "-" + map_height + "px";
-    //     for(var i=0; i<word_blocks[idx].length; i++) {
-    //         if(word_blocks[idx][i]["label"] == "GPE") {
-    //             ctx.beginPath();
-    //             ctx.fillStyle = "rgba(53, 153, 66, 0.5)";
-    //             ctx.fillRect(word_blocks[idx][i]["x"], word_blocks[idx][i]["y"] + map_height, word_blocks[idx][i]["width"], height);
-    //             var img = new Image();
-    //             img.coords = {x:word_blocks[idx][i]["map_x"],y:0};
-    //             img.onload = function() {
-    //                 ctx.drawImage(this, this.coords.x, this.coords.y);
-    //             };
-    //             img.src = "data:image/png;base64,"+word_blocks[idx][i]["map"];
-    //         }
-    //     }
-    // });
 }
 
 function init() {

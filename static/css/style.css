@@ -240,16 +240,23 @@ input:focus + .check-btn {
     
 }
 
-.vis .img-block.img-patch img {
+.vis .img-block.img-patch img, .vis .img-block.img-patch .patch-box span {
     position:absolute;
     padding: 0;
     margin: 0;
-    left: 0;
-    top: 0; 
-    width: 100%;
 }
 
-.vis .img-block.img-patch div.uniqueness-chart {
+.vis .img-block.img-patch .patch-box span {
+    bottom: 0;
+}
+
+.vis .img-block.img-patch img:not(.ngram-usage) {
+    left: 0;
+    width: 100%;
+    top: 0;    
+}
+
+.vis .img-block.img-patch div.uniqueness-chart, .vis .img-block.img-patch div.ngram-usage {
     position: absolute;
     height: 100%;
     width: 100%;
@@ -258,7 +265,7 @@ input:focus + .check-btn {
     z-index: 0;
 }
 
-.vis .img-block.img-patch div.uniqueness-chart span {
+.vis .img-block.img-patch div.uniqueness-chart span, .vis .img-block.img-patch div.ngram-usage span {
     position: absolute;
     background-size: 100% 100%;
     background-position: center;
@@ -297,7 +304,7 @@ canvas.entity-location, canvas.ngram-usage {
     overflow: hidden;
 }
 
-.img-patch img {
+.img-patch img:not(.ngram-usage) {
     width: 100%;
 }
 
