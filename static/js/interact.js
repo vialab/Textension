@@ -13,7 +13,8 @@ mouse_down = false,
 expand_width = 0,
 vertical_mode = false,
 horizontal_mode = false,
-resizing = false;
+resizing = false,
+in_transit = 0;
 
 var mode = {
     "draw": false,
@@ -29,10 +30,6 @@ $(document).ready(function() {
     var width = "-" + ($(".tool-box").width()+5).toString() + "px";
     $(".tool-box").css({"transform":"translateX(" + width + ")"});
     resizeStage();
-
-    $("#vis-container").on("transitionend webkitTransitionEnd oTransitionEnd otransitionend MSTransitionEnd", function() {
-        resizeStage();
-    });
 
     $(".img-block:not(.img-patch)").on("click", function() {
         if (getActiveMode() != "vertical") return;
@@ -322,7 +319,6 @@ function togglePointerEvents( on ) {
 }
 
 function resizeStage() {
-    if(resizing) return;
     var vp_height = $(window).height();
     var vp_width = $(window).width();
     var stage_height = $("#vis-container").height();
@@ -343,10 +339,12 @@ function resizeStage() {
     if($("#context-map-container table").length > 0 || ($("#entity-map-container img").length > 0 && $("#entity-map-container").is(":visible"))) {
         stage_width += (alt_width * 2);
         $("#context-map-container").css("top", $("#1").position().top );
+        $("#context-map-container").css("left", $("#vis-container").position().left + $("#1").eq(0).width());
         $("#entity-map-container img").each(function() {
             var text_id = $(this).data("word-id");
             $(this).css("top", $(text_id).parent().parent().position().top + "px");
         });
+        $("entity-map-container").css("left", $("#vis-container").position().left - $("#entity-map-container").width());
     } else {
         stage_width *= horizontal_margin;
     }
@@ -537,13 +535,14 @@ function toggleTextVisibility() {
 }
 
 function toggleSingleSpace($elem, is_horizontal) {
+    in_transit++;
     if(is_horizontal) {
         var $parent = $elem.parent();
         if($parent.hasClass("squeeze")) {
             $parent.removeClass("squeeze");
             space_width = $parent.data("img-width");
             stock_width = $parent.width();
-            $parent.width(space_width);
+            $parent.transition({width:space_width}, detectResizeStage);
             block_id = $parent.parent().attr("id");
             justifyDocument(block_id, (space_width-stock_width));
         } else {
@@ -560,9 +559,9 @@ function toggleSingleSpace($elem, is_horizontal) {
                     space_height = $elem.data("map-height");
                 }
             }
-            $elem.height(space_height);
+            $elem.transition({height:space_height}, detectResizeStage);
         } else {
-            $elem.height(0);
+            $elem.transition({height:0}, detectResizeStage);
             $elem.addClass("squeeze");
         }
     }
@@ -580,6 +579,7 @@ function justifyDocument(idx, space_width) {
             while(added_width < space_width) {
                 var target_width = Math.floor(space_width/$spaces.length);
                 var extra_width = space_width - (target_width*$spaces.length);
+                in_transit += $spaces.length;
                 $spaces.each(function(i) {
                     var add_width = target_width + $(this).width();
                     var full_width = $(this).data("img-width");
@@ -603,7 +603,7 @@ function justifyDocument(idx, space_width) {
                             }
                         }
                     }
-                    $(this).width(add_width);
+                    $(this).transition({width:add_width}, detectResizeStage);
                     added_width += add_width;
                 });
                 $spaces = $("span.text-space.squeeze", $(this));
@@ -619,13 +619,7 @@ function openActiveSpaces() {
     } else if(active_mode == "vertical") {
         openSpaces(false);        
     } else {
-        $("#vertical-space").prop("checked", true);
-        $("#horizontal-space").prop("checked", true);
-        setActiveMode("vertical");
-        setActiveMode("horizontal");
-        resizing = true;
         openSpaces(false);
-        resizing = false;        
         openSpaces(true);
     }
 }
@@ -667,12 +661,15 @@ function toggleSpace( is_horizontal ) {
 function openSpaces( is_horizontal ) {
     if(is_horizontal) {
         $(".text-space").removeClass("squeeze");
+        in_transit += $(".text-space").length;
         $(".text-space").each(function() {
             space_width = $(this).data("img-width");
-            $(this).width(space_width);
+            // $(this).width(space_width);
+            $(this).transition({width:space_width}, detectResizeStage);
         });
     } else {
         $(".img-patch").removeClass("squeeze");
+        in_transit += $(".img-patch").length;
         $(".img-patch").each(function() {
             space_height = $(this).data("img-height");
             if($("#location").is(":checked")) {
@@ -680,18 +677,28 @@ function openSpaces( is_horizontal ) {
                     space_height = $(this).data("map-height");
                 }
             }
-            $(this).height(space_height);
+            // $(this).height(space_height);
+            $(this).transition({height:space_height}, detectResizeStage);
         });
     }
 }
 
 function closeSpaces( is_horizontal ) {
     if(is_horizontal) {
-        $(".text-space").width(0);
+        in_transit += $(".text-space").length;
+        $(".text-space").transition({width:0}, detectResizeStage);
         $(".text-space").addClass("squeeze");
     } else {
-        $(".img-patch").height(0);
+        in_transit += $(".img-patch").length;
+        $(".img-patch").transition({height:0}, detectResizeStage);
         $(".img-patch").addClass("squeeze");        
+    }
+}
+
+function detectResizeStage() {
+    in_transit--;
+    if(in_transit == 0) {
+        resizeStage();
     }
 }
 

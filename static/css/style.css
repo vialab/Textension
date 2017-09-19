@@ -420,7 +420,7 @@ canvas.entity-location, canvas.ngram-usage {
 
 #context-map-container {
     position: absolute;
-    right: 0px;
+    left: 0px;
     top: 0px;
     -webkit-transition: all 0.5s ease;
     transition: all 0.5s ease;
@@ -430,6 +430,8 @@ canvas.entity-location, canvas.ngram-usage {
     position: absolute;
     left: 0px;
     top: 0px;
+    -webkit-transition: all 0.5s ease;
+    transition: all 0.5s ease;
 }
 
 #entity-map-container img {
