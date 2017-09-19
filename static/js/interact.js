@@ -344,7 +344,7 @@ function resizeStage() {
             var text_id = $(this).data("word-id");
             $(this).css("top", $(text_id).parent().parent().position().top + "px");
         });
-        $("entity-map-container").css("left", $("#vis-container").position().left - $("#entity-map-container").width());
+        $("#entity-map-container").css("left", $("#vis-container").position().left - $("#entity-map-container").width());
     } else {
         stage_width *= horizontal_margin;
     }
