@@ -323,11 +323,16 @@ function togglePointerEvents( on ) {
 
 function resizeStage() {
     if(resizing) return;
+    var vp_height = $(window).height();
+    var vp_width = $(window).width();
     var stage_height = $("#vis-container").height();
     var stage_width = $("#vis-container").width();
     if($("#context-map-container").height() > stage_height) {
         stage_height = $("#context-map-container").height();
-    }        
+    }
+    if(stage_height < vp_height) {
+        stage_height = vp_height;
+    }
     $(".stage").css("min-height", stage_height * vertical_margin);
     $(".vis").css("min-height", stage_height * vertical_margin);
     var alt_width = $("#context-map-container").width();
@@ -344,6 +349,9 @@ function resizeStage() {
         });
     } else {
         stage_width *= horizontal_margin;
+    }
+    if(stage_width < vp_width) {
+        stage_width = vp_width;
     }
     $(".stage").css("min-width", stage_width);
 }
