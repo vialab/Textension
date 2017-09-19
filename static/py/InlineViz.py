@@ -13,7 +13,8 @@ import base64
 import io
 import googleMaps as gm
 import getngrams as ng
-import matplotlib as matplotlibmpl.use("Agg")
+import matplotlib as mpl
+mpl.use("Agg")
 import matplotlib.pyplot as plt
 from opacityConversion import *
 from math import ceil, floor
