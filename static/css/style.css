@@ -248,6 +248,8 @@ input:focus + .check-btn {
 
 .vis .img-block.img-patch .patch-box span {
     bottom: 0;
+    -webkit-transition: all 0.5s ease;
+    transition: all 0.5s ease;
 }
 
 .vis .img-block.img-patch img:not(.ngram-usage) {
