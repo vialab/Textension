@@ -60,7 +60,7 @@ $(document).ready(function() {
             $("#uniqueness-range").show();
             $(".switch").css("height", "15%");
         } else {
-            $("div.uniqueness-chart span").height(0);
+            $(".patch-box span.uniqueness-bar").height(0);
             $("#uniqueness-range").hide();
             $(".switch").css("height", "16%");
         }
@@ -795,7 +795,7 @@ function drawConfidence() {
                     break;
                 }
             }
-            var $uniqueness = $("<span/>", {"id":"unique-" + idx_block + "-" + idx_word});
+            var $uniqueness = $("<span/>", {"id":"unique-" + idx_block + "-" + idx_word, "class":"uniqueness-bar"});
             $uniqueness.css({"height":"0px", "width":"20px"});
             if(idx_word==0) {
                 $uniqueness.css("left",word_blocks[i][j]["x"]+"px");

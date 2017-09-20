@@ -184,7 +184,6 @@
             {% endif %}
             {% endfor %}
             <input class="img-patch-text" style="margin-left:{{bounding_boxes[i-1]['x']}}px;"/>
-            <div class="uniqueness-chart"></div>
           </div>
           {% endif %}
           <div class="img-block" id="{{i}}" style="height:{{ image_dim[i]['height'] }}px;background-image: url('data:image/png;base64,{{ image_patches[i-1]['src'] }}');">
