@@ -27,7 +27,7 @@ class InlineViz:
     img_file = None
     nlp = spacy.load("en")
 
-    def __init__(self, stream, _translate=False, _max_size=(1024,1024), _pixel_cut_width=5, _noise_threshold=25, _vertical_spread=5, _horizontal_spread=5, _line_buffer=1, _hi_res=True, _rgb_text=(0,0,0), _rgb_bg=(255,255,255), _anti_alias=True, _map_height=150, _blur=0):
+    def __init__(self, stream, _translate=False, _max_size=(1024,1024), _pixel_cut_width=5, _noise_threshold=25, _vertical_spread=5, _horizontal_spread=5, _line_buffer=1, _hi_res=True, _rgb_text=(0,0,0), _rgb_bg=(255,255,255), _anti_alias=True, _map_height=150, _blur=0, _google_key=""):
         """ Initialize a file to work with """
         self.max_size = _max_size # maximum size of image for resizing
         self.img_file = Image.open(stream) # image itselfs
@@ -62,6 +62,7 @@ class InlineViz:
         self.map_height = _map_height # height of maps for insertion
         self.blur = _blur # intensity of median blurring for patches
         self.binarize = False # toggle binarization for pre-processing tesseract input
+        self.google_key = _google_key # google developer key
 
     def decompose(self):
         """ Use OCR to find bounding boxes of each line in document and dissect 
@@ -82,7 +83,7 @@ class InlineViz:
                 self.bounding_boxes.append(box)
                 self.ocr_text.append(api.GetUTF8Text())
 
-        if self.translate:
+        if self.translate and self.google_key != "":
             self.translateText() # translate the text to french
         self.space_height = self.getMinSpaceHeight() # get the minimum patch height                    
         self.cropImageBlocks() # slice original image into lines
@@ -193,7 +194,7 @@ class InlineViz:
     def translateText(self):
         """ Translate text that has been OCR'd from this image """
         for text in self.ocr_text:
-            trans_text = g_translate(text)
+            trans_text = g_translate(text, self.google_key)
             self.ocr_translated.append(trans_text)
 
     def generateFullCompositeImage(self):

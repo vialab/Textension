@@ -312,6 +312,10 @@
                     <td>Max Height</td>
                     <td><input id="option-height" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['height'] }}"/></td>
                   </tr>
+                  <tr>
+                    <td>Google Dev Key</td>
+                    <td><input id="option-google" type="text" class="form-control" form="demo-upload" value="{{ session['options']['google_key'] }}"/></td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -345,6 +349,7 @@
         formData.append("buffer", $('#option-buffer').val()); 
         formData.append("width", $('#option-width').val()); 
         formData.append("height", $('#option-height').val());
+        formData.append("google_key", $('#option-google').val());
       });
     });
   </script>

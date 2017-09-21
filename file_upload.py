@@ -38,7 +38,8 @@ default_options = {
     "height":1024,
     "translate": False,
     "antialias": True,
-    "blur":0
+    "blur":0,
+    "google_key":""
 }
 
 def allowed_file(filename):
@@ -145,6 +146,7 @@ def upload_file():
                                 , _noise_threshold=session["options"]["noise"]
                                 , _line_buffer=session["options"]["buffer"]
                                 , _blur=session["options"]["blur"]
+                                , _google_key=session["options"]["google_key"]
                                 , _max_size=(session["options"]["width"],session["options"]["height"]))
                     viz.decompose()
                     viz_list.append(viz)
@@ -159,6 +161,7 @@ def upload_file():
                                 , _noise_threshold=session["options"]["noise"]
                                 , _line_buffer=session["options"]["buffer"]
                                 , _blur=session["options"]["blur"]
+                                , _google_key=session["options"]["google_key"]
                                 , _max_size=(session["options"]["width"],session["options"]["height"]))
                 viz.decompose()
                 viz_list.append(viz)
@@ -185,7 +188,10 @@ def saveVizSessionArgs(form):
             else:
                 options_form[option] = False
             continue
-        options_form[option] = int(form[option])
+        if option == "google_key":
+            options_form[option] = form[option]
+        else:
+            options_form[option] = int(form[option])
 
     session["options"] = options_form
 
@@ -211,6 +217,7 @@ def get_image():
                     , _noise_threshold=session["options"]["noise"]
                     , _line_buffer=session["options"]["buffer"]
                     , _blur=session["options"]["blur"]
+                    , _google_key=session["options"]["google_key"]
                     , _max_size=(session["options"]["width"],session["options"]["height"]))
     viz.decompose()
     viz_list.append(viz)

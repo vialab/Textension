@@ -118,7 +118,8 @@
           height:$("#option-height").val(),
           translate: $('#option-translate').is(":checked"),
           hires: $('#option-hires').is(":checked"),
-          antialias: $('#option-antialias').is(":checked")
+          antialias: $('#option-antialias').is(":checked"),
+          google_key: $('#option-google').val()
         }
       }).done(function() {
         window.location.href = "/interact"
