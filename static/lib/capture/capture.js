@@ -103,7 +103,8 @@
 
       var data = canvas.toDataURL('image/png');
       photo.setAttribute('src', data);
-
+      $("#photo").show();
+      $(".output p").html("");
       $.ajax({
         type: "POST",
         url: "/hook",
@@ -122,7 +123,7 @@
           google_key: $('#option-google').val()
         }
       }).done(function() {
-        window.location.href = "/interact"
+        window.location.href = "/interact";
       });
 
 
