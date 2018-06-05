@@ -6,7 +6,6 @@ img_patches/**
 Inputs/**
 outputs/**
 .vscode/**
-**/*.pkl
 **/*.pyc
 vis.pkl
 app_session/**
