@@ -30,7 +30,7 @@ class InlineViz:
     def __init__(self, stream, _translate=False, _max_size=(1024,1024), _pixel_cut_width=5, _noise_threshold=25, _vertical_spread=5, _horizontal_spread=5, _line_buffer=1, _hi_res=True, _rgb_text=(0,0,0), _rgb_bg=(255,255,255), _anti_alias=True, _map_height=150, _blur=0, _google_key=""):
         """ Initialize a file to work with """
         self.max_size = _max_size # maximum size of image for resizing
-        self.img_file = Image.open(stream) # image itselfs
+        self.img_file = Image.open(stream) # image itself
         self.img_file.thumbnail(self.max_size, Image.ANTIALIAS) # resize image to maximum size
         self.img_width, self.img_height = self.img_file.convert("RGBA").size # resized width and height
         self.line_list = self.detectLines(self.img_file) # X coordinates for vertical lines

@@ -18,7 +18,7 @@ function defineWord($elem) {
         text = text.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
     };
 
-    fetch(`http://www.dictionaryapi.com/api/v1/references/collegiate/xml/${text}?key=${mwd_api_key}`)
+    fetch(`https://www.dictionaryapi.com/api/v1/references/collegiate/xml/${text}?key=${mwd_api_key}`)
     .then(function(response) {
         response.text().then(function(data) {
             var xml = $.parseXML(data),

@@ -64,6 +64,16 @@ input:focus + .check-btn {
     color: white;
 }
 
+.sample-doc {
+    display: inline-block;
+    vertical-align: top;
+    width: 80px;
+    height: 100px;
+    border: 1px solid black;
+    margin: 5px;
+    background-color: rgba(255,255,255,0.7);
+}
+
 #main-nav {
     background: rgba(75,95,125,1);
     text-transform: uppercase;
@@ -441,10 +451,11 @@ canvas.entity-location, canvas.ngram-usage {
     top: 0px;
     -webkit-transition: all 0.5s ease;
     transition: all 0.5s ease;
+    width: 550px;
 }
 
 #entity-map-container img {
-    position: relative;
+    position: absolute;
     -webkit-transition: all 0.5s ease;
     transition: all 0.5s ease;
 }

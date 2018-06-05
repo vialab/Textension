@@ -66,6 +66,15 @@ def define(word):
 @app.route('/interact')
 @app.route('/interact/<page_no>')
 def interact(page_no=0):
+    sample = request.args.get("sample")
+    if sample is not None:
+        if sample == "book_of_myths":
+            sample = "./server/book_of_myths.pkl"
+        if sample == "southern_life":
+            sample = "./server/southern_life.pkl"
+        with open(sample, 'r') as f:
+            session["viz"] = pickle.load(f)
+        
     if "viz" not in session:
         return redirect(url_for("index"))
 
@@ -167,8 +176,8 @@ def upload_file():
                 viz_list.append(viz)
 
             session["viz"] = viz_list
-            # with open("./vis.pkl", "w+") as f:
-            #     pickle.dump(viz_list, f)
+            with open("./southern_life.pkl", "w+") as f:
+                pickle.dump(viz_list, f)
     return redirect(url_for("index"))
 
 def saveVizSessionArgs(form):
