@@ -65,7 +65,7 @@ function defineWord($elem) {
 
 function createContextMap($elem) {
     var og_text = $elem.data("ocr");
-    if(typeof(og_text) == "undefined") return;
+    if(typeof(og_text) == "undefined") alert("Word not recognized");
 
     var $context_map = $("<table/>");
     var text_id = og_text.replace(/[!"#$%&'()*+,.\/:;<=>?@[\\\]^`{|}~]/g, "");
