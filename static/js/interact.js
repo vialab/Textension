@@ -683,6 +683,7 @@ function openSpaces( is_horizontal ) {
             $(this).transition({height:space_height}, detectResizeStage);
         });
     }
+    repositionMaps();
 }
 
 function closeSpaces( is_horizontal ) {
@@ -694,6 +695,16 @@ function closeSpaces( is_horizontal ) {
         in_transit += $(".img-patch").length;
         $(".img-patch").transition({height:0}, detectResizeStage);
         $(".img-patch").addClass("squeeze");        
+    }
+    repositionMaps();
+}
+
+function repositionMaps() {
+    if($("#location").is(":checked")) {
+        $(".entity-location").hide();
+        $("#entity-map-container").hide();
+        $(".entity-location").show();
+        $("#entity-map-container").show();
     }
 }
 
