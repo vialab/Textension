@@ -89,7 +89,12 @@ def interact(page_no=0):
     #     for chop in block:
     #         image_block.append(dict((i,chop[i]) for i in chop if i!="img"))
     #     image_blocks.append(image_block)
-    
+    try:
+        page_no = int(page_no)
+    except:
+        page_no = 0
+    if page_no >= len(session["viz"]):
+        page_no = 0
     for block in session["viz"][page_no].img_text:
         image_block = []
         for text in block:
@@ -176,8 +181,8 @@ def upload_file():
                 viz_list.append(viz)
 
             session["viz"] = viz_list
-            with open("./southern_life.pkl", "w+") as f:
-                pickle.dump(viz_list, f)
+            # with open("./southern_life.pkl", "w+") as f:
+            #     pickle.dump(viz_list, f)
     return redirect(url_for("index"))
 
 def saveVizSessionArgs(form):
