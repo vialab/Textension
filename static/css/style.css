@@ -507,3 +507,56 @@ canvas.entity-location, canvas.ngram-usage {
     -webkit-transition: all 0.5s ease;
     transition: all 0.5s ease;
 }
+
+#page-options {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    height: 150px;
+    width: 100vw;
+}
+
+#page-options ul {
+    list-style-type: none;
+    border-top: 1px solid darkgray;
+    background-color: lightgray;
+    height: 100%;
+    width: 100%;
+    white-space: nowrap;
+    overflow-x: scroll;
+    padding: 0 15px;
+}
+
+#page-options ul li {
+    display: inline-block;
+    line-height: 75px;
+    margin: 15px;
+    height: 120px;
+    width: 100px;
+}
+
+#page-options ul li a {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 1px solid black;
+    background-color: white;
+}
+
+#page-options ul li a span {
+    display: block;
+    height: 100%;
+    margin: 0 auto;
+    text-align:center;
+    line-height: 110px;
+    font-size: 40px;
+}
+
+#page-options #page-options-toggle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding-right: 5px;
+    cursor: pointer;
+    font-size: 12px;
+}

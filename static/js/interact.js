@@ -331,8 +331,8 @@ function resizeStage() {
     if(stage_height < vp_height) {
         stage_height = vp_height;
     }
-    $(".stage").css("min-height", stage_height * vertical_margin);
-    $(".vis").css("min-height", stage_height * vertical_margin);
+    $(".stage").css("min-height", (stage_height+150) * vertical_margin);
+    $(".vis").css("min-height", (stage_height+150) * vertical_margin);
     var alt_width = $("#context-map-container").width();
     var entity_map_width = $("#entity-map-container").width();
     if(entity_map_width > alt_width && $("#entity-map-container").is(":visible")) {
@@ -640,6 +640,18 @@ function closeActiveSpaces() {
         closeSpaces(false);
         resizing = false;
         closeSpaces(true);
+    }
+}
+
+function togglePageOptions() {
+    if($("#page-options:not(.squeeze)").length > 0) {
+        $("#page-options").css("bottom", "-135px");
+        $("#page-options").addClass("squeeze");
+        $("#page-options-toggle").html("▲");
+    } else {
+        $("#page-options").css("bottom", "0");
+        $("#page-options").removeClass("squeeze");
+        $("#page-options-toggle").html("▼");
     }
 }
 

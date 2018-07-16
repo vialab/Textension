@@ -130,7 +130,8 @@ def interact(page_no=0):
         , ngram_plot=json.dumps(session["viz"][page_no].ngram_plot)
         , ocr=json.dumps([h.unescape(line) for line in session["viz"][page_no].ocr_text])
         , translation=json.dumps([h.unescape(line) for line in session["viz"][page_no].ocr_translated])
-        , page_no=page_no)
+        , page_no=page_no
+        , num_pages=len(session["viz"]))
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():

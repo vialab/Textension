@@ -207,7 +207,15 @@
         </div>
       </div>
     </div>
-    <div id="color-options">
+  <div id="page-options">
+    <span id="page-options-toggle" onclick="togglePageOptions();">▼</span>
+    <ul>
+      {% for i in range(num_pages) %}
+        <li><a href="/interact/{i}"><span>{{i+1}}</span></a></li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div id="color-options">
     <div id="text-options">
       <span id="text-color-select"></span>
       <div style="height:30px;padding-left:40px;">TEXT COLOR</div>
@@ -232,8 +240,8 @@
       <br/>
       <input type="button" value="clear" id="clr" onclick="erase()">
     </div>
-    </div>
   </div>
+</div>
 {%endblock%}
 {%block scripts%}
   <script type="text/javascript">
