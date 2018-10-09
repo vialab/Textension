@@ -1,4 +1,4 @@
-var canvas, ctx, css_transition, flag = false,
+let canvas, ctx, css_transition, flag = false,
 prevX = 0,
 currX = 0,
 prevY = 0,
@@ -16,7 +16,8 @@ horizontal_mode = false,
 resizing = false,
 in_transit = 0;
 
-var mode = {
+// keeps track of active tools
+let mode = {
     "draw": false,
     "eraser": false,
     "define": false,
@@ -26,22 +27,23 @@ var mode = {
     "horizontal": false
 };
 
+// instantiate EVERYTHING
 $(document).ready(function() {
-    closeNav();
-    resizeStage();
+    closeNav(); // start with tool bar closed
+    resizeStage(); // handle the resizing of the window and recalculate margins
 
+    // click event listener for lines to be toggled opened or closed
     $(".img-block:not(.img-patch)").on("click", function() {
-        if (getActiveMode() != "vertical") return;
-        var id = parseInt($(this).attr("id"));
-        if(id == 0) {
-            return;
-        }
+        if (getActiveMode() != "vertical") return; // proper mode needed
+        let id = parseInt($(this).attr("id"));
+        if(id == 0) return; // the first line of the page doesn't need space
         toggleSingleSpace($("#"+id.toString()+".img-patch"), false)
     });
-    injectMetaData();
 
-    drawConfidence();
+    injectMetaData(); // insert the OCR text into the html elements
+    drawOverlays(); // draw our graphs that the user can interact with
     $(".text-confidence").hide();
+
     $("#confidence").on("click", function() {
         if($(this).is(":checked")) {
             $(".text-confidence").show();            
@@ -65,14 +67,14 @@ $(document).ready(function() {
         }
     });
 
-    var rangeSlider = function(){
-        var slider = $('.range-slider'),
+    let rangeSlider = function(){
+        let slider = $('.range-slider'),
             range = $('.range-slider__range'),
             value = $('.range-slider__value');
         slider.each(function(){
         
             value.each(function(){
-            var value = $(this).prev().attr('value');
+            let value = $(this).prev().attr('value');
             $(this).html(value);
             });
         
@@ -129,7 +131,7 @@ $(document).ready(function() {
                 break;
             case "horizontal":
                 if($(this).hasClass("img-text")) {
-                    var str_id = $(this).attr("id");
+                    let str_id = $(this).attr("id");
                     str_id = str_id.replace("text", "space");
                     toggleSingleSpace($("#"+str_id), true)
                 }
@@ -141,20 +143,10 @@ $(document).ready(function() {
                 return;
         }
     });
-    // $("span.text-box").on("hover", function() {
-    //     switch(getActiveMode()) {
-    //         case "define":
-    //             $(this).css("box-shadow", "0px 0px 0px 10px black inset");
-    //             setTimeout(function() {
-    //                 $(this).css("box-shadow", "none");
-    //             }, 500);
-    //             break;
-    //     }
-    // });
 
     $(".img-block:not(.img-patch) img").on("mousedown", function() {
         mouse_down = true;
-        var action;
+        let action;
         switch(getActiveMode()) {
             case "define":
                 action = defineWord;
@@ -253,7 +245,7 @@ $(document).ready(function() {
 });
 
 function toggleMode(elem, close_vertical=false, close_horizontal=false, open_vertical=false, open_horizontal=false) {
-    var this_mode = $(elem).data("mode");
+    let this_mode = $(elem).data("mode");
     if($(elem).is(":checked")) {
         if(close_vertical) {
             closeSpaces(false);
@@ -269,7 +261,7 @@ function toggleMode(elem, close_vertical=false, close_horizontal=false, open_ver
         }
         setActiveMode(this_mode);
     } else {
-        var cur_mode = getActiveMode();
+        let cur_mode = getActiveMode();
         setActiveMode("");
         if(cur_mode == "verticalhorizontal") {
             if(this_mode == "horizontal") {
@@ -282,12 +274,12 @@ function toggleMode(elem, close_vertical=false, close_horizontal=false, open_ver
 }
 
 function getMarginWidth() {
-    var margin_width = ($(".stage").width() - $("#vis-container").width()) / 2.0;
+    let margin_width = ($(".stage").width() - $("#vis-container").width()) / 2.0;
     return margin_width;
 }
 
 function setActiveMode(new_mode) {
-    for(var type in mode) {
+    for(let type in mode) {
         if(mode.hasOwnProperty(type)) {
             if (new_mode == type) {
                 mode[type] = true;
@@ -321,10 +313,10 @@ function resizeStage() {
     if($(".tool-box").hasClass("opened")) openNav();
     else closeNav();
     
-    var vp_height = $(window).height();
-    var vp_width = $(window).width();
-    var stage_height = $("#vis-container").height();
-    var stage_width = $("#vis-container").width();
+    let vp_height = $(window).height();
+    let vp_width = $(window).width();
+    let stage_height = $("#vis-container").height();
+    let stage_width = $("#vis-container").width();
     if($("#context-map-container").height() > stage_height) {
         stage_height = $("#context-map-container").height();
     }
@@ -333,8 +325,8 @@ function resizeStage() {
     }
     $(".stage").css("min-height", (stage_height+150) * vertical_margin);
     $(".vis").css("min-height", (stage_height+150) * vertical_margin);
-    var alt_width = $("#context-map-container").width();
-    var entity_map_width = $("#entity-map-container").width();
+    let alt_width = $("#context-map-container").width();
+    let entity_map_width = $("#entity-map-container").width();
     if(entity_map_width > alt_width && $("#entity-map-container").is(":visible")) {
         alt_width = entity_map_width;
     }
@@ -343,7 +335,7 @@ function resizeStage() {
         $("#context-map-container").css("top", $("#1").position().top );
         $("#context-map-container").css("left", $("#vis-container").position().left + $("#1").eq(0).width());
         $("#entity-map-container img").each(function() {
-            var text_id = $(this).data("word-id");
+            let text_id = $(this).data("word-id");
             $(this).css("top", $(text_id).parent().parent().position().top + "px");
         });
         // $("#entity-map-container").css("left", $("#vis-container").position().left - $("#entity-map-container").width());
@@ -388,8 +380,8 @@ function disableMode(type) {
 }
 
 function getActiveMode() {
-    var curr_mode = "";
-    for(var key in mode) {
+    let curr_mode = "";
+    for(let key in mode) {
         if(mode.hasOwnProperty(key)) {
             if(mode[key]) {
                 curr_mode += key;
@@ -400,9 +392,9 @@ function getActiveMode() {
 }
 
 function eraseWord($elem) {
-    var text_id = $elem.attr("id");
+    let text_id = $elem.attr("id");
     $("#img-text-id").val(text_id);
-    var edit_text = $(".custom-text", $("#"+text_id).parent()).html();
+    let edit_text = $(".custom-text", $("#"+text_id).parent()).html();
     $("#edit-text").val(edit_text);
     $("#edit-text").height($elem.height());
     $("#edit-text").width($elem.width());
@@ -415,7 +407,7 @@ function eraseWord($elem) {
 }
 
 function fixPronouns() {
-    var $blocks = $(".img-text[data-ocr]").filter(function() {
+    let $blocks = $(".img-text[data-ocr]").filter(function() {
         return $(this).data("ocr") == "him"
             || $(this).data("ocr") == "her"
             || $(this).data("ocr") == "he"
@@ -423,9 +415,9 @@ function fixPronouns() {
             || $(this).data("ocr") == "his"
             || $(this).data("ocr") == "hers";
     });
-    for(var i = 0; i < $blocks.length; i++) {
-        var $elem = $($blocks[i]);
-        var text_id = $elem.attr("id");
+    for(let i = 0; i < $blocks.length; i++) {
+        let $elem = $($blocks[i]);
+        let text_id = $elem.attr("id");
         if($elem.css("opacity") < 1) {
             $elem.css("opacity",1);
             $(".custom-text", $("#"+text_id).parent()).html("");
@@ -434,12 +426,12 @@ function fixPronouns() {
 }
 
 function replacePronouns(on) {
-    var himher = "his/him";
-    var heshe = "he";
-    var hishers = "his";
-    var new_himher = "her";
-    var new_heshe = "she";
-    var new_hishers = "her(s)";
+    let himher = "his/him";
+    let heshe = "he";
+    let hishers = "his";
+    let new_himher = "her";
+    let new_heshe = "she";
+    let new_hishers = "her(s)";
     if(!on) {
         himher = "her";
         heshe = "she";
@@ -448,16 +440,16 @@ function replacePronouns(on) {
         new_heshe = "he";
         new_hishers = "his";
     }
-    var $blocks = $(".img-text[data-ocr]").filter(function() {
+    let $blocks = $(".img-text[data-ocr]").filter(function() {
         return $(this).data("ocr") == himher
             || $(this).data("ocr") == heshe
             || $(this).data("ocr") == hishers;
     });
 
-    for(var i=0; i<$blocks.length; i++) {
+    for(let i=0; i<$blocks.length; i++) {
         $("#img-text-id").val($($blocks[i]).attr("id"));
-        var old_text = $($blocks[i]).data("ocr");
-        var new_text = "";
+        let old_text = $($blocks[i]).data("ocr");
+        let new_text = "";
         switch(old_text) {
             case himher:
                 new_text = new_himher;
@@ -474,34 +466,36 @@ function replacePronouns(on) {
     }
 }
 
+// Set the data elements for all of our detected words
+// currently only using this to have OCR text available in the html
 function injectMetaData() {
-    for(var i=0; i<word_blocks.length; i++) {
-        for(var y=0; y<word_blocks[i].length; y++) {
-            var text = word_blocks[i][y]["text"];
-            var idx_block = word_blocks[i][y]["idx_block"];
-            var word_pos = word_blocks[i][y]["word_pos"];
-            var text_id = "text-" + idx_block.toString() + "-" + word_pos.toString();
+    for(let i=0; i<word_blocks.length; i++) {
+        for(let y=0; y<word_blocks[i].length; y++) {
+            let text = word_blocks[i][y]["text"];
+            let idx_block = word_blocks[i][y]["idx_block"];
+            let word_pos = word_blocks[i][y]["word_pos"];
+            let text_id = "text-" + idx_block.toString() + "-" + word_pos.toString();
             $("#" + text_id).attr("data-ocr", text);
         }
     }
 }
 
 function saveText() {
-    var text = $("#edit-text").val();    
-    var text_id = $("#img-text-id").val();
+    let text = $("#edit-text").val();    
+    let text_id = $("#img-text-id").val();
     $(".custom-text", $("#"+text_id).parent()).html(text);
     $("#"+text_id).css("opacity", 0);
     $("#text-visibility").html("Show Text");
 }
 
 function replaceAllText() {
-    var text = $("#edit-text").val();
-    var text_id = $("#img-text-id").val();
+    let text = $("#edit-text").val();
+    let text_id = $("#img-text-id").val();
     $(".custom-text", $("#"+text_id).parent()).html(text);
     $("#"+text_id).css("opacity", 0);
     $("#text-visibility").html("Show Text");
 
-    var text_ocr = $("#"+text_id).data("ocr");
+    let text_ocr = $("#"+text_id).data("ocr");
     if(text_ocr != "") {
         $(".custom-text", $("img[data-ocr='" + text_ocr + "']").parent()).html(text);
         $("img[data-ocr='" + text_ocr + "']").css("opacity",0);
@@ -509,13 +503,13 @@ function replaceAllText() {
 }
 
 function undoAllText() {
-    var text_id = $("#img-text-id").val();
-    var $elem = $("#" + text_id);
+    let text_id = $("#img-text-id").val();
+    let $elem = $("#" + text_id);
     $elem.css("opacity",1);
     $("#text-visibility").html("Hide Text");     
     $(".custom-text", $("#"+text_id).parent()).html("");   
     $("#edit-text").val("");
-    var text_ocr = $("#"+text_id).data("ocr");
+    let text_ocr = $("#"+text_id).data("ocr");
     if(text_ocr != "") {
         $(".custom-text", $("img[data-ocr='" + text_ocr + "']").parent()).html("");
         $("img[data-ocr='" + text_ocr + "']").css("opacity",1);
@@ -523,8 +517,8 @@ function undoAllText() {
 }
 
 function toggleTextVisibility() {
-    var text_id = $("#img-text-id").val();
-    var $elem = $("#" + text_id);
+    let text_id = $("#img-text-id").val();
+    let $elem = $("#" + text_id);
     if($elem.css("opacity") > 0) {
         $elem.css("opacity",0);
         $("#text-visibility").html("Show Text");        
@@ -539,7 +533,7 @@ function toggleTextVisibility() {
 function toggleSingleSpace($elem, is_horizontal) {
     in_transit++;
     if(is_horizontal) {
-        var $parent = $elem.parent();
+        let $parent = $elem.parent();
         if($parent.hasClass("squeeze")) {
             $parent.removeClass("squeeze");
             space_width = $parent.data("img-width");
@@ -574,24 +568,24 @@ function justifyDocument(idx, space_width) {
         if(!$(this).hasClass("img-patch") && $(this).attr("id")==idx) {
             return;
         }
-        var $spaces = $("span.text-space.squeeze", $(this));
+        let $spaces = $("span.text-space.squeeze", $(this));
         if($spaces.length > 0) {
-            var added_width = 0;
-            var iter_width = space_width;
+            let added_width = 0;
+            let iter_width = space_width;
             while(added_width < space_width) {
-                var target_width = Math.floor(space_width/$spaces.length);
-                var extra_width = space_width - (target_width*$spaces.length);
+                let target_width = Math.floor(space_width/$spaces.length);
+                let extra_width = space_width - (target_width*$spaces.length);
                 in_transit += $spaces.length;
                 $spaces.each(function(i) {
-                    var add_width = target_width + $(this).width();
-                    var full_width = $(this).data("img-width");
+                    let add_width = target_width + $(this).width();
+                    let full_width = $(this).data("img-width");
                     if(add_width >= full_width) {
                         $(this).removeClass("squeeze");
                         add_width = full_width;
                     } else {
                         // sneak some of the extra width as we go
                         if(full_width>add_width && extra_width > 0) {
-                            var extra_diff = extra_width-(full_width-add_width);
+                            let extra_diff = extra_width-(full_width-add_width);
                             if(extra_diff <= 0) {
                                 add_width += extra_width;
                                 extra_width = 0;
@@ -615,7 +609,7 @@ function justifyDocument(idx, space_width) {
 }
 
 function openActiveSpaces() {
-    var active_mode = getActiveMode();
+    let active_mode = getActiveMode();
     if(active_mode == "horizontal") {
         openSpaces(true);        
     } else if(active_mode == "vertical") {
@@ -627,7 +621,7 @@ function openActiveSpaces() {
 }
 
 function closeActiveSpaces() {
-    var active_mode = getActiveMode();
+    let active_mode = getActiveMode();
     if(active_mode == "horizontal") {
         closeSpaces(true);
     } else if(active_mode == "vertical") {
@@ -717,14 +711,14 @@ function detectResizeStage() {
 }
 
 function argsort(to_sort) {
-    for (var i = 0; i < to_sort.length; i++) {
+    for (let i = 0; i < to_sort.length; i++) {
       to_sort[i] = [to_sort[i], i];
     }
     to_sort.sort(function(left, right) {
       return left[0] > right[0] ? -1 : 1;
     });
     to_sort.sort_indices = [];
-    for (var j = 0; j < to_sort.length; j++) {
+    for (let j = 0; j < to_sort.length; j++) {
       to_sort.sort_indices.push(to_sort[j][1]);
       to_sort[j] = to_sort[j][0];
     }
@@ -732,31 +726,31 @@ function argsort(to_sort) {
 }
 
 function setUniqueness(dateval) {
-    var idx_date = dateval - 1800;
-    var usage_list = [];
-    for(var i=0; i<ngram_plot.length; i++) {
+    let idx_date = dateval - 1800;
+    let usage_list = [];
+    for(let i=0; i<ngram_plot.length; i++) {
         usage_list.push(ngram_plot[i]["usage"][idx_date]);
     }
     usage_list = argsort(usage_list);
 
-    for(var rank=0; rank<usage_list.length; rank++) {
-        var i = usage_list.sort_indices[rank];
-        var norm_rank = rank;
+    for(let rank=0; rank<usage_list.length; rank++) {
+        let i = usage_list.sort_indices[rank];
+        let norm_rank = rank;
         if (rank > 0) {
-            var last_rank = rank-1;
-            var last_idx = usage_list.sort_indices[last_rank];
+            let last_rank = rank-1;
+            let last_idx = usage_list.sort_indices[last_rank];
             while(ngram_plot[i]["usage"][idx_date] == ngram_plot[last_idx]["usage"][idx_date] && last_rank > 0) {
                 last_rank--;
                 last_idx = usage_list.sort_indices[last_rank];
             }
             norm_rank = last_rank;
         }
-        var idx_block = ngram_plot[i]["idx_block"];
-        var idx_word = ngram_plot[i]["word_pos"];
-        var id = "unique-" + idx_block.toString() + "-" + idx_word.toString();
-        var patch_height = $("#"+id).closest("div.img-patch").data("img-height");
-        var img_url = "uniqueness_0.png";
-        var image_rank = (norm_rank/usage_list.length);
+        let idx_block = ngram_plot[i]["idx_block"];
+        let idx_word = ngram_plot[i]["word_pos"];
+        let id = "unique-" + idx_block.toString() + "-" + idx_word.toString();
+        let patch_height = $("#"+id).closest("div.img-patch").data("img-height");
+        let img_url = "uniqueness_0.png";
+        let image_rank = (norm_rank/usage_list.length);
 
         if(image_rank >= 0.8) {
             img_url = "uniqueness_4.png";
@@ -779,16 +773,24 @@ function setUniqueness(dateval) {
     }
 }
 
-function drawConfidence() {
-    for(var i=0; i<word_blocks.length; i++) {
-        for(var j=0; j<word_blocks[i].length; j++) {
-            var opacity = (word_blocks[i][j]["confidence"]/100.0);
+// Place the appropriate graphs as an overlay in the correct positions
+// This includes:
+//  - OCR confidence highlighting
+//  - NGram Plots
+//  - Uniqueness Glyphs
+function drawOverlays() {
+    // iterate through each line
+    for(let i=0; i<word_blocks.length; i++) {
+        // within each line, iterate each word that we detected
+        for(let j=0; j<word_blocks[i].length; j++) {
+            // generate highlight blocks or OCR confidence
+            let opacity = (word_blocks[i][j]["confidence"]/100.0);
             opacity = (1.00-Math.max((Math.round(opacity * 5) / 5), 0.1)).toFixed(2) * 0.9;
-            var idx_block = word_blocks[i][j]["idx_block"];
-            var idx_word = word_blocks[i][j]["word_pos"];
-            var text_id = "#text-" + idx_block.toString() + "-" + idx_word.toString();
-            var patch_id = "#patch-" + idx_block.toString() + "-" + idx_word.toString();
-            var $conf = $("<div/>", {"class":"text-confidence"});
+            let idx_block = word_blocks[i][j]["idx_block"];
+            let idx_word = word_blocks[i][j]["word_pos"];
+            let text_id = "#text-" + idx_block.toString() + "-" + idx_word.toString();
+            let patch_id = "#patch-" + idx_block.toString() + "-" + idx_word.toString();
+            let $conf = $("<div/>", {"class":"text-confidence"});
             $conf.css("opacity", opacity);
             $conf.width(word_blocks[i][j]["width"]);
             $conf.height(word_blocks[i][j]["height"]);
@@ -797,10 +799,10 @@ function drawConfidence() {
                 $conf.css("left", word_blocks[i][j]["x"] + "px");                
             }
             $(text_id).parent().append($conf);
-
-            for(var y=0; y<ngram_plot.length; y++) {
+            // place our NGRAM plots (raw base64 strings) and place them in as img elements
+            for(let y=0; y<ngram_plot.length; y++) {
                 if(ngram_plot[y]["idx_block"] == idx_block && ngram_plot[y]["word_pos"]==idx_word) {
-                    var $img = $("<img/>",{"class":"ngram-usage"});
+                    let $img = $("<img/>",{"class":"ngram-usage"});
                     $img.attr("src", "data:image/png;base64,"+ngram_plot[y]["ngram"]);
                     if(idx_word==0) {
                         $img.css("left",word_blocks[i][j]["x"]+"px");
@@ -809,7 +811,10 @@ function drawConfidence() {
                     break;
                 }
             }
-            var $uniqueness = $("<span/>", {"id":"unique-" + idx_block + "-" + idx_word, "class":"uniqueness-bar"});
+
+            // place the uniqueness glyph placeholders
+            let $uniqueness = $("<span/>", {"id":"unique-" 
+                + idx_block + "-" + idx_word, "class":"uniqueness-bar"});
             $uniqueness.css({"height":"0px", "width":"20px"});
             if(idx_word==0) {
                 $uniqueness.css("left",word_blocks[i][j]["x"]+"px");
@@ -819,15 +824,16 @@ function drawConfidence() {
     }
 }
 
+// insert base64 strings as imgs into the DOM and also highlight the locations
 function drawLocations() {
-    for(var i=0; i<word_blocks.length; i++) {
-        for(var j=0; j<word_blocks[i].length; j++) {
+    for(let i=0; i<word_blocks.length; i++) {
+        for(let j=0; j<word_blocks[i].length; j++) {
             if(word_blocks[i][j]["label"] == "GPE") {
                 // draw the overlay color box
-                var idx_block = word_blocks[i][j]["idx_block"];
-                var idx_word = word_blocks[i][j]["word_pos"];
-                var text_id = "#text-" + idx_block.toString() + "-" + idx_word.toString();
-                var $loc = $("<div/>", {"class":"entity-location"});
+                let idx_block = word_blocks[i][j]["idx_block"];
+                let idx_word = word_blocks[i][j]["word_pos"];
+                let text_id = "#text-" + idx_block.toString() + "-" + idx_word.toString();
+                let $loc = $("<div/>", {"class":"entity-location"});
                 $loc.width(word_blocks[i][j]["width"]);
                 $loc.height(word_blocks[i][j]["height"]);
                 $loc.css("top", word_blocks[i][j]["y"] + "px");
@@ -836,7 +842,7 @@ function drawLocations() {
                 }
                 $(text_id).parent().append($loc);
                 // draw the map
-                var $img = new Image();
+                let $img = new Image();
                 $img.src = "data:image/png;base64,"+word_blocks[i][j]["map"];
                 $($img).css("top", $(text_id).parent().parent().position().top + "px");
                 $($img).data("word-id",text_id);
@@ -846,6 +852,7 @@ function drawLocations() {
     }
 }
 
+// Initialize the usable canvas for drawing
 function init() {
     canvas = document.getElementById('draw-board');
     ctx = canvas.getContext("2d");
@@ -856,6 +863,7 @@ function init() {
     w = canvas.width;
     h = canvas.height;
     
+    // remove the mouse event listeners if they already exist
     if(haslistener) {
         canvas.removeEventListener("mousemove");
         canvas.removeEventListener("mousedown");
@@ -879,43 +887,14 @@ function init() {
     haslistener = true;
 }
 
+// set inline styles based on the color element selected
 function textColor(obj) {
     $("#text-color-select").css("background-color", obj.id);
     $(".img-patch-text").css("color", obj.id);
     $(".custom-text").css("color", obj.id);
 }
 
-function color(obj) {
-    $("#draw-color-select").css("background-color", obj.id);
-
-    switch (obj.id) {
-        case "#D93240":
-            x = "#D93240";
-            break;
-        case "#638CA6":
-            x = "#638CA6";
-            break;
-        case "#BFD4D9":
-            x = "#BFD4D9";
-            break;
-        case "#0F5959":
-            x = "#0F5959";
-            break;
-        case "#17A697":
-            x = "#17A697";
-            break;
-        case "black":
-            x = "black";
-            break;
-        case "white":
-            x = "white";
-            break;
-    }
-    if (x == "white") y = 14;
-    else y = 2;
-
-}
-
+// draw functionality for mouse down events while draw mode is activated
 function draw() {
     ctx.beginPath();
     ctx.moveTo(prevX, prevY);
@@ -926,14 +905,16 @@ function draw() {
     ctx.closePath();
 }
 
+// erase button click event
 function erase() {
-    var m = confirm("Are you sure you would like to clear?");
+    let m = confirm("Are you sure you would like to clear?");
     if (m) {
         ctx.clearRect(0, 0, w, h);
         // document.getElementById("canvasimg").style.display = "none";
     }
 }
 
+// download the current html canvas as an image
 function print() {
     html2canvas($(".vis"), {
         onrendered: function (canvas) {
@@ -943,6 +924,7 @@ function print() {
     });
 }
 
+// track the mouse and draw when the mouse is pressed and moving
 function findxy(res, e) {
     rect = canvas.getBoundingClientRect();
     if (res == 'down') {

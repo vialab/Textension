@@ -41,16 +41,11 @@ default_options = {
     "blur":0,
     "google_key":""
 }
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
-           
+    
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if "options" not in session:
         session["options"] = default_options
-
     return render_template('index2.html')
 
 @app.route('/return_file')
@@ -58,14 +53,11 @@ def return_file():
     return send_file("./file_processing/ocr_document.pdf"
                     , attachment_filename="ocr_document.pdf")
 
-@app.route('/define/<word>')
-def define(word):
-    
-    return jsonify(stuff)
-
+# This is our hook that will load all the data processed from /upload
 @app.route('/interact')
 @app.route('/interact/<page_no>')
 def interact(page_no=0):
+    # samples are pre-processed and pickled for easy loading
     sample = request.args.get("sample")
     if sample is not None:
         if sample == "book_of_myths":
@@ -74,52 +66,25 @@ def interact(page_no=0):
             sample = "./server/southern_life.pkl"
         with open(sample, 'r') as f:
             session["viz"] = pickle.load(f)
-        
+    # if we don't have a viz to render, redirect back home
     if "viz" not in session:
         return redirect(url_for("index"))
-
-    image_blocks = []
-    image_text = []
-    image_patches = []
-    image_patch_space = []
-    image_space = []
-
-    # for block in session["viz"][page_no].img_chops:
-    #     image_block = []
-    #     for chop in block:
-    #         image_block.append(dict((i,chop[i]) for i in chop if i!="img"))
-    #     image_blocks.append(image_block)
+    # default to first page
     try:
         page_no = int(page_no)
     except:
         page_no = 0
     if page_no >= len(session["viz"]):
         page_no = 0
-    for block in session["viz"][page_no].img_text:
-        image_block = []
-        for text in block:
-            image_block.append(dict((i,text[i]) for i in text if i!="img"))
-        image_text.append(image_block)
 
-    for line in session["viz"][page_no].img_patches:
-        image_patch = []
-        for patch in line:
-            image_patch.append(dict((i,patch[i]) for i in patch if i!="img"))
-        image_patches.append(image_patch)
+    # looping through the full arrays during rendering is slow due to size
+    # segregate the data to matrices and do not include images
+    image_text = formatToMatrix(session["viz"][page_no].img_text)
+    image_patches = formatToMatrix(session["viz"][page_no].img_patches)
+    image_patch_space = formatToMatrix(session["viz"][page_no].img_patch_space)
+    image_space = formatToMatrix(session["viz"][page_no].img_space)
 
-    for line in session["viz"][page_no].img_patch_space:
-        patch_space = []
-        for patch in line:
-            patch_space.append(dict((i,patch[i]) for i in patch if i!="img"))
-        image_patch_space.append(patch_space)
-
-    for line in session["viz"][page_no].img_space:
-        line_space = []
-        for space in line:
-            line_space.append(dict((i,space[i]) for i in space if i!="img"))
-        image_space.append(line_space)
-
-    return render_template('interact.html', image_blocks=image_blocks
+    return render_template('interact.html'
         , image_text=image_text
         , image_patches=image_patches
         , image_space=image_space
@@ -133,12 +98,11 @@ def interact(page_no=0):
         , page_no=page_no
         , num_pages=len(session["viz"]))
 
+# Receive images from the dropzone and process it
+# Processed data is saved to the session and used later on for display
+# using the JINJA framework
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
-    # with open('./viz.pkl', 'r') as f:
-    #     session["viz"] = pickle.load(f)
-    # return redirect(url_for("index"))
-
     if request.method == 'POST':
         file = request.files['file']
 
@@ -186,30 +150,6 @@ def upload_file():
             #     pickle.dump(viz_list, f)
     return redirect(url_for("index"))
 
-def saveVizSessionArgs(form):
-    """ Save visualization parameters into session"""
-    if "options" not in session:
-        session["options"] = default_options
-        
-    options_form = session["options"]
-
-    for option in form:
-        if option not in options_form:
-            # don't save unnecessary data
-            continue
-        if option == "translate" or option == "hires" or option == "antialias":
-            if form[option] == u"true":
-                options_form[option] = True
-            else:
-                options_form[option] = False
-            continue
-        if option == "google_key":
-            options_form[option] = form[option]
-        else:
-            options_form[option] = int(form[option])
-
-    session["options"] = options_form
-
 #This gets the camera image
 @app.route('/hook', methods=['POST'])
 def get_image():
@@ -238,6 +178,50 @@ def get_image():
     viz_list.append(viz)
     session["viz"] = viz_list
     return redirect(url_for("index"))
+
+
+
+##### HELPER FUNCTIONS
+# save the viz parameters to the session
+def saveVizSessionArgs(form):
+    """ Save visualization parameters into session"""
+    if "options" not in session:
+        session["options"] = default_options
+        
+    options_form = session["options"]
+
+    for option in form:
+        if option not in options_form:
+            # don't save unnecessary data
+            continue
+        if option == "translate" or option == "hires" or option == "antialias":
+            if form[option] == u"true":
+                options_form[option] = True
+            else:
+                options_form[option] = False
+            continue
+        if option == "google_key":
+            options_form[option] = form[option]
+        else:
+            options_form[option] = int(form[option])
+
+    session["options"] = options_form
+
+# check if the uploaded file extension is allowed
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+       
+# itemize our data into dict multi-d arrays for consistency 
+# and efficiency by filtering out the images
+def formatToMatrix(data):
+    new_array = []
+    for row in data:
+        item = []
+        for col in row:
+            item.append(dict((i,col[i]) for i in col if i!="img"))
+        new_array.append(item)
+    return new_array
 
 if __name__ == "__main__":
     sess.init_app(app)

@@ -1,17 +1,8 @@
 $(document).ready(function() {
-//     $("#main-nav").peekaboo({
-//         offset_top: 60
-//         , scroll_threshold: 20
-//         , opaque_threshold_down: 25
-//         , opaque_threshold_up: 25
-//         , animation: true
-//         , hide_class: "slide-up"
-//         , fade_class: "fade-background"
-//         , hide_height_auto: true
-//     });
     closeNav();
 });
 
+/// open the side bar containing the tools
 function openNav() {
     var width = ($(".tool-box").width()+5).toString() + "px";    
     $(".tool-box").css({"transform":"translateX(0px)"});
@@ -19,6 +10,7 @@ function openNav() {
     // $(".stage").css({"transform":"translateX(" + width + ")"});
 }
 
+// close the side bar containing the tools
 function closeNav() {
     var width = "-" + ($(".tool-box").width()+5).toString() + "px";
     $(".tool-box").css({"transform":"translateX(" + width + ")"});
