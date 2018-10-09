@@ -53,10 +53,10 @@ def return_file():
     return send_file("./file_processing/ocr_document.pdf"
                     , attachment_filename="ocr_document.pdf")
 
-# This is our hook that will load all the data processed from /upload
 @app.route('/interact')
 @app.route('/interact/<page_no>')
 def interact(page_no=0):
+    """ Web hook that will load all the data processed from /upload """
     # samples are pre-processed and pickled for easy loading
     sample = request.args.get("sample")
     if sample is not None:
@@ -98,11 +98,11 @@ def interact(page_no=0):
         , page_no=page_no
         , num_pages=len(session["viz"]))
 
-# Receive images from the dropzone and process it
-# Processed data is saved to the session and used later on for display
-# using the JINJA framework
+
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
+    """ Receive images from the dropzone and process it. Processed data is
+     saved to the session and used later on for rendering in JINJA2 """
     if request.method == 'POST':
         file = request.files['file']
 
@@ -150,9 +150,10 @@ def upload_file():
             #     pickle.dump(viz_list, f)
     return redirect(url_for("index"))
 
-#This gets the camera image
+
 @app.route('/hook', methods=['POST'])
 def get_image():
+    """ Retrieves image that was taken by the webcam, and processes like /upload """
     viz_list=[]
     saveVizSessionArgs(request.values)
     image_b64 = re.sub("data:image/png;base64,", "", request.values["imageBase64"])
@@ -182,7 +183,6 @@ def get_image():
 
 
 ##### HELPER FUNCTIONS
-# save the viz parameters to the session
 def saveVizSessionArgs(form):
     """ Save visualization parameters into session"""
     if "options" not in session:
@@ -207,14 +207,16 @@ def saveVizSessionArgs(form):
 
     session["options"] = options_form
 
-# check if the uploaded file extension is allowed
+
 def allowed_file(filename):
+    """ check if the uploaded file extension is allowed """
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
        
-# itemize our data into dict multi-d arrays for consistency 
-# and efficiency by filtering out the images
+
 def formatToMatrix(data):
+    """ Itemize our data into dict multi-d arrays for consistency 
+     and efficiency by filtering out the images """
     new_array = []
     for row in data:
         item = []
