@@ -1,7 +1,7 @@
 # Textension
 
 A visualization tool built for researchers in the humanities and social sciences. 
-This project aims to digitize physical pages/books into modular web objects that allow users to annotate, manipulate, and perform analytics.
+This project aims to digitize analog text into modular web objects that allow users to annotate, manipulate, and perform analytics.
 
 ## Getting Started
 
