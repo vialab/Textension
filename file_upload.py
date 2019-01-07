@@ -111,7 +111,6 @@ def upload_file():
             file_extension = file.filename.split(".")[-1].lower()
             
             viz_list = []
-
             if file_extension == "pdf":
                 # need to split pages and decompose one by one
                 pdf_pages = pdfSplitPageStream(file.stream)

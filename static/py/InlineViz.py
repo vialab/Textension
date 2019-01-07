@@ -76,11 +76,11 @@ class InlineViz:
         """ Use OCR to find bounding boxes of each line in document and dissect 
         into workable parts """
         img_bw = self.binarizeSharpenImage(self.img_file)
-
+        # img = np.array(self.img_file, dtype=np.uint8)
         with PyTessBaseAPI() as api:
             api.SetImage(img_bw)
-            # Interate over lines using OCR
-            boxes = api.GetComponentImages(RIL.TEXTLINE, True)
+            # Iterate over lines using OCR
+            boxes = api.GetComponentImages(RIL.BLOCK, True)
             
             for i, (im, box, _, _) in enumerate(boxes):
                 # im is a PIL image object
@@ -90,7 +90,9 @@ class InlineViz:
                 #this tracks all the places that the texture needs to be laid
                 self.bounding_boxes.append(box)
                 self.ocr_text.append(api.GetUTF8Text())
-
+                # cv2.rectangle(img, (box["x"],box["y"]), (box["x"]+box["w"],box["y"]+box["h"]),(0,255,0),1)
+            # img = Image.fromarray(img)
+            # img.show()
         if self.translate and self.google_key != "":
             self.translateText() # translate the text to french
         self.space_height = self.getMinSpaceHeight() # get the minimum patch height                    

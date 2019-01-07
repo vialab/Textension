@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
         libtesseract-dev \
         libleptonica-dev \
         libmagickwand-dev \
+	poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install flask numpy scikit-learn scipy spacy pypdf2 pdfminer wand image google-api-python-client matplotlib opencv-python pandas pyocr textstat tesserocr
