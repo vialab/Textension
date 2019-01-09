@@ -1,5 +1,10 @@
+/******************************************************************************
+ * linguistic.js
+ * Functions for linguistic tools to be used on our digital document
+ *****************************************************************************/
 var mwd_api_key = "c021ec02-2d18-4e7d-8507-4f940f531e77";
 
+// on hover over a word, provide a tool tip that gives it's definition
 function defineWord($elem) { 
     var text = $elem.data("ocr");
     if(typeof(text)=="undefined") {
@@ -17,7 +22,7 @@ function defineWord($elem) {
     } else {
         text = text.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
     };
-
+    // fetch the data from our dictionary api
     fetch(`https://www.dictionaryapi.com/api/v1/references/collegiate/xml/${text}?key=${mwd_api_key}`)
     .then(function(response) {
         response.text().then(function(data) {
@@ -63,6 +68,8 @@ function defineWord($elem) {
     .catch(error => console.error(error));
 }
 
+// collect all instances of selected word, and provide a map of
+// two words before and after each instance
 function createContextMap($elem) {
     var og_text = $elem.data("ocr");
     if(typeof(og_text) == "undefined") alert("Word not recognized");

@@ -1,3 +1,7 @@
+/******************************************************************************
+ * interact.js
+ * Meat and potatoes of our interactive digital object
+ *****************************************************************************/
 let canvas, ctx, css_transition, flag = false,
 prevX = 0,
 currX = 0,
@@ -27,223 +31,9 @@ let mode = {
     "horizontal": false
 };
 
-// instantiate EVERYTHING
-$(document).ready(function() {
-    closeNav(); // start with tool bar closed
-    resizeStage(); // handle the resizing of the window and recalculate margins
-
-    // click event listener for lines to be toggled opened or closed
-    $(".img-block:not(.img-patch)").on("click", function() {
-        if (getActiveMode() != "vertical") return; // proper mode needed
-        let id = parseInt($(this).attr("id"));
-        if(id == 0) return; // the first line of the page doesn't need space
-        toggleSingleSpace($("#"+id.toString()+".img-patch"), false)
-    });
-
-    injectMetaData(); // insert the OCR text into the html elements
-    drawOverlays(); // draw our graphs that the user can interact with
-    $(".text-confidence").hide();
-
-    $("#confidence").on("click", function() {
-        if($(this).is(":checked")) {
-            $(".text-confidence").show();            
-        } else {
-            $(".text-confidence").hide();            
-        }
-    });
-
-    // drawUniqueness();
-    $("#uniqueness-range").hide();
-    $("#uniqueness").on("click", function() {
-        if($(this).is(":checked")) {
-            openSpaces(false);
-            setUniqueness( $("#uniqueness-range input").val() );
-            $("#uniqueness-range").show();
-            $(".switch").css("height", "15%");
-        } else {
-            $(".patch-box span.uniqueness-bar").height(0);
-            $("#uniqueness-range").hide();
-            $(".switch").css("height", "16%");
-        }
-    });
-
-    let rangeSlider = function(){
-        let slider = $('.range-slider'),
-            range = $('.range-slider__range'),
-            value = $('.range-slider__value');
-        slider.each(function(){
-        
-            value.each(function(){
-            let value = $(this).prev().attr('value');
-            $(this).html(value);
-            });
-        
-            range.on('input', function(){
-            $(this).next(value).html(this.value);
-            });
-        });
-    };
-      
-    rangeSlider();
-
-    // drawNGramUsage();
-    $(".ngram-usage").hide();
-    $("#ngram").on("click", function() {
-        if($(this).is(":checked")) {
-            openSpaces(false);            
-            $(".ngram-usage").show();
-        } else {
-            $(".ngram-usage").hide();            
-        }
-    });
-
-    drawLocations();    
-    $(".entity-location").hide();
-    $("#entity-map-container").hide();
-    $("#location").on("click", function() {
-        if($(this).is(":checked")) {
-            $(".entity-location").show();
-            $("#entity-map-container").show();
-        } else {
-            $(".entity-location").hide();
-            $("#entity-map-container").hide();
-        }
-        resizeStage();
-    });
-
-    // ACTIVE TOOLS
-    $("#draw-tool").on("click", function() {
-        if($(this).is(":checked")) {
-            setActiveMode("draw");
-            $("canvas#draw-board").removeClass("overlay");
-            $("#draw-options").show();
-            if(!haslistener) init();
-        } else {
-            setActiveMode("");
-            $("#draw-options").hide();            
-        }
-    });
-
-    $(".img-block:not(.img-patch) img").on("click", function() {
-        switch(getActiveMode()) {
-            case "eraser":
-                eraseWord($(this));
-                break;
-            case "horizontal":
-                if($(this).hasClass("img-text")) {
-                    let str_id = $(this).attr("id");
-                    str_id = str_id.replace("text", "space");
-                    toggleSingleSpace($("#"+str_id), true)
-                }
-                break;
-            case "grammar":
-            case "draw":
-            case "vertical":
-            default:
-                return;
-        }
-    });
-
-    $(".img-block:not(.img-patch) img").on("mousedown", function() {
-        mouse_down = true;
-        let action;
-        switch(getActiveMode()) {
-            case "define":
-                action = defineWord;
-                break;
-            case "context":
-                action = createContextMap;
-                break;
-            default:
-                return;
-        }
-        timeout_id = setTimeout(action($(this)), 1000);
-    }).on("mouseup mouseleave", function() {
-        mouse_down = false;
-        switch(getActiveMode()) {
-            case "define":
-                $(this).popover("hide");
-                break;
-            case "context":
-                break;
-            default:
-                return;
-        }
-        clearTimeout(timeout_id);
-    });
-    // END ACTIVE TOOLS
-    
-    $("#translate-text").on("click", function() {
-        if($(this).is(":checked")) {
-            if( $("#ocr-text").is(":checked") ) {
-                $("#ocr-text").click();
-            }
-            $(".img-patch-text").each(function(idx) {
-                $(this).val(translation[idx]);
-            });
-        } else {
-            $(".img-patch-text").each(function(idx) {
-                $(this).val("");
-            });
-        }
-    });
-
-    $("#ocr-text").on("click", function() {
-        if($(this).is(":checked")) {
-            if($("#translate-text").is(":checked")) {
-                $("#translate-text").click();
-            }
-            $(".img-patch-text").each(function(idx) {
-                $(this).val(ocr[idx]);
-            });
-        } else {
-            $(".img-patch-text").each(function(idx) {
-                $(this).val("");
-            });
-        }
-    });
-
-    $("#replace-pronoun").on("click", function() {
-        if($(this).is(":checked")) {
-            $(".gender-pronoun").show();
-        } else {
-            fixPronouns();
-            if($("#male-pronoun").is("checked")) {
-                $("#male-pronoun").click();
-            }
-            if($("#female-pronoun").is("checked")) {
-                $("#female-pronoun").click();
-            }
-            $(".gender-pronoun").hide();
-        }
-    });
-
-    $("#male-pronoun").on("click", function() {
-        if($(this).is(":checked")) {
-            if($("#female-pronoun").is("checked")) {
-                $("#female-pronoun").click();
-            }
-            replacePronouns(false);
-        } else {
-            fixPronouns();
-        }
-    });
-
-    $("#female-pronoun").on("click", function() {
-        if($(this).is(":checked")) {
-            if($("#male-pronoun").is("checked")) {
-                $("#male-pronoun").click();
-            }
-            replacePronouns(true);
-        } else {
-            fixPronouns();
-        }
-    });
-
-    $("#vis-container").css("opacity", 1);
-    $("#loading").removeClass("show");
-});
-
+// Toggle a specific active mode
+// Sometimes require a series of actions to occur
+// or change in functionality based on other active settings
 function toggleMode(elem, close_vertical=false, close_horizontal=false, open_vertical=false, open_horizontal=false) {
     let this_mode = $(elem).data("mode");
     if($(elem).is(":checked")) {
@@ -278,6 +68,8 @@ function getMarginWidth() {
     return margin_width;
 }
 
+// We have a list of valid modes, and this keeps track of which ones are active
+// We use this so that we can have multiple modes active
 function setActiveMode(new_mode) {
     for(let type in mode) {
         if(mode.hasOwnProperty(type)) {
@@ -309,6 +101,8 @@ function togglePointerEvents( on ) {
     }
 }
 
+// Shrink or grow the size of our canvas based on the tools that are
+// active, or have been turned on.. this is mostly to recenter the canvas
 function resizeStage() {
     if($(".tool-box").hasClass("opened")) openNav();
     else closeNav();
@@ -348,6 +142,8 @@ function resizeStage() {
     $(".stage").css("min-width", stage_width);
 }
 
+// some tools might require more steps to disable, so let's
+// throw the disabling into a switch method
 function disableMode(type) {
     togglePointerEvents(false);
     switch(type) {
@@ -379,6 +175,7 @@ function disableMode(type) {
     }
 }
 
+// return the current mode being used
 function getActiveMode() {
     let curr_mode = "";
     for(let key in mode) {
@@ -391,6 +188,7 @@ function getActiveMode() {
     return curr_mode;
 }
 
+// hide a specific word
 function eraseWord($elem) {
     let text_id = $elem.attr("id");
     $("#img-text-id").val(text_id);
@@ -406,6 +204,7 @@ function eraseWord($elem) {
     }
 }
 
+// put original pronouns back into the text
 function fixPronouns() {
     let $blocks = $(".img-text[data-ocr]").filter(function() {
         return $(this).data("ocr") == "him"
@@ -425,6 +224,7 @@ function fixPronouns() {
     }
 }
 
+// swap pronouns detected
 function replacePronouns(on) {
     let himher = "his/him";
     let heshe = "he";
@@ -563,6 +363,8 @@ function toggleSingleSpace($elem, is_horizontal) {
     }
 }
 
+// When we open a space, distribute the same amount of space across all lines
+// in order to keep the edges of our document in line
 function justifyDocument(idx, space_width) {
     $(".img-block").each(function(x){
         if(!$(this).hasClass("img-patch") && $(this).attr("id")==idx) {
@@ -608,6 +410,8 @@ function justifyDocument(idx, space_width) {
     });        
 }
 
+// based on whatever mode is selected, open the required spaces
+// if no mode is selected, open everything
 function openActiveSpaces() {
     let active_mode = getActiveMode();
     if(active_mode == "horizontal") {
@@ -620,6 +424,8 @@ function openActiveSpaces() {
     }
 }
 
+// based on whatever mode is selected, close the required spaces
+// if no mode is selected, close everything
 function closeActiveSpaces() {
     let active_mode = getActiveMode();
     if(active_mode == "horizontal") {
@@ -634,18 +440,6 @@ function closeActiveSpaces() {
         closeSpaces(false);
         resizing = false;
         closeSpaces(true);
-    }
-}
-
-function togglePageOptions() {
-    if($("#page-options:not(.squeeze)").length > 0) {
-        $("#page-options").css("bottom", "-135px");
-        $("#page-options").addClass("squeeze");
-        $("#page-options-toggle").html("▲");
-    } else {
-        $("#page-options").css("bottom", "0");
-        $("#page-options").removeClass("squeeze");
-        $("#page-options-toggle").html("▼");
     }
 }
 
@@ -703,6 +497,21 @@ function closeSpaces( is_horizontal ) {
     }
 }
 
+
+// hide or show page selection bar on the bottom
+function togglePageOptions() {
+    if($("#page-options:not(.squeeze)").length > 0) {
+        $("#page-options").css("bottom", "-135px");
+        $("#page-options").addClass("squeeze");
+        $("#page-options-toggle").html("▲");
+    } else {
+        $("#page-options").css("bottom", "0");
+        $("#page-options").removeClass("squeeze");
+        $("#page-options-toggle").html("▼");
+    }
+}
+
+// wait for animations to complete before resizing the stage again
 function detectResizeStage() {
     in_transit--;
     if(in_transit == 0) {
@@ -710,21 +519,7 @@ function detectResizeStage() {
     }
 }
 
-function argsort(to_sort) {
-    for (let i = 0; i < to_sort.length; i++) {
-      to_sort[i] = [to_sort[i], i];
-    }
-    to_sort.sort(function(left, right) {
-      return left[0] > right[0] ? -1 : 1;
-    });
-    to_sort.sort_indices = [];
-    for (let j = 0; j < to_sort.length; j++) {
-      to_sort.sort_indices.push(to_sort[j][1]);
-      to_sort[j] = to_sort[j][0];
-    }
-    return to_sort;
-}
-
+// Place the appropriate symbols indicating a words uniqueness level
 function setUniqueness(dateval) {
     let idx_date = dateval - 1800;
     let usage_list = [];
@@ -955,4 +750,20 @@ function findxy(res, e) {
             draw();
         }
     }
+}
+
+// return a list of indices that would sort an array
+function argsort(to_sort) {
+    for (let i = 0; i < to_sort.length; i++) {
+      to_sort[i] = [to_sort[i], i];
+    }
+    to_sort.sort(function(left, right) {
+      return left[0] > right[0] ? -1 : 1;
+    });
+    to_sort.sort_indices = [];
+    for (let j = 0; j < to_sort.length; j++) {
+      to_sort.sort_indices.push(to_sort[j][1]);
+      to_sort[j] = to_sort[j][0];
+    }
+    return to_sort;
 }

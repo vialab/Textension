@@ -16,6 +16,7 @@ import googleMaps as gm
 import getngrams as ng
 import matplotlib as mpl
 import math
+import colour
 mpl.use("Agg")
 import matplotlib.pyplot as plt
 from opacityConversion import *
@@ -71,12 +72,13 @@ class InlineViz:
         self.blur = _blur # intensity of median blurring for patches
         self.binarize = False # toggle binarization for pre-processing tesseract input
         self.google_key = _google_key # google developer key
+        self.block_bounds = [[9999, 9999], [0, 0]] # box coords by which all blocks reside
 
     def decompose(self):
         """ Use OCR to find bounding boxes of each line in document and dissect 
         into workable parts """
         img_bw = self.binarizeSharpenImage(self.img_file)
-        # img = np.array(self.img_file, dtype=np.uint8)
+        img = np.array(self.img_file, dtype=np.uint8)
         with PyTessBaseAPI() as api:
             api.SetImage(img_bw)
             # Iterate over lines using OCR
@@ -86,15 +88,26 @@ class InlineViz:
                 # im is a PIL image object
                 # box is a dict with x, y, w and h keys
                 api.SetRectangle(box["x"], box["y"], box["w"], box["h"])
-
+                dx = box["x"]+box["w"]
+                dy = box["y"]+box["h"]
+                if box["x"] < self.block_bounds[0][0]:
+                    self.block_bounds[0][0] = box["x"]
+                if box["y"] < self.block_bounds[0][1]:
+                    self.block_bounds[0][1] = box["y"]
+                if dx > self.block_bounds[1][0]:
+                    self.block_bounds[1][0] = dx
+                if dy > self.block_bounds[1][1]:
+                    self.block_bounds[1][1] = dy
                 #this tracks all the places that the texture needs to be laid
                 self.bounding_boxes.append(box)
                 self.ocr_text.append(api.GetUTF8Text())
                 # cv2.rectangle(img, (box["x"],box["y"]), (box["x"]+box["w"],box["y"]+box["h"]),(0,255,0),1)
+            # cv2.rectangle(img, tuple(bounds[0]), tuple(bounds[1]),(255,0,0),1)
             # img = Image.fromarray(img)
             # img.show()
         if self.translate and self.google_key != "":
             self.translateText() # translate the text to french
+        self.expandMargin() # expand the margins for infinite canvas
         self.space_height = self.getMinSpaceHeight() # get the minimum patch height                    
         self.cropImageBlocks() # slice original image into lines
         self.generateExpandedPatches() # strip and expand line spaces
@@ -475,7 +488,6 @@ class InlineViz:
             else:
                 # nothing to merge
                 compImage = img_block[i]
-
         return compImage
 
     def calculateColorDistance(self, color_1, color_2):
@@ -985,3 +997,62 @@ class InlineViz:
     
         # return the ordered coordinates
         return rect
+
+    def RGB_to_hex(self, RGB):
+        """ [255,255,255] -> "#FFFFFF" """
+        # Components need to be integers for hex to make sense
+        RGB = [int(x) for x in RGB]
+        return "#"+"".join(["0{0:x}".format(v) if v < 16 else
+                    "{0:x}".format(v) for v in RGB])
+
+    def hex_to_RGB(self, hex):
+        """ "#FFFFFF" -> [255,255,255] """
+        # Pass 16 to the integer function for change of base
+        if len(hex) < 7:
+            return tuple([int(hex[i]+hex[i], 16) for i in range(1,4)])
+        return tuple([int(hex[i:i+2], 16) for i in range(1,6,2)])
+
+    def expandMargin(self):
+        """ Create an expanded background image by expanding the 4 margins 
+        to be used on our infinite canvas """
+        img = self.img_file.convert("RGB")
+        r_total = 0
+        g_total = 0
+        b_total = 0
+        top = img.crop((0,0,self.img_width,1))
+        right = img.crop((self.img_width-1,0,self.img_width,self.img_height))
+        bottom = img.crop((0,self.img_height-1,self.img_width,self.img_height))
+        left = img.crop((0,0,1,self.img_height))
+        color_list = []
+        for x in range(self.img_width-1):
+            r, g, b = top.getpixel((x, 0))
+            color_list.append((r,g,b))
+            r, g, b = bottom.getpixel((x, 0))
+            color_list.append((r,g,b))
+        for y in range(self.img_height-1):
+            r, g, b = right.getpixel((0, y))
+            color_list.append((r,g,b))
+            r, g, b = left.getpixel((0, y))
+            color_list.append((r,g,b))
+        avg_color = self.calculateAverageColor(color_list)
+        c = colour.Color(self.RGB_to_hex(avg_color))
+        top_list = []
+        bottom_list = []
+        for x in range(self.img_width):
+            # top
+            strip = Image.new('RGB', (1, 100))
+            r,g,b = top.getpixel((x,0))
+            color_list = list(c.range_to(colour.Color(self.RGB_to_hex((r,g,b))),100))
+            color_list = [self.hex_to_RGB(i.hex) for i in color_list]
+            strip.putdata(color_list)
+            top_list.append(strip)
+            #bottom
+            strip = Image.new('RGB', (1, 100))
+            r,g,b = bottom.getpixel((x,0))
+            color_list = list(c.range_to(colour.Color(self.RGB_to_hex((r,g,b))),100))
+            color_list = [self.hex_to_RGB(i.hex) for i in color_list]
+            strip.putdata(color_list)
+            bottom_list.append(strip)
+        new_top = self.mergeImageList(top_list)
+        new_bottom = self.mergeImageList(bottom_list)
+        
