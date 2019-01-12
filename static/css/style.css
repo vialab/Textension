@@ -560,3 +560,15 @@ canvas.entity-location, canvas.ngram-usage {
     cursor: pointer;
     font-size: 12px;
 }
+
+.img-box {
+    position:relative;
+    padding: 0;
+    margin: 0;
+    border: 0;
+}
+
+.img-cell {
+    position: absolute;
+    top: 0;
+}

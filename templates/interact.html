@@ -166,6 +166,15 @@
     </label>
     </div>
   </div>
+  <div class="cell-grid">
+    {% for i in range(mesh|length) %}
+    <div class="img-box" data-img-height="{{ mesh[i][0]['height'] }}" style="height:{{ mesh[i][0]['height'] }}px;">
+      {% for j in range(mesh[i]|length) %}
+      <img class="img-cell {{'background' if mesh[i][j]['background'] else 'interactive'}}" src="data:image/png;base64,{{ mesh[i][j]['src'] }}"/>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
   <div class="stage container-fluid">
   	 <div class="row" style="height:100%;">
   		<div class="vis no-print">

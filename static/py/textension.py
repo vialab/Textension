@@ -23,7 +23,7 @@ from opacityConversion import *
 from math import ceil, floor
 from skimage.filters import threshold_local
 
-class InlineViz:
+class Block(object):
     """ Inline Viz wrapper object that performs all algorithm functions and 
     interfaces an image into workable components """
     # Class Variables
@@ -31,16 +31,13 @@ class InlineViz:
     img_file = None
     nlp = spacy.load("en")
 
-    def __init__(self, stream, _translate=False, _max_size=(1024,1024), _pixel_cut_width=5, _noise_threshold=25, _vertical_spread=5, _horizontal_spread=5, _line_buffer=1, _hi_res=True, _rgb_text=(0,0,0), _rgb_bg=(255,255,255), _anti_alias=True, _map_height=150, _blur=0, _google_key=""):
+    def __init__(self, _img_file, _translate=False
+    , _pixel_cut_width=5, _noise_threshold=25, _vertical_spread=5
+    , _horizontal_spread=5, _line_buffer=1, _hi_res=True, _rgb_text=(0,0,0)
+    , _rgb_bg=(255,255,255), _anti_alias=True, _map_height=150, _blur=0
+    , _google_key=""):
         """ Initialize a file to work with """
-        self.max_size = _max_size # maximum size of image for resizing
-        self.img_file = Image.open(stream).convert("RGB") # image itself
-        self.img_file = self.deskewImage(self.img_file)
-        # original = [float(d) for d in self.img_file.size]
-        # scale = 300/72.0
-        # if scale != 1:
-        #     self.img_file.thumbnail([round(scale * d) for d in original], Image.ANTIALIAS)
-        self.img_file.thumbnail(self.max_size, Image.ANTIALIAS) # resize image to maximum size
+        self.img_file = _img_file # PIL image
         self.img_width, self.img_height = self.img_file.convert("RGBA").size # resized width and height
         self.line_list = self.detectLines(self.img_file) # X coordinates for vertical lines
         self.translate = _translate # indicator for translating OCR'd text
@@ -72,42 +69,27 @@ class InlineViz:
         self.blur = _blur # intensity of median blurring for patches
         self.binarize = False # toggle binarization for pre-processing tesseract input
         self.google_key = _google_key # google developer key
-        self.block_bounds = [[9999, 9999], [0, 0]] # box coords by which all blocks reside
 
     def decompose(self):
         """ Use OCR to find bounding boxes of each line in document and dissect 
         into workable parts """
         img_bw = self.binarizeSharpenImage(self.img_file)
-        img = np.array(self.img_file, dtype=np.uint8)
         with PyTessBaseAPI() as api:
             api.SetImage(img_bw)
             # Iterate over lines using OCR
-            boxes = api.GetComponentImages(RIL.BLOCK, True)
-            
+            boxes = api.GetComponentImages(RIL.TEXTLINE, True)
             for i, (im, box, _, _) in enumerate(boxes):
                 # im is a PIL image object
                 # box is a dict with x, y, w and h keys
                 api.SetRectangle(box["x"], box["y"], box["w"], box["h"])
-                dx = box["x"]+box["w"]
-                dy = box["y"]+box["h"]
-                if box["x"] < self.block_bounds[0][0]:
-                    self.block_bounds[0][0] = box["x"]
-                if box["y"] < self.block_bounds[0][1]:
-                    self.block_bounds[0][1] = box["y"]
-                if dx > self.block_bounds[1][0]:
-                    self.block_bounds[1][0] = dx
-                if dy > self.block_bounds[1][1]:
-                    self.block_bounds[1][1] = dy
                 #this tracks all the places that the texture needs to be laid
                 self.bounding_boxes.append(box)
                 self.ocr_text.append(api.GetUTF8Text())
-                # cv2.rectangle(img, (box["x"],box["y"]), (box["x"]+box["w"],box["y"]+box["h"]),(0,255,0),1)
-            # cv2.rectangle(img, tuple(bounds[0]), tuple(bounds[1]),(255,0,0),1)
-            # img = Image.fromarray(img)
-            # img.show()
+
         if self.translate and self.google_key != "":
             self.translateText() # translate the text to french
-        self.expandMargin() # expand the margins for infinite canvas
+        if self.expand_margin:
+            self.expandMargin() # expand the margins for infinite canvas
         self.space_height = self.getMinSpaceHeight() # get the minimum patch height                    
         self.cropImageBlocks() # slice original image into lines
         self.generateExpandedPatches() # strip and expand line spaces
@@ -293,7 +275,7 @@ class InlineViz:
                 # get the pixel data in this space
                 rgb_img = space.convert("RGB")
                 if idx_line == 0:
-                    rgb_img_patch = self.img_patch_space[idx_line+1][idx].convert("RGB")
+                    rgb_img_patch = self.img_patch_space[idx_line][idx].convert("RGB")
                 else:
                     rgb_img_patch = self.img_patch_space[idx_line-1][idx].convert("RGB")
                 total_width = space.size[0]
@@ -758,11 +740,14 @@ class InlineViz:
                 self.img_patches[idx-1] = img_patch_crops
                 self.img_patch_space.append(img_patch_spaces)
 
-    def getImageDict(self, image):
+    def getImageDict(self, image, coords=None):
         img_dict = { "img":image
                     , "width":image.size[0]
                     , "height":image.size[1]
-                    , "src":self.encodeBase64(image)}
+                    , "src": self.encodeBase64(image)}
+        if coords:
+            img_dict["x"] = coords[0]
+            img_dict["y"] = coords[1]
         return img_dict
 
     def encodeBase64(self, image):
@@ -981,49 +966,137 @@ class InlineViz:
         # the second entry is the top-right, the third is the
         # bottom-right, and the fourth is the bottom-left
         rect = np.zeros((4, 2), dtype = "float32")
-    
         # the top-left point will have the smallest sum, whereas
         # the bottom-right point will have the largest sum
         s = pts.sum(axis = 1)
         rect[0] = pts[np.argmin(s)]
         rect[2] = pts[np.argmax(s)]
-    
         # now, compute the difference between the points, the
         # top-right point will have the smallest difference,
         # whereas the bottom-left will have the largest difference
         diff = np.diff(pts, axis = 1)
         rect[1] = pts[np.argmin(diff)]
         rect[3] = pts[np.argmax(diff)]
-    
         # return the ordered coordinates
         return rect
 
-    def RGB_to_hex(self, RGB):
-        """ [255,255,255] -> "#FFFFFF" """
-        # Components need to be integers for hex to make sense
-        RGB = [int(x) for x in RGB]
-        return "#"+"".join(["0{0:x}".format(v) if v < 16 else
-                    "{0:x}".format(v) for v in RGB])
 
-    def hex_to_RGB(self, hex):
-        """ "#FFFFFF" -> [255,255,255] """
-        # Pass 16 to the integer function for change of base
-        if len(hex) < 7:
-            return tuple([int(hex[i]+hex[i], 16) for i in range(1,4)])
-        return tuple([int(hex[i:i+2], 16) for i in range(1,6,2)])
+class Textension(Block):
+    def __init__(self, stream, _translate=False, _max_size=(1024,1024)
+    , _pixel_cut_width=5, _noise_threshold=25, _vertical_spread=5
+    , _horizontal_spread=5, _line_buffer=1, _hi_res=True, _rgb_text=(0,0,0)
+    , _rgb_bg=(255,255,255), _anti_alias=True, _map_height=150, _blur=0
+    , _google_key="", _expand_margin=False):
+        """ Initialize a file to work with """
+        # convert uploaded stream to PIL image
+        self.img_file = Image.open(stream).convert("RGB") # image itself
+        # self.img_file = self.deskewImage(self.img_file)
+        original = [float(d) for d in self.img_file.size]
+        scale = 300/72.0
+        if scale != 1:
+            self.img_file.thumbnail([round(scale * d) for d in original], Image.ANTIALIAS)
+        self.img_file.thumbnail(_max_size, Image.ANTIALIAS) # resize image to maximum size
+        # instantiate our algorithm
+        super(Textension, self).__init__(self.img_file, _translate
+        , _pixel_cut_width, _noise_threshold, _vertical_spread
+        , _horizontal_spread, _line_buffer, _hi_res, _rgb_text
+        , _rgb_bg, _anti_alias, _map_height, _blur
+        , _google_key)
+        self.block_bounds = [[9999, 9999], [0, 0]] # box coords by which all blocks reside
+        self.bg_color = (255,255,255) # the background color of the HTML stage
+        self.expand_margin = _expand_margin # expand and fade margins to bg color
+        self.x_mesh = [] # x coords for page block columns 
+        self.y_mesh = [] # y coords for page block rows
+        self.mesh = [] # two dim array of page block images
+        self.block_boxes = [] # detected blocks using tesserocr
+        self.blocks = [] # recursed textension objects of each block on the page
 
-    def expandMargin(self):
+    def blockify():
+        for (img, box, _, _) in self.block_boxes:
+            b = Block(img, self.translate, self.pixel_cut_width
+            , self.noise_threshold, self.vertical_spread, self.horizontal_spread
+            , self.line_buffer, self.hi_res, self.rgb_text
+            , self.rgb_bg, self.anti_alias, self.map_height
+            , self.blur, self.google_key)
+            b.decompose()
+            self.blocks.append(b)
+
+    def linearGradient(self, s, f, n=10):
+        """ returns a gradient list of (n) colors between
+            two hex colors. start_hex and finish_hex
+            should be the full six-digit color string,
+            inlcuding the number sign ("#FFFFFF") """
+        # Initilize a list of the output colors with the starting color
+        RGB_list = [s]
+        # Calcuate a color at each evenly spaced value of t from 1 to n
+        for t in range(1, n):
+            # Interpolate RGB vector for color at the current value of t
+            curr_vector = tuple([
+            int(s[j] + (float(t)/(n-1))*(f[j]-s[j]))
+            for j in range(3)
+            ])
+            # Add it to our list of output colors
+            RGB_list.append(curr_vector)
+        return RGB_list
+
+    def fadeColor(self, c, d=1, n=100):
+        """ Return a list of colors reducing in opacity """
+        color_list = []
+        a = 0
+        s = int(round(255.0 / n))
+        if d < 0:
+            s = s * -1
+            a = 255
+        for i in range(n):
+            a=a+s
+            if a < 0:
+                a = 0
+            if a > 255:
+                a = 255
+            color_list.append((c[0],c[1],c[2],a))
+        return color_list
+
+    def stretchFadePixel(self, start_c, end_c, size, px=100):
+        """ Linearly fade a single pixel from one color to another """
+        strip = Image.new('RGB', size)
+        color_list = self.linearGradient(start_c, end_c, px)
+        strip.putdata(color_list)
+        return strip, color_list
+
+    def pasteFade(self, img, color_list, px=100, d=1, r=0):
+        """ Paste a gradient image on top of another 
+            based on a list of colours """
+        temp = Image.new(mode='RGBA',size=(px,px))
+        t_fade = []
+        for c in color_list:
+            t_fade = t_fade + self.fadeColor(c, d)
+        temp.putdata(t_fade)
+        if r > 0:
+            temp = temp.rotate(r)
+        img.paste(temp,(0,0),mask=temp)
+        return img
+
+    def createFilledBoxImage(self, c, size):
+        """ Returns a blank image with a background color"""
+        img = Image.new(mode='RGB',size=size)
+        img.paste(c,(0,0,size[0],size[1]))
+        img.convert("RGBA")
+        return img
+
+    def expandMargin(self, px=100):
         """ Create an expanded background image by expanding the 4 margins 
         to be used on our infinite canvas """
         img = self.img_file.convert("RGB")
         r_total = 0
         g_total = 0
         b_total = 0
+        # get the bordering pixels
         top = img.crop((0,0,self.img_width,1))
         right = img.crop((self.img_width-1,0,self.img_width,self.img_height))
         bottom = img.crop((0,self.img_height-1,self.img_width,self.img_height))
         left = img.crop((0,0,1,self.img_height))
         color_list = []
+        # aggregate all pixel colors into a list to calculate average
         for x in range(self.img_width-1):
             r, g, b = top.getpixel((x, 0))
             color_list.append((r,g,b))
@@ -1034,25 +1107,173 @@ class InlineViz:
             color_list.append((r,g,b))
             r, g, b = left.getpixel((0, y))
             color_list.append((r,g,b))
-        avg_color = self.calculateAverageColor(color_list)
-        c = colour.Color(self.RGB_to_hex(avg_color))
+        self.bg_color = self.calculateAverageColor(color_list)
+        # now iterate through every pixel and stretch it px pixels
+        # our fade will go towards the average colour so that we can use
+        # a solid background colour in page
         top_list = []
         bottom_list = []
+        right_list = []
+        left_list = []
+        # these are for the corners that don't have pixels
+        tl = self.createFilledBoxImage(avg_color, (px,px))
+        tr = self.createFilledBoxImage(avg_color, (px,px))
+        bl = self.createFilledBoxImage(avg_color, (px,px))
+        br = self.createFilledBoxImage(avg_color, (px,px))
+        # stretch the top and bottom pixels of the page
         for x in range(self.img_width):
             # top
-            strip = Image.new('RGB', (1, 100))
             r,g,b = top.getpixel((x,0))
-            color_list = list(c.range_to(colour.Color(self.RGB_to_hex((r,g,b))),100))
-            color_list = [self.hex_to_RGB(i.hex) for i in color_list]
-            strip.putdata(color_list)
+            strip, top_colors = self.stretchFadePixel(avg_color, (r,g,b), (1,100))
             top_list.append(strip)
             #bottom
-            strip = Image.new('RGB', (1, 100))
             r,g,b = bottom.getpixel((x,0))
-            color_list = list(c.range_to(colour.Color(self.RGB_to_hex((r,g,b))),100))
-            color_list = [self.hex_to_RGB(i.hex) for i in color_list]
-            strip.putdata(color_list)
+            strip, bottom_colors = self.stretchFadePixel((r,g,b), avg_color, (1,100))
             bottom_list.append(strip)
-        new_top = self.mergeImageList(top_list)
-        new_bottom = self.mergeImageList(bottom_list)
-        
+        #stretch the right and left pixels of the page
+        for y in range(self.img_height):
+            #right
+            r,g,b = right.getpixel((0,y))
+            strip, right_colors = self.stretchFadePixel((r,g,b), avg_color, (100,1))
+            right_list.append(strip)
+            # left
+            r,g,b = left.getpixel((0,y))
+            strip, left_colors = self.stretchFadePixel(avg_color, (r,g,b), (100,1))
+            left_list.append(strip)
+            # Take the top pixels and fade them upwards (for the corners)
+            if y == 0:
+                tr = self.pasteFade(tr, right_colors, r=180)
+                tl = self.pasteFade(tl, left_colors, r=-90)
+            # Take the bottom pixels and fade them downwards (for the corners)
+            if y == self.img_height-1:
+                br = self.pasteFade(br, right_colors, d=-1, r=-90)
+                bl = self.pasteFade(bl, left_colors, d=-1, r=180)
+        # merge it all together
+        new_top = self.mergeImageList([tl] + top_list + [tr]) 
+        new_bottom = self.mergeImageList([bl] + bottom_list + [br])
+        new_right = self.mergeImageList(right_list, "vertical")
+        new_left = self.mergeImageList(left_list, "vertical")
+        middle = self.mergeImageList([new_left, img, new_right])
+        self.img_file = self.mergeImageList([new_top, middle, new_bottom], "vertical")
+
+    def boxesOverlap(self, box_a, box_b):
+        """ Return true if box a and b overlap """
+        a_dx = box_a["x"] + box_a["w"]
+        a_dy = box_a["y"] + box_a["h"]
+        b_dx = box_b["x"] + box_b["w"]
+        b_dy = box_b["y"] + box_b["h"]
+        if box_a["x"] >= b_dx or a_dx <= box_b["x"] \
+        or box_a["y"] >= b_dy or a_dy <= box_b["y"]:
+            return False
+        return True
+
+    def justifyBlocks(self, boxes, margin=5):
+        for i,box in enumerate(boxes):
+            changed = True
+            while changed:
+                changed = False
+                for b in boxes:
+                    idx = box["x"]+box["w"]
+                    idy = box["y"]+box["h"]
+                    dx = b["x"]+b["w"]
+                    dy = b["y"]+b["h"]
+                    x_diff = box["x"]-b["x"]
+                    y_diff = box["y"]-b["y"]
+                    dx_diff = dx-idx
+                    dy_diff = dy-idy
+                    xdx_diff = box["x"]-dx
+                    ydy_diff = box["y"]-dy
+                    idxx_diff = idx-b["x"]
+                    idyy_diff = idy-b["y"]
+                    if x_diff <= margin and x_diff > 0:
+                        boxes[i]["x"] = b["x"]
+                        changed = True
+                    if xdx_diff <= margin and xdx_diff > 0:
+                        boxes[i]["x"] = dx
+                        changed = True
+                    if y_diff <= margin and y_diff > 0:
+                        boxes[i]["y"] = b["y"]
+                        changed = True
+                    if ydy_diff <= margin and ydy_diff > 0:
+                        boxes[i]["y"] = dy
+                        changed = True
+                    if dx_diff <= margin and dx_diff > 0:
+                        boxes[i]["w"] = b["w"]
+                        changed = True
+                    if idxx_diff <= margin and idxx_diff > 0:
+                        boxes[i]["w"] = b["w"]+idxx_diff
+                        changed = True
+                    if dy_diff <= margin and dy_diff > 0:
+                        boxes[i]["h"] = b["h"]
+                        changed = True
+                    if idyy_diff <= margin and idyy_diff > 0:
+                        boxes[i]["h"] = b["h"]+idyy_diff
+                        changed = True
+
+    def chopPageByBlock(self):
+        with PyTessBaseAPI() as api:
+            api.SetImage(self.img_file)
+            # Iterate over lines using OCR
+            self.block_boxes = api.GetComponentImages(RIL.BLOCK, True)
+
+        boxes = [box[1] for box in self.block_boxes]
+        for i, box in enumerate(boxes):
+            if boxes[i]["x"] > 2 and boxes[i]["x"]+boxes[i]["w"] < self.img_width-2:
+                boxes[i]["x"] = boxes[i]["x"]-2
+                boxes[i]["w"] = boxes[i]["w"]+4
+            if boxes[i]["y"] > 2 and boxes[i]["y"]+boxes[i]["h"] < self.img_height-2:            
+                boxes[i]["y"] = boxes[i]["y"]-2
+                boxes[i]["h"] = boxes[i]["h"]+4
+            self.block_boxes[i] = list(self.block_boxes[i])
+            self.block_boxes[i][1] = boxes[i]
+
+        self.justifyBlocks(boxes, 10)
+
+        # img = np.array(self.img_file, dtype=np.uint8)
+        for i, box in enumerate(boxes):
+            # box is a dict with x, y, w and h keys
+            dx = box["x"]+box["w"]
+            dy = box["y"]+box["h"]
+            # box all the boxes so that we can track margin
+            if box["x"] < self.block_bounds[0][0]:
+                self.block_bounds[0][0] = box["x"]
+            if box["y"] < self.block_bounds[0][1]:
+                self.block_bounds[0][1] = box["y"]
+            if dx > self.block_bounds[1][0]:
+                self.block_bounds[1][0] = dx
+            if dy > self.block_bounds[1][1]:
+                self.block_bounds[1][1] = dy
+            self.y_mesh.append(box["y"])
+            self.y_mesh.append(dy)
+            self.x_mesh.append(box["x"])
+            self.x_mesh.append(dx)
+        #     cv2.rectangle(img, (box["x"],box["y"]), (box["x"]+box["w"],box["y"]+box["h"]),(0,255,0),1)
+        # cv2.rectangle(img, tuple(self.block_bounds[0]), tuple(self.block_bounds[1]),(255,0,0),1)
+        # img = Image.fromarray(img)
+        # img.show()
+
+        self.x_mesh.append(self.block_bounds[1][0])
+        self.x_mesh.append(self.img_width)
+        self.y_mesh.append(self.block_bounds[1][1])
+        self.y_mesh.append(self.img_height)
+        self.x_mesh = set(self.x_mesh)
+        self.y_mesh = set(self.y_mesh)
+        last_y = 0
+        last_x = 0
+        for i, y in enumerate(sorted(self.y_mesh)):
+            row = []
+            for x in sorted(self.x_mesh):
+                overlap = False
+                for b in boxes:
+                    if self.boxesOverlap(b, {"x":last_x, "y":last_y, "w":x-last_x, "h":y-last_y}):
+                        overlap = True
+                        break
+                cell = self.getImageDict(self.img_file.crop((last_x,last_y,x,y)), (last_x, last_y))
+                cell["background"] = True
+                if overlap:
+                    cell["background"] = False                    
+                row.append(cell)
+                last_x = x
+            self.mesh.append(row)
+            last_y = y
+            last_x = 0

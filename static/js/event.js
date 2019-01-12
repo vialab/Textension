@@ -5,6 +5,13 @@
  *****************************************************************************/
 
 $(document).ready(function() {
+    $(".img-box").each(function(i, $box) {
+        let w = 0;
+        $(".img-cell", $box).each(function(j, cell) {
+            $(cell).css("left", w+"px");
+            w += $(cell).width();
+        });
+    });
     closeNav(); // start with tool bar closed
     resizeStage(); // handle the resizing of the window and recalculate margins
 

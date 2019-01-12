@@ -15,6 +15,7 @@ import cPickle as pickle
 import pickle_session as ps
 import json
 import wand.image as wi
+from textension import Block, Textension
 from HTMLParser import HTMLParser
 from input_text_processing import *
 
@@ -96,7 +97,8 @@ def interact(page_no=0):
         , ocr=json.dumps([h.unescape(line) for line in session["viz"][page_no].ocr_text])
         , translation=json.dumps([h.unescape(line) for line in session["viz"][page_no].ocr_translated])
         , page_no=page_no
-        , num_pages=len(session["viz"]))
+        , num_pages=len(session["viz"])
+        , mesh=session["viz"][page_no].mesh)
 
 
 @app.route('/upload', methods=['GET', 'POST'])
@@ -116,7 +118,7 @@ def upload_file():
                 pdf_pages = pdfSplitPageStream(file.stream)
                 for page in pdf_pages:
                     page.seek(0)
-                    viz = iv.InlineViz(page, _translate=session["options"]["translate"]
+                    viz = Textension(page, _translate=session["options"]["translate"]
                                 , _vertical_spread=session["options"]["spread"]
                                 , _hi_res=session["options"]["hires"]
                                 , _anti_alias=session["options"]["antialias"]
@@ -130,7 +132,7 @@ def upload_file():
                     viz_list.append(viz)
             else:
                 # just an image
-                viz = iv.InlineViz(file.stream
+                viz = Textension(file.stream
                                 , _translate=session["options"]["translate"]
                                 , _hi_res=session["options"]["hires"]
                                 , _anti_alias=session["options"]["antialias"]
@@ -163,7 +165,7 @@ def get_image():
     img.save(bImage, "PNG")
     img.save("test.png","PNG")    
     bImage.seek(0)
-    viz = iv.InlineViz(bImage
+    viz = Textension(bImage
                     , _translate=session["options"]["translate"]
                     , _hi_res=session["options"]["hires"]
                     , _anti_alias=session["options"]["antialias"]
