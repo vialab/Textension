@@ -117,8 +117,8 @@ function resizeStage() {
     if(stage_height < vp_height) {
         stage_height = vp_height;
     }
-    $(".stage").css("min-height", (stage_height+150) * vertical_margin);
-    $(".vis").css("min-height", (stage_height+150) * vertical_margin);
+    // $(".stage").css("min-height", (stage_height+150) * vertical_margin);
+    // $(".vis").css("min-height", (stage_height+150) * vertical_margin);
     let alt_width = $("#context-map-container").width();
     let entity_map_width = $("#entity-map-container").width();
     if(entity_map_width > alt_width && $("#entity-map-container").is(":visible")) {
@@ -139,7 +139,7 @@ function resizeStage() {
     if(stage_width < vp_width) {
         stage_width = vp_width;
     }
-    $(".stage").css("min-width", stage_width);
+    // $(".stage").css("min-width", stage_width);
 }
 
 // some tools might require more steps to disable, so let's
@@ -270,12 +270,14 @@ function replacePronouns(on) {
 // currently only using this to have OCR text available in the html
 function injectMetaData() {
     for(let i=0; i<word_blocks.length; i++) {
-        for(let y=0; y<word_blocks[i].length; y++) {
-            let text = word_blocks[i][y]["text"];
-            let idx_block = word_blocks[i][y]["idx_block"];
-            let word_pos = word_blocks[i][y]["word_pos"];
-            let text_id = "text-" + idx_block.toString() + "-" + word_pos.toString();
-            $("#" + text_id).attr("data-ocr", text);
+        for(let j=0; j<word_blocks[i].length; j++) {
+            for(let k=0; k<word_blocks[i][j].length; k++) {
+                let text = word_blocks[i][j][k]["text"];
+                let idx_block = word_blocks[i][j][k]["idx_block"];
+                let word_pos = word_blocks[i][j][k]["word_pos"];
+                let text_id = "text-" + i.toString() + "-" + idx_block.toString() + "-" + word_pos.toString();
+                $("#" + text_id).attr("data-ocr", text);
+            }
         }
     }
 }
@@ -574,47 +576,50 @@ function setUniqueness(dateval) {
 //  - NGram Plots
 //  - Uniqueness Glyphs
 function drawOverlays() {
-    // iterate through each line
+    // iterate through each block
     for(let i=0; i<word_blocks.length; i++) {
-        // within each line, iterate each word that we detected
+        // iterate through each line
         for(let j=0; j<word_blocks[i].length; j++) {
-            // generate highlight blocks or OCR confidence
-            let opacity = (word_blocks[i][j]["confidence"]/100.0);
-            opacity = (1.00-Math.max((Math.round(opacity * 5) / 5), 0.1)).toFixed(2) * 0.9;
-            let idx_block = word_blocks[i][j]["idx_block"];
-            let idx_word = word_blocks[i][j]["word_pos"];
-            let text_id = "#text-" + idx_block.toString() + "-" + idx_word.toString();
-            let patch_id = "#patch-" + idx_block.toString() + "-" + idx_word.toString();
-            let $conf = $("<div/>", {"class":"text-confidence"});
-            $conf.css("opacity", opacity);
-            $conf.width(word_blocks[i][j]["width"]);
-            $conf.height(word_blocks[i][j]["height"]);
-            $conf.css("top", word_blocks[i][j]["y"] + "px");
-            if(idx_word == 0) {
-                $conf.css("left", word_blocks[i][j]["x"] + "px");                
-            }
-            $(text_id).parent().append($conf);
-            // place our NGRAM plots (raw base64 strings) and place them in as img elements
-            for(let y=0; y<ngram_plot.length; y++) {
-                if(ngram_plot[y]["idx_block"] == idx_block && ngram_plot[y]["word_pos"]==idx_word) {
-                    let $img = $("<img/>",{"class":"ngram-usage"});
-                    $img.attr("src", "data:image/png;base64,"+ngram_plot[y]["ngram"]);
-                    if(idx_word==0) {
-                        $img.css("left",word_blocks[i][j]["x"]+"px");
-                    }
-                    $(patch_id).parent().append($img);
-                    break;
+            // within each line, iterate each word that we detected
+            for(let k=0; k<word_blocks[i][j].length; k++) {
+                // generate highlight blocks or OCR confidence
+                let opacity = (word_blocks[i][j][k]["confidence"]/100.0);
+                opacity = (1.00-Math.max((Math.round(opacity * 5) / 5), 0.1)).toFixed(2) * 0.9;
+                let idx_block = word_blocks[i][j][k]["idx_block"];
+                let idx_word = word_blocks[i][j][k]["word_pos"];
+                let text_id = "#text-" + i.toString() + "-" + idx_block.toString() + "-" + idx_word.toString();
+                let patch_id = "#patch-" + i.toString() + "-" + idx_block.toString() + "-" + idx_word.toString();
+                let $conf = $("<div/>", {"class":"text-confidence"});
+                $conf.css("opacity", opacity);
+                $conf.width(word_blocks[i][j][k]["width"]);
+                $conf.height(word_blocks[i][j][k]["height"]);
+                $conf.css("top", word_blocks[i][j][k]["y"] + "px");
+                if(idx_word == 0) {
+                    $conf.css("left", word_blocks[i][j][k]["x"] + "px");                
                 }
-            }
+                $(text_id).parent().append($conf);
+                // place our NGRAM plots (raw base64 strings) and place them in as img elements
+                for(let y=0; y<ngram_plot.length; y++) {
+                    if(ngram_plot[y]["idx_block"] == idx_block && ngram_plot[y]["word_pos"]==idx_word) {
+                        let $img = $("<img/>",{"class":"ngram-usage"});
+                        $img.attr("src", "data:image/png;base64,"+ngram_plot[y]["ngram"]);
+                        if(idx_word==0) {
+                            $img.css("left",word_blocks[i][j][k]["x"]+"px");
+                        }
+                        $(patch_id).parent().append($img);
+                        break;
+                    }
+                }
 
-            // place the uniqueness glyph placeholders
-            let $uniqueness = $("<span/>", {"id":"unique-" 
-                + idx_block + "-" + idx_word, "class":"uniqueness-bar"});
-            $uniqueness.css({"height":"0px", "width":"20px"});
-            if(idx_word==0) {
-                $uniqueness.css("left",word_blocks[i][j]["x"]+"px");
+                // place the uniqueness glyph placeholders
+                let $uniqueness = $("<span/>", {"id":"unique-" 
+                    + idx_block + "-" + idx_word, "class":"uniqueness-bar"});
+                $uniqueness.css({"height":"0px", "width":"20px"});
+                if(idx_word==0) {
+                    $uniqueness.css("left",word_blocks[i][j][k]["x"]+"px");
+                }
+                $(patch_id).parent().append($uniqueness);
             }
-            $(patch_id).parent().append($uniqueness);
         }
     }
 }

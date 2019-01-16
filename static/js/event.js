@@ -5,6 +5,7 @@
  *****************************************************************************/
 
 $(document).ready(function() {
+    $(".stage").css("background-color","rgb(" + bg_color[0] + "," + bg_color[1] + "," + bg_color[2] + ")")
     $(".img-box").each(function(i, $box) {
         let w = 0;
         $(".img-cell", $box).each(function(j, cell) {

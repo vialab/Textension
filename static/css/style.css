@@ -219,7 +219,6 @@ input:focus + .check-btn {
     justify-content: center;
     flex-direction: column;
     background-color: white;
-    box-shadow: 0 0 40px rgba(0,0,0,0.2);
     overflow: hidden;
     -webkit-transition: all 0.5s ease;
     transition: all 0.5s ease;
@@ -571,4 +570,12 @@ canvas.entity-location, canvas.ngram-usage {
 .img-cell {
     position: absolute;
     top: 0;
+}
+
+.cell-grid {
+    position: absolute;
+}
+
+.vis-container {
+    position: absolute;
 }

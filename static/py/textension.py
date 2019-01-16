@@ -1,5 +1,5 @@
 from PIL import Image, ImageDraw, ImageFont
-from tesserocr import PyTessBaseAPI, PSM, RIL
+from tesserocr import PyTessBaseAPI, PSM, RIL, OEM
 from google_translate import *
 import spacy
 from generate_examples import *
@@ -35,10 +35,11 @@ class Block(object):
     , _pixel_cut_width=5, _noise_threshold=25, _vertical_spread=5
     , _horizontal_spread=5, _line_buffer=1, _hi_res=True, _rgb_text=(0,0,0)
     , _rgb_bg=(255,255,255), _anti_alias=True, _map_height=150, _blur=0
-    , _google_key=""):
+    , _google_key="", _coords=(0,0)):
         """ Initialize a file to work with """
         self.img_file = _img_file # PIL image
         self.img_width, self.img_height = self.img_file.convert("RGBA").size # resized width and height
+        self.img_coords = _coords # starting coordinates for this block
         self.line_list = self.detectLines(self.img_file) # X coordinates for vertical lines
         self.translate = _translate # indicator for translating OCR'd text
         self.vertical_spread = _vertical_spread # multiplier for strip size
@@ -49,8 +50,8 @@ class Block(object):
         self.line_buffer = _line_buffer # space buffer cropping between bounding boxes
         self.img_patches = [] # strips between lines of text
         self.img_blocks = [] # lines of text
-        self.img_space = [] # spaces between words
-        self.img_patch_space = [] # spaces between words
+        self.img_space = [] # spaces between actual words
+        self.img_patch_space = [] # spaces between words in the space between lines
         self.chop_dimension = [] # full dimensions of each chop
         self.img_text = [] # text blocks
         self.word_blocks = [] # meta info for word in each line/block
@@ -73,23 +74,29 @@ class Block(object):
     def decompose(self):
         """ Use OCR to find bounding boxes of each line in document and dissect 
         into workable parts """
-        img_bw = self.binarizeSharpenImage(self.img_file)
-        with PyTessBaseAPI() as api:
+        # img_bw = self.binarizeSharpenImage(self.img_file)
+        img_bw = self.img_file
+        with PyTessBaseAPI(psm=PSM.SINGLE_BLOCK, oem=OEM.LSTM_ONLY) as api:
             api.SetImage(img_bw)
             # Iterate over lines using OCR
+            # img = np.array(self.img_file, dtype=np.uint8)
             boxes = api.GetComponentImages(RIL.TEXTLINE, True)
+            y = 0
+            h = 0
             for i, (im, box, _, _) in enumerate(boxes):
                 # im is a PIL image object
                 # box is a dict with x, y, w and h keys
-                api.SetRectangle(box["x"], box["y"], box["w"], box["h"])
-                #this tracks all the places that the texture needs to be laid
-                self.bounding_boxes.append(box)
-                self.ocr_text.append(api.GetUTF8Text())
 
+                # because we've already segmented page into blocks
+                # assume our lines are full width of the page
+                api.SetRectangle(0, box["y"], self.img_width, box["h"])
+                self.bounding_boxes.append({"x":0, "y":box["y"], "w":self.img_width, "h":box["h"]})
+                self.ocr_text.append(api.GetUTF8Text())
+        #         # cv2.rectangle(img, (box["x"],box["y"]), (box["x"]+box["w"],box["y"]+box["h"]),(0,255,0),1)
+        # img = Image.fromarray(img)
+        # img.show()
         if self.translate and self.google_key != "":
             self.translateText() # translate the text to french
-        if self.expand_margin:
-            self.expandMargin() # expand the margins for infinite canvas
         self.space_height = self.getMinSpaceHeight() # get the minimum patch height                    
         self.cropImageBlocks() # slice original image into lines
         self.generateExpandedPatches() # strip and expand line spaces
@@ -218,15 +225,16 @@ class Block(object):
         """ Find minimum space height - use this for symmetry """
         space_height = 5 # default max space height
         for idx, box in enumerate(self.bounding_boxes):
-            if idx == len(self.bounding_boxes)-1:
-                break
             if idx == 0:
                 if box['y'] > self.line_buffer:
                     new_space_height = box['y']-self.line_buffer
             else:
+                if idx == len(self.bounding_boxes)-1:
+                    break
                 new_space_height = (self.bounding_boxes[idx+1]['y']) - (box['y']+box['h'])
                 if new_space_height < space_height and new_space_height > self.line_buffer:
                     space_height = new_space_height
+        assert space_height > self.line_buffer
         return space_height
 
     def expandWordSpaces(self):
@@ -242,7 +250,7 @@ class Block(object):
             if len(line) == 0:
                 space_width.append(0)
                 continue
-            line_space = [space.size[0] for space in line]
+            line_space = [space["img"].size[0] for space in line]
             min_line_space = min(line_space)
             total_width = sum(line_space)
             space_width.append(total_width)
@@ -268,21 +276,18 @@ class Block(object):
             extra_space = missing_space - (add_space * space_count[idx_line])
 
             for idx, space in enumerate(line):
-                target_width = space.size[0]+add_space
+                target_width = space["img"].size[0]+add_space
                 if idx == len(line)-1:
                     # make sure we add extra space at end
                     target_width = target_width+extra_space
                 # get the pixel data in this space
-                rgb_img = space.convert("RGB")
-                if idx_line == 0:
-                    rgb_img_patch = self.img_patch_space[idx_line][idx].convert("RGB")
-                else:
-                    rgb_img_patch = self.img_patch_space[idx_line-1][idx].convert("RGB")
-                total_width = space.size[0]
+                rgb_img = space["img"].convert("RGB")
+                rgb_img_patch = self.img_patch_space[idx_line][idx]["img"].convert("RGB")
+                total_width = space["img"].size[0]
                 pixel_list = []
                 patch_pixel_list = []
-                for y in range(space.size[1]):
-                    for x in range(space.size[0]):
+                for y in range(space["img"].size[1]):
+                    for x in range(space["img"].size[0]):
                         r, g, b = rgb_img.getpixel((x, y))
                         pixel_list.append((r,g,b))
                 for y in range(rgb_img_patch.size[1]):
@@ -290,7 +295,7 @@ class Block(object):
                         r, g, b = rgb_img_patch.getpixel((x, y))                        
                         patch_pixel_list.append((r,g,b))
                 # shuffle the pixel data and create new image
-                img_pixel = Image.new('RGB', (space.size[0], space.size[1]))
+                img_pixel = Image.new('RGB', (space["img"].size[0], space["img"].size[1]))
                 # don't shuffle if space is artificial
                 if idx_line > 0 and idx_line < len(self.img_space)-1 and len(self.bounding_boxes[idx_line-1]) > 1:
                     random.shuffle(pixel_list)
@@ -306,7 +311,7 @@ class Block(object):
                 last_width = total_width
                 while total_width < target_width:
                     if self.hi_res:
-                        img_pixel = Image.new('RGB', (space.size[0], space.size[1]))
+                        img_pixel = Image.new('RGB', (space["img"].size[0], space["img"].size[1]))
                         if idx_line > 0 and idx_line < len(self.img_space)-1 and  len(self.bounding_boxes[idx_line-1]) > 1:
                             random.shuffle(pixel_list)                    
                         img_pixel.putdata(pixel_list)
@@ -318,7 +323,7 @@ class Block(object):
 
                     img_list.append(img_pixel)
                     img_patch_list.append(img_patch_pixel)
-                    total_width = total_width + space.size[0]
+                    total_width = total_width + space["img"].size[0]
                     if total_width == last_width:
                         break # break infinite loop
                     last_width = total_width
@@ -344,19 +349,19 @@ class Block(object):
         and then expand the strip based on vertical_spread """
         tmp = Image.new('RGBA', (self.img_width, self.img_height), (0,0,0,0))
         img = self.img_file.convert("RGBA")
-
         # Create the expanded patches
         for idx, box in enumerate(self.bounding_boxes):
             # Cut textures for expansion in paper backgrounds
             # Cut between current box and next box +/- a pixel for slack
-            if box['y'] <= self.line_buffer:
-                # text too close to top of page
-                continue
-            y_start = box['y']-self.space_height
-            y_end = box['y']-self.line_buffer
+            if idx == 0:
+                # if we're at the top, take top pixel
+                y_start = 0
+                y_end = self.space_height
+            else:
+                y_start = box['y']-self.space_height
+                y_end = box['y']-self.line_buffer
 
-            if (y_end - y_start) < 1:
-                continue
+            assert y_end > y_start
 
             # if aa enabled, sample a text block to get background and text colors
             if self.anti_alias:
@@ -373,10 +378,11 @@ class Block(object):
 
             img_patch = self.createNewPatch(img, y_start, y_end, True)
             img_patch = self.getImageDict(self.smoothImage(img_patch))
-            if idx < len(self.img_text):
+            if idx < len(self.img_text)-1:
                 if "has_map" in self.img_text[idx+1][0]:
                     img_patch["map_height"] = self.map_height
             self.img_patches.append(img_patch)
+
 
     def createNewPatch(self, img, y_start, y_end, expand=True):
         """ Crop, randomize, and expand a strip """
@@ -387,9 +393,10 @@ class Block(object):
 
     def cropImageBlocks(self, pad_bottom=True):
         """ Crop blocks of image entities for recomposition with bottom padding """
-        tmp = Image.new('RGBA', (self.img_width, self.img_height), (0,0,0,0))
+        # tmp = Image.new('RGBA', (self.img_width, self.img_height), (0,0,0,0))
         # This creates a composite image with the original image and the transparent overlay
-        img = Image.alpha_composite(self.img_file.convert("RGBA"), tmp)
+        # img = Image.alpha_composite(self.img_file.convert("RGBA"), tmp)
+        img = self.img_file
         width, height = img.size
         if width == 0:
             return
@@ -408,21 +415,13 @@ class Block(object):
                 y_end = height
 
             if i == 0:
-                # check if there is room to make space above first line
-                if box['y'] > self.line_buffer:
-                    # seperate the header from first block
-                    self.has_header = True
-                    tmpImageCrop = img.crop((0, 0, width, box['y']-self.line_buffer))
-                    self.img_blocks.append(self.getImageDict(tmpImageCrop))
-                    tmpImageCrop = img.crop((0, box['y']-self.line_buffer, width, y_end))
-                else:
-                    # include the header in first block
-                    tmpImageCrop = img.crop((0, 0, width, y_end))
+                # include the header in first block
+                tmpImageCrop = img.crop((0, 0, width, y_end))
             else:
                 y_start = box['y']-self.line_buffer
                 if box['y'] > self.line_buffer and y_end > y_start:
                     tmpImageCrop = img.crop((0, box['y']-self.line_buffer, width, y_end))
-            
+
             self.img_blocks.append(self.getImageDict(tmpImageCrop))
 
     #This merges two image files using PIL
@@ -538,100 +537,88 @@ class Block(object):
         """ Get word boxes with confidence level in an image -
          does not include text for injection protection """
         img = image.convert("RGB")
-        if idx > 0:
-            img_patch = image_patch.convert("RGB")
+        img_patch = image_patch.convert("RGB")
         word_boxes = []
         img_crops = []
         img_patch_crops = []
         img_spaces = []
         img_patch_spaces = []
         has_map = False
-        img_bw = self.binarizeSharpenImage(image)
-        single_box_space = False
-
-        with PyTessBaseAPI() as api:
+        # img_bw = self.binarizeSharpenImage(image)
+        img_bw = image
+        x_end = 0
+        no_final_space = False
+        with PyTessBaseAPI(psm=PSM.SINGLE_LINE, oem=OEM.LSTM_ONLY) as api:
             api.SetImage(img_bw)
             boxes = api.GetComponentImages(RIL.WORD, True)
             for i, (im, box, _, _) in enumerate(boxes):
                 # crop the image block for display
                 x_start = box["x"]-self.line_buffer
                 if i == 0:
+                    # first word can take in the left margin
                     x_start = 0
-                    
                 if i == len(boxes)-1:
-                    if len(boxes)==1:
-                        x_end = box["x"]+box["w"]+self.line_buffer
+                    # Need to create space after last word
+                    x_end = box["x"]+box["w"]
+                    space_start = x_end+self.line_buffer
+                    if space_start >= img.size[0]-self.pixel_cut_width:
+                        # impossible to make space after the word..
+                        no_final_space = True
+                        break
                     else:
-                        x_end = img.size[0]
-                else:
-                    x_end = boxes[i+1][1]["x"]-self.line_buffer
-
-                if x_end < x_start:
-                    # ran into overlapping boxes problems so include rest of image in crop and break
-                    x_end = img.size[0]
-                    img_dict = self.getImageDict(img.crop((x_start, 0, x_end, img.size[1])))
-                    img_crops.append(img_dict)
-                    if idx > 0:
-                        img_patch_dict = self.getImageDict(img_patch.crop((x_start, 0, x_end, img_patch.size[1])))
-                        img_patch_crops.append(img_patch_dict)
-                    break
-
-                if len(boxes)==1:
-                    # if we have only one bounding box
-                    # try to make a space after the word
-                    space_start = x_end
-                    space_end = space_start + self.pixel_cut_width
-                    if space_end > img.size[0]:
-                        space_end = img.size[0]
-                    if space_start < space_end:
-                        space_crop = img.crop((space_start, 0, space_end, img.size[1]))
+                        # try to make a space after the word
+                        space_end = space_start + self.pixel_cut_width
+                        if space_end > img.size[0]:
+                            # make sure we do not cut past the width of the img
+                            space_end = img.size[0]-1
+                        # cut the space after the word
+                        space_crop = self.getImageDict(img.crop((space_start, 0, space_end, img.size[1])))
                         img_spaces.append(space_crop)
-                        single_box_space = True
-                        if idx > 0:
-                            patch_space_crop = img_patch.crop((space_start, 0, space_end, img_patch.size[1]))
-                            img_patch_spaces.append(patch_space_crop)
-                    else:
-                        x_end = img.size[0]
-
-                if i < len(boxes)-1:
+                        patch_space_crop = self.getImageDict(img_patch.crop((space_start, 0, space_end, img_patch.size[1])))
+                        img_patch_spaces.append(patch_space_crop)
+                else:
                     # cut the spaces between the words
                     space_start = box["x"]+box["w"]                    
                     space_end = boxes[i+1][1]["x"]
-                    space_crop = img.crop((space_start, 0, space_end, img.size[1]))
+                    if space_start > space_end:
+                        # broken detection.. give up
+                        if i > 0:
+                            no_final_space = True
+                        break
+                    x_end = boxes[i+1][1]["x"]-self.line_buffer
+                    space_crop = self.getImageDict(img.crop((space_start, 0, space_end, img.size[1])))
                     img_spaces.append(space_crop)
-                    if idx > 0:
-                        patch_space_crop = img_patch.crop((space_start, 0, space_end, img_patch.size[1]))
-                        img_patch_spaces.append(patch_space_crop)
-                # get the text from within bounding box
-                api.SetRectangle(x_start, box["y"], (x_end-x_start), box["h"])
-                text = api.GetUTF8Text()
+                    patch_space_crop = self.getImageDict(img_patch.crop((space_start, 0, space_end, img_patch.size[1])))
+                    img_patch_spaces.append(patch_space_crop)
+                    
                 # crop out this word from original image
                 img_dict = self.getImageDict(img.crop((x_start, 0, x_end, img.size[1])))
                 img_crops.append(img_dict)
-                if idx > 0:
-                    # also crop out the same portion from patch above
-                    img_patch_dict = self.getImageDict(img_patch.crop((x_start, 0, x_end, img_patch.size[1])))
-                    img_patch_crops.append(img_patch_dict)
+                # also crop out the same portion from patch above
+                img_patch_dict = self.getImageDict(img_patch.crop((x_start, 0, x_end, img_patch.size[1])))
+                img_patch_crops.append(img_patch_dict)
 
-                if text.strip() == u"":
-                    continue
-
-                # if we have text to analyze, run entity recognition
-                entities = self.nlp(text)
+                # get the text from within bounding box
+                api.SetRectangle(x_start, box["y"], (x_end-x_start), box["h"])
+                text = api.GetUTF8Text().strip()
                 conf = api.MeanTextConf()
                 label = ""
-                if len(entities.ents) > 0:
-                    label = entities.ents[-1].label_
 
-                # capture other meta info for ngrams
-                ngram = {
-                    "idx_block":idx
-                    , "idx_word": len(word_boxes)
-                    , "word_pos": i
-                    , "size":(box["w"],((self.space_height - self.line_buffer) * self.vertical_spread))
-                    , "text":text.strip()
-                }
-                self.ngram_data.append(ngram)
+                if text != u"":
+                    # if we have text to analyze, run entity recognition
+                    entities = self.nlp(text)
+                    if len(entities.ents) > 0:
+                        label = entities.ents[-1].label_
+
+                    # capture other meta info for ngrams
+                    ngram = {
+                        "idx_block":idx
+                        , "idx_word": len(word_boxes)
+                        , "word_pos": i
+                        , "size":(box["w"],((self.space_height - self.line_buffer) * self.vertical_spread))
+                        , "text":text.strip()
+                    }
+                    self.ngram_data.append(ngram)
                 
                 # capture word meta info
                 word = { 
@@ -643,7 +630,7 @@ class Block(object):
                     , "height":box["h"]
                     , "confidence":conf 
                     , "label": label
-                    , "text": text.strip()
+                    , "text": text
                 }
                 if label == "GPE":
                     map_width = self.bounding_boxes[idx]["w"]
@@ -654,15 +641,15 @@ class Block(object):
                         has_map = True
                 word_boxes.append(word)
 
-            if len(boxes)==1 and single_box_space:
-                # if only one bounding box crop rest of image without text
-                x_start = boxes[0][1]["x"]+boxes[0][1]["w"]+self.line_buffer
-                x_end = img.size[0]
-                img_crop = self.getImageDict(img.crop((x_start, 0, x_end, img.size[1])))
+            # cut the rest of the image off (no text)
+            if not no_final_space:
+                x_start = x_end
+            if x_start < img.size[0]:
+                img_crop = self.getImageDict(img.crop((x_start, 0, img.size[0], img.size[1])))
                 img_crops.append(img_crop)
                 img_crop = self.getImageDict(img_patch.crop((x_start, 0, x_end, img_patch.size[1])))
                 img_patch_crops.append(img_crop)
-                
+
         return img_crops, img_patch_crops, img_spaces, img_patch_spaces, word_boxes, has_map
 
     def chopImageBlockSpace(self, boxes, img):
@@ -693,55 +680,33 @@ class Block(object):
 
     def getWordBlocks(self):
         """ Get bounding boxes for single words in a line """
+        # Rewritten and removed special cases to simplify
+        # First word always includes left margin
+        # last word should never be connected to right margin
         for idx, img_dict in enumerate(self.img_blocks):
             img = img_dict["img"]
-            img_patch = None
-            if idx > 0:
-                img_patch = self.img_patches[idx-1]["img"]
-            if idx == 1:
-                # bring first image along for the ride
-                img_patch = self.mergeImages(self.img_blocks[0]["img"], img_patch, "vertical")
+            self.chop_dimension.append({"width":img.size[0],"height":img.size[1]})
+            img_patch = self.img_patches[idx]["img"]
             img_crops, img_patch_crops, img_spaces, img_patch_spaces, word_block, has_map = self.getWordInfo(idx, img, img_patch)
-            if idx == 1:
-                # split first image from patch
-                new_patch_crops = []
-                prev_img_crops = []
-                prev_height = self.img_blocks[0]["img"].size[1]
-                for crop in img_patch_crops:
-                    img_patch_crop = crop["img"].crop((0,prev_height,crop["img"].size[0],crop["img"].size[1]))
-                    new_patch_crops.append(self.getImageDict(img_patch_crop))
-                    img_crop = crop["img"].crop((0,0,crop["img"].size[0], prev_height))
-                    prev_img_crops.append(self.getImageDict(img_crop))
-                img_patch_crops = new_patch_crops
-                self.img_text[0] = prev_img_crops
-                # split first image from space
-                new_patch_spaces = []
-                prev_img_spaces = []
-                for crop in img_patch_spaces:
-                    img_patch_crop = crop.crop((0,prev_height,crop.size[0],crop.size[1]))
-                    new_patch_spaces.append(img_patch_crop)
-                    img_crop = crop.crop((0,0,crop.size[0], prev_height))
-                    prev_img_spaces.append(img_crop)
-                img_patch_spaces = new_patch_spaces
-                self.img_space[0] = prev_img_spaces
-
             if has_map:
                 for crop in img_crops:
                     crop["has_map"] = True
             if len(img_crops) == 0:
                 # if we have no bounding boxes detected (i.e. no images)
-                # use original image
-                img_crops.append(img_dict)
-            self.chop_dimension.append({"width":img.size[0],"height":img.size[1]})
+                # use original image and make sure everything else is blank too
+                img_crops = [[img_dict]]
+                img_patch_crops = [[self.getImageDict(img_patch)]]
+                img_spaces = []
+                img_patch_spaces = []
+                word_block = []
             self.word_blocks.append(word_block)
             self.img_text.append(img_crops)
             self.img_space.append(img_spaces)
-            if idx > 0:
-                self.img_patches[idx-1] = img_patch_crops
-                self.img_patch_space.append(img_patch_spaces)
+            self.img_patches[idx] = img_patch_crops
+            self.img_patch_space.append(img_patch_spaces)
 
     def getImageDict(self, image, coords=None):
-        img_dict = { "img":image
+        img_dict = { "img":image.convert("RGB")
                     , "width":image.size[0]
                     , "height":image.size[1]
                     , "src": self.encodeBase64(image)}
@@ -863,7 +828,7 @@ class Block(object):
     def increaseContrast(self, image):
         """ Increase the contrast of an image to improve OCR results """
         # convert to lab color model
-        img_array = np.asarray(image)
+        img_array = np.asarray(image.convert("RGB"))
         lab = cv2.cvtColor(img_array, cv2.COLOR_RGB2LAB)
         cv2.imshow("lab",lab)
 
@@ -986,7 +951,7 @@ class Textension(Block):
     , _pixel_cut_width=5, _noise_threshold=25, _vertical_spread=5
     , _horizontal_spread=5, _line_buffer=1, _hi_res=True, _rgb_text=(0,0,0)
     , _rgb_bg=(255,255,255), _anti_alias=True, _map_height=150, _blur=0
-    , _google_key="", _expand_margin=False):
+    , _google_key="", _expand_margin=True):
         """ Initialize a file to work with """
         # convert uploaded stream to PIL image
         self.img_file = Image.open(stream).convert("RGB") # image itself
@@ -1011,13 +976,16 @@ class Textension(Block):
         self.block_boxes = [] # detected blocks using tesserocr
         self.blocks = [] # recursed textension objects of each block on the page
 
-    def blockify():
+    def blockify(self):
+        if self.expand_margin:
+            self.expandMargin() # expand the margins for infinite canvas
+        self.chopPageByBlock()
         for (img, box, _, _) in self.block_boxes:
             b = Block(img, self.translate, self.pixel_cut_width
             , self.noise_threshold, self.vertical_spread, self.horizontal_spread
             , self.line_buffer, self.hi_res, self.rgb_text
             , self.rgb_bg, self.anti_alias, self.map_height
-            , self.blur, self.google_key)
+            , self.blur, self.google_key, _coords=(box["x"],box["y"]))
             b.decompose()
             self.blocks.append(b)
 
@@ -1108,6 +1076,8 @@ class Textension(Block):
             r, g, b = left.getpixel((0, y))
             color_list.append((r,g,b))
         self.bg_color = self.calculateAverageColor(color_list)
+        if self.bg_color == (255,255,255):
+            return
         # now iterate through every pixel and stretch it px pixels
         # our fade will go towards the average colour so that we can use
         # a solid background colour in page
@@ -1116,29 +1086,29 @@ class Textension(Block):
         right_list = []
         left_list = []
         # these are for the corners that don't have pixels
-        tl = self.createFilledBoxImage(avg_color, (px,px))
-        tr = self.createFilledBoxImage(avg_color, (px,px))
-        bl = self.createFilledBoxImage(avg_color, (px,px))
-        br = self.createFilledBoxImage(avg_color, (px,px))
+        tl = self.createFilledBoxImage(self.bg_color, (px,px))
+        tr = self.createFilledBoxImage(self.bg_color, (px,px))
+        bl = self.createFilledBoxImage(self.bg_color, (px,px))
+        br = self.createFilledBoxImage(self.bg_color, (px,px))
         # stretch the top and bottom pixels of the page
         for x in range(self.img_width):
             # top
             r,g,b = top.getpixel((x,0))
-            strip, top_colors = self.stretchFadePixel(avg_color, (r,g,b), (1,100))
+            strip, top_colors = self.stretchFadePixel(self.bg_color, (r,g,b), (1,100))
             top_list.append(strip)
             #bottom
             r,g,b = bottom.getpixel((x,0))
-            strip, bottom_colors = self.stretchFadePixel((r,g,b), avg_color, (1,100))
+            strip, bottom_colors = self.stretchFadePixel((r,g,b), self.bg_color, (1,100))
             bottom_list.append(strip)
         #stretch the right and left pixels of the page
         for y in range(self.img_height):
             #right
             r,g,b = right.getpixel((0,y))
-            strip, right_colors = self.stretchFadePixel((r,g,b), avg_color, (100,1))
+            strip, right_colors = self.stretchFadePixel((r,g,b), self.bg_color, (100,1))
             right_list.append(strip)
             # left
             r,g,b = left.getpixel((0,y))
-            strip, left_colors = self.stretchFadePixel(avg_color, (r,g,b), (100,1))
+            strip, left_colors = self.stretchFadePixel(self.bg_color, (r,g,b), (100,1))
             left_list.append(strip)
             # Take the top pixels and fade them upwards (for the corners)
             if y == 0:
@@ -1155,6 +1125,8 @@ class Textension(Block):
         new_left = self.mergeImageList(left_list, "vertical")
         middle = self.mergeImageList([new_left, img, new_right])
         self.img_file = self.mergeImageList([new_top, middle, new_bottom], "vertical")
+        self.img_width = self.img_file.size[0]
+        self.img_height = self.img_file.size[1]
 
     def boxesOverlap(self, box_a, box_b):
         """ Return true if box a and b overlap """
@@ -1168,6 +1140,8 @@ class Textension(Block):
         return True
 
     def justifyBlocks(self, boxes, margin=5):
+        """ If there are boundaries that are near each other, cluster them.
+            However, only cluster if it makes our bounding box larger """
         for i,box in enumerate(boxes):
             changed = True
             while changed:
@@ -1177,57 +1151,51 @@ class Textension(Block):
                     idy = box["y"]+box["h"]
                     dx = b["x"]+b["w"]
                     dy = b["y"]+b["h"]
-                    x_diff = box["x"]-b["x"]
-                    y_diff = box["y"]-b["y"]
+                    
+                    x_diff = b["x"]-box["x"]
+                    y_diff = b["y"]+box["y"]
+                    xdx_diff = dx-box["x"]
+                    ydy_diff = dy-box["y"]
                     dx_diff = dx-idx
                     dy_diff = dy-idy
-                    xdx_diff = box["x"]-dx
-                    ydy_diff = box["y"]-dy
-                    idxx_diff = idx-b["x"]
-                    idyy_diff = idy-b["y"]
+                    idxx_diff = b["x"]-idx
+                    idyy_diff = b["y"]-idy
                     if x_diff <= margin and x_diff > 0:
                         boxes[i]["x"] = b["x"]
+                        boxes[i]["w"] = boxes[i]["w"]+x_diff
                         changed = True
-                    if xdx_diff <= margin and xdx_diff > 0:
-                        boxes[i]["x"] = dx
+                    if (xdx_diff <= margin and xdx_diff > 0) \
+                    or (dx_diff <= margin and dx_diff > 0) \
+                    or (idxx_diff <= margin and idxx_diff > 0):
+                        boxes[i]["w"] = boxes[i]["w"]+xdx_diff
                         changed = True
                     if y_diff <= margin and y_diff > 0:
                         boxes[i]["y"] = b["y"]
+                        boxes[i]["y"] = boxes[i]["y"]+x_diff
                         changed = True
-                    if ydy_diff <= margin and ydy_diff > 0:
-                        boxes[i]["y"] = dy
-                        changed = True
-                    if dx_diff <= margin and dx_diff > 0:
-                        boxes[i]["w"] = b["w"]
-                        changed = True
-                    if idxx_diff <= margin and idxx_diff > 0:
-                        boxes[i]["w"] = b["w"]+idxx_diff
-                        changed = True
-                    if dy_diff <= margin and dy_diff > 0:
-                        boxes[i]["h"] = b["h"]
-                        changed = True
-                    if idyy_diff <= margin and idyy_diff > 0:
-                        boxes[i]["h"] = b["h"]+idyy_diff
+                    if (ydy_diff <= margin and ydy_diff > 0) \
+                    or (dy_diff <= margin and dy_diff > 0) \
+                    or (idyy_diff <= margin and idyy_diff > 0):
+                        boxes[i]["h"] = boxes[i]["h"]+ydy_diff
                         changed = True
 
     def chopPageByBlock(self):
-        with PyTessBaseAPI() as api:
+        with PyTessBaseAPI(oem=OEM.LSTM_ONLY) as api:
             api.SetImage(self.img_file)
             # Iterate over lines using OCR
             self.block_boxes = api.GetComponentImages(RIL.BLOCK, True)
 
         boxes = [box[1] for box in self.block_boxes]
+        margin = self.space_height
         for i, box in enumerate(boxes):
-            if boxes[i]["x"] > 2 and boxes[i]["x"]+boxes[i]["w"] < self.img_width-2:
-                boxes[i]["x"] = boxes[i]["x"]-2
-                boxes[i]["w"] = boxes[i]["w"]+4
-            if boxes[i]["y"] > 2 and boxes[i]["y"]+boxes[i]["h"] < self.img_height-2:            
-                boxes[i]["y"] = boxes[i]["y"]-2
-                boxes[i]["h"] = boxes[i]["h"]+4
-            self.block_boxes[i] = list(self.block_boxes[i])
-            self.block_boxes[i][1] = boxes[i]
+            if boxes[i]["x"] > margin and boxes[i]["x"]+boxes[i]["w"] < self.img_width-margin:
+                boxes[i]["x"] = boxes[i]["x"]-margin
+                boxes[i]["w"] = boxes[i]["w"]+(margin*2)
+            if boxes[i]["y"] > margin and boxes[i]["y"]+boxes[i]["h"] < self.img_height-margin:
+                boxes[i]["y"] = boxes[i]["y"]-margin
+                boxes[i]["h"] = boxes[i]["h"]+(margin*2)
 
-        self.justifyBlocks(boxes, 10)
+        # self.justifyBlocks(boxes, margin)
 
         # img = np.array(self.img_file, dtype=np.uint8)
         for i, box in enumerate(boxes):
@@ -1247,6 +1215,9 @@ class Textension(Block):
             self.y_mesh.append(dy)
             self.x_mesh.append(box["x"])
             self.x_mesh.append(dx)
+            self.block_boxes[i] = list(self.block_boxes[i])
+            self.block_boxes[i][1] = boxes[i]
+            self.block_boxes[i][0] = self.img_file.crop((box["x"],box["y"],dx,dy))
         #     cv2.rectangle(img, (box["x"],box["y"]), (box["x"]+box["w"],box["y"]+box["h"]),(0,255,0),1)
         # cv2.rectangle(img, tuple(self.block_bounds[0]), tuple(self.block_bounds[1]),(255,0,0),1)
         # img = Image.fromarray(img)
@@ -1264,14 +1235,15 @@ class Textension(Block):
             row = []
             for x in sorted(self.x_mesh):
                 overlap = False
-                for b in boxes:
+                for j, b in enumerate(boxes):
                     if self.boxesOverlap(b, {"x":last_x, "y":last_y, "w":x-last_x, "h":y-last_y}):
                         overlap = True
                         break
                 cell = self.getImageDict(self.img_file.crop((last_x,last_y,x,y)), (last_x, last_y))
                 cell["background"] = True
                 if overlap:
-                    cell["background"] = False                    
+                    cell["background"] = False
+                    cell["idx_box"] = j
                 row.append(cell)
                 last_x = x
             self.mesh.append(row)

@@ -66,39 +66,67 @@ def interact(page_no=0):
         if sample == "southern_life":
             sample = "./server/southern_life.pkl"
         with open(sample, 'r') as f:
-            session["viz"] = pickle.load(f)
-    # if we don't have a viz to render, redirect back home
-    if "viz" not in session:
+            session["vis"] = pickle.load(f)
+    # if we don't have a vis to render, redirect back home
+    if "vis" not in session:
         return redirect(url_for("index"))
     # default to first page
     try:
         page_no = int(page_no)
     except:
         page_no = 0
-    if page_no >= len(session["viz"]):
+    if page_no >= len(session["vis"]):
         page_no = 0
 
     # looping through the full arrays during rendering is slow due to size
     # segregate the data to matrices and do not include images
-    image_text = formatToMatrix(session["viz"][page_no].img_text)
-    image_patches = formatToMatrix(session["viz"][page_no].img_patches)
-    image_patch_space = formatToMatrix(session["viz"][page_no].img_patch_space)
-    image_space = formatToMatrix(session["viz"][page_no].img_space)
+    vis = session["vis"][page_no]
+    image_mesh = formatToMatrix(vis.mesh)
+
+    image_text = []
+    image_patches = []
+    image_patch_space = []
+    image_space = []
+    image_dim = []
+    image_coords = []
+    bounding_boxes = []
+    word_blocks = []
+    ngram_plot = []
+    ocr_text = []
+    ocr_translated = []
+
+    for b in vis.blocks:
+        image_text.append(formatToMatrix(b.img_text))
+        image_patches.append(formatToMatrix(b.img_patches))
+        image_patch_space.append(formatToMatrix(b.img_patch_space))
+        image_space.append(formatToMatrix(b.img_space))
+        image_dim.append(b.chop_dimension)
+        image_coords.append(b.img_coords)
+        bounding_boxes.append(b.bounding_boxes)
+        word_blocks.append(b.word_blocks)
+        ngram_plot.append(b.ngram_plot)
+        ocr_text.append(b.ocr_text)
+        ocr_translated.append(b.ocr_translated)
 
     return render_template('interact.html'
         , image_text=image_text
         , image_patches=image_patches
         , image_space=image_space
         , image_patch_space=image_patch_space
-        , image_dim=session["viz"][page_no].chop_dimension
-        , bounding_boxes=session["viz"][page_no].bounding_boxes
-        , word_blocks=json.dumps(session["viz"][page_no].word_blocks)
-        , ngram_plot=json.dumps(session["viz"][page_no].ngram_plot)
-        , ocr=json.dumps([h.unescape(line) for line in session["viz"][page_no].ocr_text])
-        , translation=json.dumps([h.unescape(line) for line in session["viz"][page_no].ocr_translated])
+        , mesh=image_mesh
+        , image_dim=image_dim
+        , image_coords=image_coords
+        , bounding_boxes=bounding_boxes
+        , word_blocks=json.dumps(word_blocks)
+        , ngram_plot=json.dumps(ngram_plot)
+        , ocr=json.dumps([h.unescape(line) for line in ocr_text])
+        , translation=json.dumps([h.unescape(line) for line in ocr_translated])
         , page_no=page_no
-        , num_pages=len(session["viz"])
-        , mesh=session["viz"][page_no].mesh)
+        , num_pages=len(session["vis"])
+        , num_blocks=len(vis.blocks)
+        , image_size=[vis.img_width, vis.img_height]
+        , bg_color=vis.bg_color
+        )
 
 
 @app.route('/upload', methods=['GET', 'POST'])
@@ -109,16 +137,16 @@ def upload_file():
         file = request.files['file']
 
         if file and allowed_file(file.filename):
-            saveVizSessionArgs(request.form)
+            savevisSessionArgs(request.form)
             file_extension = file.filename.split(".")[-1].lower()
             
-            viz_list = []
+            vis_list = []
             if file_extension == "pdf":
                 # need to split pages and decompose one by one
                 pdf_pages = pdfSplitPageStream(file.stream)
                 for page in pdf_pages:
                     page.seek(0)
-                    viz = Textension(page, _translate=session["options"]["translate"]
+                    vis = Textension(page, _translate=session["options"]["translate"]
                                 , _vertical_spread=session["options"]["spread"]
                                 , _hi_res=session["options"]["hires"]
                                 , _anti_alias=session["options"]["antialias"]
@@ -128,11 +156,11 @@ def upload_file():
                                 , _blur=session["options"]["blur"]
                                 , _google_key=session["options"]["google_key"]
                                 , _max_size=(session["options"]["width"],session["options"]["height"]))
-                    viz.decompose()
-                    viz_list.append(viz)
+                    vis.blockify()
+                    vis_list.append(vis)
             else:
                 # just an image
-                viz = Textension(file.stream
+                vis = Textension(file.stream
                                 , _translate=session["options"]["translate"]
                                 , _hi_res=session["options"]["hires"]
                                 , _anti_alias=session["options"]["antialias"]
@@ -143,20 +171,20 @@ def upload_file():
                                 , _blur=session["options"]["blur"]
                                 , _google_key=session["options"]["google_key"]
                                 , _max_size=(session["options"]["width"],session["options"]["height"]))
-                viz.decompose()
-                viz_list.append(viz)
+                vis.blockify()
+                vis_list.append(vis)
 
-            session["viz"] = viz_list
+            session["vis"] = vis_list
             # with open("./southern_life.pkl", "w+") as f:
-            #     pickle.dump(viz_list, f)
+            #     pickle.dump(vis_list, f)
     return redirect(url_for("index"))
 
 
 @app.route('/hook', methods=['POST'])
 def get_image():
     """ Retrieves image that was taken by the webcam, and processes like /upload """
-    viz_list=[]
-    saveVizSessionArgs(request.values)
+    vis_list=[]
+    savevisSessionArgs(request.values)
     image_b64 = re.sub("data:image/png;base64,", "", request.values["imageBase64"])
     bImage = io.BytesIO(base64.b64decode(image_b64))
     img = Image.open(bImage)
@@ -165,7 +193,7 @@ def get_image():
     img.save(bImage, "PNG")
     img.save("test.png","PNG")    
     bImage.seek(0)
-    viz = Textension(bImage
+    vis = Textension(bImage
                     , _translate=session["options"]["translate"]
                     , _hi_res=session["options"]["hires"]
                     , _anti_alias=session["options"]["antialias"]
@@ -176,15 +204,15 @@ def get_image():
                     , _blur=session["options"]["blur"]
                     , _google_key=session["options"]["google_key"]
                     , _max_size=(session["options"]["width"],session["options"]["height"]))
-    viz.decompose()
-    viz_list.append(viz)
-    session["viz"] = viz_list
+    vis.decompose()
+    vis_list.append(vis)
+    session["vis"] = vis_list
     return redirect(url_for("index"))
 
 
 
 ##### HELPER FUNCTIONS
-def saveVizSessionArgs(form):
+def savevisSessionArgs(form):
     """ Save visualization parameters into session"""
     if "options" not in session:
         session["options"] = default_options
@@ -218,6 +246,8 @@ def allowed_file(filename):
 def formatToMatrix(data):
     """ Itemize our data into dict multi-d arrays for consistency 
      and efficiency by filtering out the images """
+    if len(data) == 0:
+        return []
     new_array = []
     for row in data:
         item = []
