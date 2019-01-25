@@ -393,6 +393,10 @@ canvas.entity-location, canvas.ngram-usage {
     top: 0;
 }
 
+.text-box img, .text-space img, .patch-box img.ngram-usage {
+    max-height: 25px;
+}
+
 .custom-text { 
     position: absolute;
     left: 0;

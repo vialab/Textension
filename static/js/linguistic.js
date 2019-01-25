@@ -89,26 +89,28 @@ function createContextMap($elem) {
     $occurences.each(function() {
         var curr_id = $(this).attr("id");
         var arr_id = curr_id.split("-");
-        var idx_line = parseInt(arr_id[1]);
-        var idx_word = parseInt(arr_id[2]);
+        var idx_block = parseInt(arr_id[1]);
+        var idx_line = parseInt(arr_id[2]);
+        var idx_word = parseInt(arr_id[3]);
         var before = [];
         var after = []
         
         if(idx_word > 1) {
-            before.push($("#text-" + arr_id[1] + "-" + (idx_word-2).toString()));
+            before.push($("#text-" + idx_block + "-" + idx_line + "-" + (idx_word-2).toString()));
         }
         if(idx_word > 0) {
-            before.push($("#text-" + arr_id[1] + "-" + (idx_word-1).toString()));
+            before.push($("#text-" + idx_block + "-" + idx_line + "-" + (idx_word-1).toString()));
         }
-        var last_id = $(".img-block:not(.img-patch)#" + idx_line.toString() + " span img").last().attr("id");
+        var last_id = $(".img-block:not(.img-patch)#block-" + idx_block 
+            + "-" + idx_line.toString() + " span img").last().attr("id");
         var arr_last_id = last_id.split("-");
         var idx_last = parseInt(arr_last_id[2]);
         
         if((idx_last-idx_word) >= 2) {
-            after.push($("#text-" + arr_id[1] + "-" + (idx_word+2).toString()));
+            after.push($("#text-" + idx_block + "-" + idx_line + "-" + (idx_word+2).toString()));
         }
         if((idx_last-idx_word) >= 1) {
-            after.push($("#text-" + arr_id[1] + "-" + (idx_word+1).toString()));
+            after.push($("#text-" + idx_block + "-" + idx_line + "-" + (idx_word+1).toString()));
         }
         var row_html = "<tr>";
         if(before.length == 2) {
@@ -145,8 +147,8 @@ function createContextMap($elem) {
     });
     $context_map.click(function() {
         $(this).remove();
-        resizeStage();
+        mapBlockMesh();
     })
     $("#context-map-container").append($context_map);
-    resizeStage();
+    mapBlockMesh();
 }

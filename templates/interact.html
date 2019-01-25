@@ -189,7 +189,7 @@
             {% if (image_patches[b]|length) > 0 and (image_patches[b][i]|length) > 0 %}
             <div class="img-block img-patch squeeze" id="patch-{{b}}-{{i}}" data-img-height="{{ image_patches[b][i][0]['height'] }}" style="height:0px;">
               {% for y in range(image_patches[b][i]|length) %}
-              <span class="patch-box" style="width:{{ image_patches[b][i][y]['width'] }}px;">
+              <span id="patch-box-{{b}}-{{i}}-{{y}}" class="patch-box" style="width:{{ image_patches[b][i][y]['width'] }}px;">
                 <img style="width:{{ image_patches[b][i][y]['width'] }}px;" id="patch-{{i}}-{{y}}" src="data:image/png;base64,{{ image_patches[b][i][y]['src'] }}"/>
               </span>
                 {% if y < (image_patch_space[b][i]|length)%}

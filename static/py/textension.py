@@ -92,7 +92,9 @@ class Block(object):
                 # assume our lines are full width of the page
                 api.SetRectangle(0, box["y"], self.img_width, box["h"])
                 self.bounding_boxes.append({"x":0, "y":box["y"], "w":self.img_width, "h":box["h"]})
-                self.ocr_text.append(api.GetUTF8Text())
+                api.SetRectangle(box["x"], box["y"], box["w"], box["h"])
+                ocr_result = api.GetUTF8Text()
+                self.ocr_text.append(ocr_result)
         #         # cv2.rectangle(img, (box["x"],box["y"]), (box["x"]+box["w"],box["y"]+box["h"]),(0,255,0),1)
         # img = Image.fromarray(img)
         # img.show()

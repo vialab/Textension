@@ -559,8 +559,8 @@ function drawOverlays() {
                 opacity = (1.00-Math.max((Math.round(opacity * 5) / 5), 0.1)).toFixed(2) * 0.9;
                 let idx_block = word_blocks[i][j][k]["idx_block"];
                 let idx_word = word_blocks[i][j][k]["word_pos"];
-                let text_id = "#text-" + i.toString() + "-" + idx_block.toString() + "-" + idx_word.toString();
-                let patch_id = "#patch-" + i.toString() + "-" + idx_block.toString() + "-" + idx_word.toString();
+                let text_id = "#text-" + i + "-" + idx_block + "-" + idx_word;
+                let patch_id = "#patch-box-" + i + "-" + idx_block + "-" + idx_word;
                 let $conf = $("<div/>", {"class":"text-confidence"});
                 $conf.css("opacity", opacity);
                 $conf.width(word_blocks[i][j][k]["width"]);
@@ -571,14 +571,14 @@ function drawOverlays() {
                 }
                 $(text_id).parent().append($conf);
                 // place our NGRAM plots (raw base64 strings) and place them in as img elements
-                for(let y=0; y<ngram_plot.length; y++) {
-                    if(ngram_plot[y]["idx_block"] == idx_block && ngram_plot[y]["word_pos"]==idx_word) {
+                for(let y=0; y<ngram_plot[i].length; y++) {
+                    if(ngram_plot[i][y]["idx_block"] == idx_block && ngram_plot[i][y]["word_pos"]==idx_word) {
                         let $img = $("<img/>",{"class":"ngram-usage"});
-                        $img.attr("src", "data:image/png;base64,"+ngram_plot[y]["ngram"]);
+                        $img.attr("src", "data:image/png;base64,"+ngram_plot[i][y]["ngram"]);
                         if(idx_word==0) {
                             $img.css("left",word_blocks[i][j][k]["x"]+"px");
                         }
-                        $(patch_id).parent().append($img);
+                        $(patch_id).append($img);
                         break;
                     }
                 }
@@ -590,7 +590,7 @@ function drawOverlays() {
                 if(idx_word==0) {
                     $uniqueness.css("left",word_blocks[i][j][k]["x"]+"px");
                 }
-                $(patch_id).parent().append($uniqueness);
+                $(patch_id).append($uniqueness);
             }
         }
     }

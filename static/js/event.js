@@ -67,7 +67,6 @@ $(document).ready(function() {
     rangeSlider();
 
     // Ngram usage widget buttom
-    // drawNGramUsage();
     $(".ngram-usage").hide();
     $("#ngram").on("click", function() {
         if($(this).is(":checked")) {
@@ -90,7 +89,7 @@ $(document).ready(function() {
             $(".entity-location").hide();
             $("#entity-map-container").hide();
         }
-        resizeStage();
+        mapBlockMesh();
     });
 
     // Translation widget button
@@ -99,8 +98,11 @@ $(document).ready(function() {
             if( $("#ocr-text").is(":checked") ) {
                 $("#ocr-text").click();
             }
-            $(".img-patch-text").each(function(idx) {
-                $(this).val(translation[idx]);
+            $(".vis-container").each(function(i, $e) {
+                let block_num = $(this).data("block");
+                $(".img-patch-text", $e).each(function(idx) {
+                    $(this).val(translation[block_num][idx]);
+                });
             });
         } else {
             $(".img-patch-text").each(function(idx) {
@@ -115,8 +117,11 @@ $(document).ready(function() {
             if($("#translate-text").is(":checked")) {
                 $("#translate-text").click();
             }
-            $(".img-patch-text").each(function(idx) {
-                $(this).val(ocr[idx]);
+            $(".vis-container").each(function(i, $e) {
+                let block_num = $(this).data("block");
+                $(".img-patch-text", $e).each(function(idx) {
+                    $(this).val(ocr[block_num][idx]);
+                });
             });
         } else {
             $(".img-patch-text").each(function(idx) {
