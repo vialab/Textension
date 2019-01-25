@@ -5,21 +5,15 @@
  *****************************************************************************/
 
 $(document).ready(function() {
-    $(".stage").css("background-color","rgb(" + bg_color[0] + "," + bg_color[1] + "," + bg_color[2] + ")")
-    $(".img-box").each(function(i, $box) {
-        let w = 0;
-        $(".img-cell", $box).each(function(j, cell) {
-            $(cell).css("left", w+"px");
-            w += $(cell).width();
-        });
-    });
+    $(".stage, html").css("background-color","rgb(" + bg_color[0] + "," + bg_color[1] + "," + bg_color[2] + ")")
     closeNav(); // start with tool bar closed
-    resizeStage(); // handle the resizing of the window and recalculate margins
-
+    // handle the resizing of the window and recalculate margins
+    $(window).resize(mapBlockMesh);
     // click event listener for lines to be toggled opened or closed
     $(".img-block:not(.img-patch)").on("click", function() {
         if (getActiveMode() != "vertical") return; // proper mode needed
         let id = parseInt($(this).attr("id"));
+        console.log($(this));
         if(id == 0) return; // the first line of the page doesn't need space
         toggleSingleSpace($("#"+id.toString()+".img-patch"), false)
     });
@@ -231,7 +225,97 @@ $(document).ready(function() {
         clearTimeout(timeout_id);
     });
     // END ACTIVE TOOLS
-
+    createMeshMap();
+    mapBlockMesh();
     $("#vis-container").css("opacity", 1);
     $("#loading").removeClass("show");
 });
+
+function createMeshMap() {
+    for(let i = 0; i < num_blocks; i++) {
+        block_mesh.push([[99999999,99999999],[-1,-1]]);
+        block_x.push(0);
+        block_y.push(0);
+    }
+    $(".cell-grid .img-box").each(function(i, b) {
+        let row = []
+        $(".img-cell", $(b)).each(function(j, c) {
+            row.push($(c));
+            let data_block = $(c).data("block");
+            if(data_block != "" || data_block == "0") {
+                let block_num = parseInt(data_block);
+                if(i <= block_mesh[block_num][0][1]) {
+                    block_mesh[block_num][0][1] = i;
+                    if(j < block_mesh[block_num][0][0]) {
+                        block_mesh[block_num][0][0] = j;
+                    }
+                }
+                if(i >= block_mesh[block_num][1][1]) {
+                    block_mesh[block_num][1][1] = i;
+                    if(j >= block_mesh[block_num][0][0]) {
+                        block_mesh[block_num][1][0] = j;
+                    }
+                }
+            }
+        });
+        mesh.push(row);
+        $(this).data("img-width", $(this).width());
+    });
+    for(let i=0; i < block_mesh.length; i++) {
+        block_x[i] = block_mesh[i][0][0];
+        block_y[i] = block_mesh[i][0][1];
+    }
+    block_x = argsort(block_x);
+    block_y = argsort(block_y);
+}
+
+function resetBlockMesh() {
+    for(let i=0; i < mesh.length; i++) {
+        for(let j=0; j < mesh[i].length; j++) {
+            $(mesh[i][j]).css("min-width", $(mesh[i][j]).data("img-width"));
+        }
+    }
+}
+
+function resizeBlockMesh(block_num) {
+    let min_x = block_mesh[block_num][0][0]
+    , max_x = block_mesh[block_num][1][0]+1
+    , $b = $("#vis-container-"+block_num)
+    , space_size = $b.width();
+    for(let i=min_x; i < max_x; i++) {
+        space_size -= $(mesh[0][i]).data("img-width");
+    }
+    let dw = space_size / (max_x-min_x);
+    for(let i=0; i < mesh.length; i++) {
+        let $b = $(mesh[i][0]).parent();
+        $b.width($b.data("img-width")+space_size);
+        for(let j=min_x; j < max_x; j++) {
+            let $cell = $(mesh[i][j]);
+            $cell.css("min-width", $cell.data("img-width")+dw);
+        }
+    }
+
+    let min_y = block_mesh[block_num][0][1]
+        , max_y = block_mesh[block_num][1][1]+1;
+    $b = $("#vis-container-"+block_num);
+    space_size = $b.height();
+    for(let i=min_y; i < max_y; i++) {
+        space_size -= $(mesh[i][0]).parent().height();
+    }
+    let dh = space_size / (max_y-min_y);
+    for(let i=min_y; i < max_y; i++) {
+        let $b = $(mesh[i][0]).parent();
+        $b.height($b.height()+dh);
+    }
+}
+
+function mapBlockMesh() {
+    for(let j=0; j < block_mesh.length; j++) {
+        let mesh_xy = block_mesh[j][0];
+        let $cell = $(mesh[mesh_xy[1]][mesh_xy[0]]);
+        let top_offset = $cell.parent().position().top
+            , left_offset = $cell.parent().position().left + $cell.position().left;
+        $("#vis-container-"+j).css({"top":top_offset});
+        $("#vis-container-"+j).css({"left":left_offset});
+    }
+}

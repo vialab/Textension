@@ -168,13 +168,15 @@
   </div>
   <div class="stage container-fluid">
       <!-- BLOCKS START -->
-  		<div class="vis no-print" style="width: {{image_size[0]}}px;height:{{image_size[1]}}px;">
+  		<div class="vis no-print" style="">
         <!-- MESH START -->
-        <div class="cell-grid" style="width: {{image_size[0]}}px;height:{{image_size[1]}}px;">
+        <div class="cell-grid" style="width: {{image_size[0]}}px;top:0;">
           {% for i in range(mesh|length) %}
           <div class="img-box" data-img-height="{{ mesh[i][0]['height'] }}" style="height:{{ mesh[i][0]['height'] }}px;">
             {% for j in range(mesh[i]|length) %}
-            <img class="img-cell {{'background' if mesh[i][j]['background'] else 'interactive'}}" data-block="{{mesh[i][0]['idx_box'] if mesh[i][0]['idx_box']}}" src="data:image/png;base64,{{ mesh[i][j]['src'] }}"/>
+            <span style="min-width:{{mesh[i][j]['width']}}px;" data-img-width="{{mesh[i][j]['width']}}" data-width-offset="0" class="img-cell {{'background' if mesh[i][j]['background'] else 'interactive'}}" data-block="{{mesh[i][j]['idx_block'] if not mesh[i][j]['background']}}">
+              <img data-img-height="{{mesh[i][j]['height']}}" data-height-offset="0" src="data:image/png;base64,{{ mesh[i][j]['src'] }}"/>
+            </span>
             {% endfor %}
           </div>
           {% endfor %}
@@ -182,15 +184,15 @@
         <!-- MESH END -->
 
         {% for b in range(num_blocks) %}
-        <div id="vis-container-{{b}}" data-block="" class="vis-container" style="left:{{image_coords[b][0]}}px;top:{{image_coords[b][1]}}px;">
+        <div id="vis-container-{{b}}" data-block="{{b}}" data-img-width="{{block_size[b][0]}}" data-img-height="{{block_size[b][1]}}" data-img-x="{{image_coords[b][0]}}" data-img-y="{{image_coords[b][1]}}" class="vis-container" style="left:{{image_coords[b][0]}}px;top:{{image_coords[b][1]}}px;">
           {% for i in range(image_text[b]|length) %}
             {% if (image_patches[b]|length) > 0 and (image_patches[b][i]|length) > 0 %}
-            <div class="img-block img-patch squeeze" id="{{b}}-{{i}}" data-img-height="{{ image_patches[b][i][0]['height'] }}" style="height:0px;">
+            <div class="img-block img-patch squeeze" id="patch-{{b}}-{{i}}" data-img-height="{{ image_patches[b][i][0]['height'] }}" style="height:0px;">
               {% for y in range(image_patches[b][i]|length) %}
               <span class="patch-box" style="width:{{ image_patches[b][i][y]['width'] }}px;">
                 <img style="width:{{ image_patches[b][i][y]['width'] }}px;" id="patch-{{i}}-{{y}}" src="data:image/png;base64,{{ image_patches[b][i][y]['src'] }}"/>
               </span>
-                {% if y < (image_patch_space[b][i]|length)-1%}
+                {% if y < (image_patch_space[b][i]|length)%}
                 <span class="text-space squeeze" style="width:0px;" data-img-width="{{ image_patch_space[b][i][y]['width'] }}">
                   <img id="patch-space-{{b}}-{{i}}-{{y}}" class="img-patch-space" src="data:image/png;base64,{{ image_patch_space[b][i][y]['src'] }}"/>
                 </span>
@@ -200,13 +202,13 @@
             </div>
             {% endif %}
           {% if image_patches[b]|length > 0 %}
-          <div class="img-block" id="{{b}}-{{i}}" style="height:{{ image_dim[b][i]['height'] if image_dim[b]|length > 0 }}px;background-image: url('data:image/png;base64,{{ image_patches[b][i]['src'] if image_patches[b]|length > 0 }}');">
+          <div class="img-block" id="block-{{b}}-{{i}}" style="height:{{ image_dim[b][i]['height'] if image_dim[b]|length > 0 }}px;background-image: url('data:image/png;base64,{{ image_patches[b][i]['src'] if image_patches[b]|length > 0 }}');">
             {% for y in range(image_text[b][i]|length) %}
             <span class="text-box" style="width:{{image_text[b][i][y]['width']}}px;">
               <div style="width:{{image_text[b][i][y]['width']}}px;" class="custom-text text-center"></div>
               <img id="text-{{b}}-{{i}}-{{y}}" class="img-text" src="data:image/png;base64,{{image_text[b][i][y]['src']}}"/>
             </span>
-              {% if y < (image_space[b][i]|length)-1 %}
+              {% if y < (image_space[b][i]|length) %}
               <span class="text-space squeeze" style="width:0px;" data-img-width="{{ image_space[b][i][y]['width'] }}">
                 <div style="width:{{image_space[b][i][y]['width']}}px;" class="custom-text text-center"></div>
                 <img id="space-{{b}}-{{i}}-{{y}}" class="img-space" src="data:image/png;base64,{{image_space[b][i][y]['src']}}"/>
@@ -224,14 +226,14 @@
       </div>
       <!-- BLOCKS END -->
     </div>
-  <div id="page-options">
+  <!-- <div id="page-options">
     <span id="page-options-toggle" onclick="togglePageOptions();">▼</span>
     <ul>
       {% for i in range(num_pages) %}
         <li><a href="/interact/{i}"><span>{{i+1}}</span></a></li>
       {% endfor %}
     </ul>
-  </div>
+  </div> -->
   <div id="color-options">
     <div id="text-options">
       <span id="text-color-select"></span>
@@ -270,6 +272,7 @@
     var img_width = {{ image_size[0]|safe }}
     var img_height = {{ image_size[1]|safe }}
     var bg_color = [{{bg_color[0]|safe}},{{bg_color[1]|safe}},{{bg_color[2]|safe}}]
+    var num_blocks = {{num_blocks}}
   </script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.transit/0.9.12/jquery.transit.min.js"></script>
   <script type='text/javascript' src="https://cdn.jsdelivr.net/g/canvas2image@0.1(base64.js+canvas2image.min.js+canvas2image.js)"></script>  

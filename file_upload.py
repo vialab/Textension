@@ -94,6 +94,7 @@ def interact(page_no=0):
     ngram_plot = []
     ocr_text = []
     ocr_translated = []
+    block_size = []
 
     for b in vis.blocks:
         image_text.append(formatToMatrix(b.img_text))
@@ -107,6 +108,7 @@ def interact(page_no=0):
         ngram_plot.append(b.ngram_plot)
         ocr_text.append(b.ocr_text)
         ocr_translated.append(b.ocr_translated)
+        block_size.append([b.img_width, b.img_height])
 
     return render_template('interact.html'
         , image_text=image_text
@@ -114,6 +116,7 @@ def interact(page_no=0):
         , image_space=image_space
         , image_patch_space=image_patch_space
         , mesh=image_mesh
+        , block_size=block_size
         , image_dim=image_dim
         , image_coords=image_coords
         , bounding_boxes=bounding_boxes

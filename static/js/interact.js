@@ -20,6 +20,9 @@ horizontal_mode = false,
 resizing = false,
 in_transit = 0;
 
+// keep track of mesh and blocks
+let mesh = [], block_mesh = [], block_y = [], block_x = [];
+
 // keeps track of active tools
 let mode = {
     "draw": false,
@@ -99,47 +102,6 @@ function togglePointerEvents( on ) {
     } else {
         $("input.img-patch-text").css("pointer-events", "");
     }
-}
-
-// Shrink or grow the size of our canvas based on the tools that are
-// active, or have been turned on.. this is mostly to recenter the canvas
-function resizeStage() {
-    if($(".tool-box").hasClass("opened")) openNav();
-    else closeNav();
-    
-    let vp_height = $(window).height();
-    let vp_width = $(window).width();
-    let stage_height = $("#vis-container").height();
-    let stage_width = $("#vis-container").width();
-    if($("#context-map-container").height() > stage_height) {
-        stage_height = $("#context-map-container").height();
-    }
-    if(stage_height < vp_height) {
-        stage_height = vp_height;
-    }
-    // $(".stage").css("min-height", (stage_height+150) * vertical_margin);
-    // $(".vis").css("min-height", (stage_height+150) * vertical_margin);
-    let alt_width = $("#context-map-container").width();
-    let entity_map_width = $("#entity-map-container").width();
-    if(entity_map_width > alt_width && $("#entity-map-container").is(":visible")) {
-        alt_width = entity_map_width;
-    }
-    if($("#context-map-container table").length > 0 || ($("#entity-map-container img").length > 0 && $("#entity-map-container").is(":visible"))) {
-        stage_width += (alt_width * 2);
-        $("#context-map-container").css("top", $("#1").position().top );
-        $("#context-map-container").css("left", $("#vis-container").position().left + $("#1").eq(0).width());
-        $("#entity-map-container img").each(function() {
-            let text_id = $(this).data("word-id");
-            $(this).css("top", $(text_id).parent().parent().position().top + "px");
-        });
-        // $("#entity-map-container").css("left", $("#vis-container").position().left - $("#entity-map-container").width());
-    } else {
-        stage_width *= horizontal_margin;
-    }
-    if(stage_width < vp_width) {
-        stage_width = vp_width;
-    }
-    // $(".stage").css("min-width", stage_width);
 }
 
 // some tools might require more steps to disable, so let's
@@ -463,40 +425,58 @@ function toggleSpace( is_horizontal ) {
 }
 
 function openSpaces( is_horizontal ) {
-    if(is_horizontal) {
-        $(".text-space").removeClass("squeeze");
-        in_transit += $(".text-space").length;
-        $(".text-space").each(function() {
-            space_width = $(this).data("img-width");
-            // $(this).width(space_width);
-            $(this).transition({width:space_width}, detectResizeStage);
-        });
-    } else {
-        $(".img-patch").removeClass("squeeze");
-        in_transit += $(".img-patch").length;
-        $(".img-patch").each(function() {
-            space_height = $(this).data("img-height");
-            if($("#location").is(":checked")) {
-                if($(this).data("map-height") > 0) {
-                    space_height = $(this).data("map-height");
+    let deferrals = [];
+    $(".vis-container").each(function(i, $e) {
+        let block_num = $(this).data("block");
+        if(is_horizontal) {
+            $(".text-space",$e).removeClass("squeeze");
+            $(".text-space",$e).each(function() {
+                in_transit++;
+                space_width = $(this).data("img-width");
+                // $(this).width(space_width);
+                deferrals.push($(this).transition({width:space_width}).promise());
+            });
+        } else {
+            $(".img-patch",$e).removeClass("squeeze");
+            $(".img-patch",$e).each(function() {
+                in_transit++;
+                space_height = $(this).data("img-height");
+                if($("#location",$e).is(":checked")) {
+                    if($(this).data("map-height") > 0) {
+                        space_height = $(this).data("map-height");
+                    }
                 }
-            }
-            // $(this).height(space_height);
-            $(this).transition({height:space_height}, detectResizeStage);
-        });
-    }
+                deferrals.push($(this).transition({height:space_height}).promise());
+            });
+        }
+    });
+    $.when(...deferrals).done(function() {
+        resetBlockMesh();
+        for(let i=0; i < block_mesh.length; i++) resizeBlockMesh(i);
+        mapBlockMesh();
+    })
 }
 
 function closeSpaces( is_horizontal ) {
-    if(is_horizontal) {
-        in_transit += $(".text-space").length;
-        $(".text-space").transition({width:0}, detectResizeStage);
-        $(".text-space").addClass("squeeze");
-    } else {
-        in_transit += $(".img-patch").length;
-        $(".img-patch").transition({height:0}, detectResizeStage);
-        $(".img-patch").addClass("squeeze");        
-    }
+    let deferrals = [];
+    $(".vis-container").each(function(i, $e) {
+        block_num = $(this).data("block");
+        space_size = 0;
+        if(is_horizontal) {
+            in_transit += $(".text-space",$e).length;
+            deferrals.push($(".text-space",$e).transition({width:0}).promise());
+            $(".text-space",$e).addClass("squeeze");
+        } else {
+            in_transit += $(".img-patch",$e).length;
+            deferrals.push($(".img-patch",$e).transition({height:0}).promise());
+            $(".img-patch",$e).addClass("squeeze"); 
+        }
+    });
+    $.when(...deferrals).done(function() {
+        resetBlockMesh();
+        for(let i=0; i < block_mesh.length; i++) resizeBlockMesh(i);
+        mapBlockMesh();
+    })
 }
 
 
@@ -513,14 +493,6 @@ function togglePageOptions() {
     }
 }
 
-// wait for animations to complete before resizing the stage again
-function detectResizeStage() {
-    in_transit--;
-    if(in_transit == 0) {
-        resizeStage();
-    }
-}
-
 // Place the appropriate symbols indicating a words uniqueness level
 function setUniqueness(dateval) {
     let idx_date = dateval - 1800;
@@ -528,7 +500,7 @@ function setUniqueness(dateval) {
     for(let i=0; i<ngram_plot.length; i++) {
         usage_list.push(ngram_plot[i]["usage"][idx_date]);
     }
-    usage_list = argsort(usage_list);
+    usage_list = argsort(usage_list, true);
 
     for(let rank=0; rank<usage_list.length; rank++) {
         let i = usage_list.sort_indices[rank];
@@ -758,12 +730,16 @@ function findxy(res, e) {
 }
 
 // return a list of indices that would sort an array
-function argsort(to_sort) {
+function argsort(to_sort, desc=false) {
     for (let i = 0; i < to_sort.length; i++) {
       to_sort[i] = [to_sort[i], i];
     }
     to_sort.sort(function(left, right) {
-      return left[0] > right[0] ? -1 : 1;
+        if(desc) {
+            return left[0] > right[0] ? -1 : 1;
+        } else {
+            return left[0] < right[0] ? -1 : 1;
+        }
     });
     to_sort.sort_indices = [];
     for (let j = 0; j < to_sort.length; j++) {

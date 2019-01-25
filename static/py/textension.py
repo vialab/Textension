@@ -35,7 +35,7 @@ class Block(object):
     , _pixel_cut_width=5, _noise_threshold=25, _vertical_spread=5
     , _horizontal_spread=5, _line_buffer=1, _hi_res=True, _rgb_text=(0,0,0)
     , _rgb_bg=(255,255,255), _anti_alias=True, _map_height=150, _blur=0
-    , _google_key="", _coords=(0,0)):
+    , _google_key="", _coords=(0,0), _block=0):
         """ Initialize a file to work with """
         self.img_file = _img_file # PIL image
         self.img_width, self.img_height = self.img_file.convert("RGBA").size # resized width and height
@@ -70,6 +70,7 @@ class Block(object):
         self.blur = _blur # intensity of median blurring for patches
         self.binarize = False # toggle binarization for pre-processing tesseract input
         self.google_key = _google_key # google developer key
+        self.idx_block = _block # block number in a Textension object
 
     def decompose(self):
         """ Use OCR to find bounding boxes of each line in document and dissect 
@@ -647,7 +648,7 @@ class Block(object):
             if x_start < img.size[0]:
                 img_crop = self.getImageDict(img.crop((x_start, 0, img.size[0], img.size[1])))
                 img_crops.append(img_crop)
-                img_crop = self.getImageDict(img_patch.crop((x_start, 0, x_end, img_patch.size[1])))
+                img_crop = self.getImageDict(img_patch.crop((x_start, 0, img.size[0], img_patch.size[1])))
                 img_patch_crops.append(img_crop)
 
         return img_crops, img_patch_crops, img_spaces, img_patch_spaces, word_boxes, has_map
@@ -709,7 +710,8 @@ class Block(object):
         img_dict = { "img":image.convert("RGB")
                     , "width":image.size[0]
                     , "height":image.size[1]
-                    , "src": self.encodeBase64(image)}
+                    , "src": self.encodeBase64(image)
+                    , "idx_block": self.idx_block}
         if coords:
             img_dict["x"] = coords[0]
             img_dict["y"] = coords[1]
@@ -975,17 +977,19 @@ class Textension(Block):
         self.mesh = [] # two dim array of page block images
         self.block_boxes = [] # detected blocks using tesserocr
         self.blocks = [] # recursed textension objects of each block on the page
+        self.margin_size = 100
+        self.stripe_bg = False
 
     def blockify(self):
         if self.expand_margin:
-            self.expandMargin() # expand the margins for infinite canvas
+            self.expandMargin(self.margin_size) # expand the margins for infinite canvas
         self.chopPageByBlock()
-        for (img, box, _, _) in self.block_boxes:
+        for i, (img, box, _, _) in enumerate(self.block_boxes):
             b = Block(img, self.translate, self.pixel_cut_width
             , self.noise_threshold, self.vertical_spread, self.horizontal_spread
-            , self.line_buffer, self.hi_res, self.rgb_text
-            , self.rgb_bg, self.anti_alias, self.map_height
-            , self.blur, self.google_key, _coords=(box["x"],box["y"]))
+            , self.line_buffer, self.hi_res, self.rgb_text, self.rgb_bg
+            , self.anti_alias, self.map_height, self.blur, self.google_key
+            , _coords=(box["x"],box["y"]), _block=i)
             b.decompose()
             self.blocks.append(b)
 
@@ -1182,7 +1186,7 @@ class Textension(Block):
     def chopPageByBlock(self):
         with PyTessBaseAPI(oem=OEM.LSTM_ONLY) as api:
             api.SetImage(self.img_file)
-            # Iterate over lines using OCR
+            # Iterate over blocks using OCR
             self.block_boxes = api.GetComponentImages(RIL.BLOCK, True)
 
         boxes = [box[1] for box in self.block_boxes]
@@ -1222,7 +1226,11 @@ class Textension(Block):
         # cv2.rectangle(img, tuple(self.block_bounds[0]), tuple(self.block_bounds[1]),(255,0,0),1)
         # img = Image.fromarray(img)
         # img.show()
-
+        if self.expand_margin:
+            self.x_mesh.append(self.margin_size)
+            self.x_mesh.append(self.img_width-self.margin_size)
+            self.y_mesh.append(self.margin_size)
+            self.y_mesh.append(self.img_height-self.margin_size)
         self.x_mesh.append(self.block_bounds[1][0])
         self.x_mesh.append(self.img_width)
         self.y_mesh.append(self.block_bounds[1][1])
@@ -1238,12 +1246,26 @@ class Textension(Block):
                 for j, b in enumerate(boxes):
                     if self.boxesOverlap(b, {"x":last_x, "y":last_y, "w":x-last_x, "h":y-last_y}):
                         overlap = True
+                        self.idx_block = j
                         break
-                cell = self.getImageDict(self.img_file.crop((last_x,last_y,x,y)), (last_x, last_y))
-                cell["background"] = True
+                cell_img = self.img_file.crop((last_x,last_y,x,y))
                 if overlap:
+                    if self.stripe_bg:
+                        cell_strips = []
+                        for i in range(cell_img.size[0]):
+                            start_c = tuple(cell_img.getpixel((i,0)))
+                            end_c = tuple(cell_img.getpixel((i,cell_img.size[1]-1)))
+                            strip, _ = self.stretchFadePixel(start_c, end_c, (1,cell_img.size[1]), cell_img.size[1])
+                            cell_strips.append(strip)
+                        cell = self.getImageDict(self.mergeImageList(cell_strips), (last_x, last_y))
+                    else:
+                        new_box = self.createFilledBoxImage(self.bg_color, (cell_img.size[0],cell_img.size[1]))
+                        cell = self.getImageDict(new_box, (last_x, last_y))
                     cell["background"] = False
                     cell["idx_box"] = j
+                else:
+                    cell = self.getImageDict(cell_img, (last_x, last_y))
+                    cell["background"] = True
                 row.append(cell)
                 last_x = x
             self.mesh.append(row)
