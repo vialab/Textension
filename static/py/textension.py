@@ -631,9 +631,9 @@ class Block(object):
                     , "label": label
                     , "text": text
                 }
-                if label == "GPE":
+                if label == "GPE" and self.google_key != "":
                     map_width = self.bounding_boxes[idx]["w"]
-                    img_map = gm.getMap(text, map_width, self.map_height)
+                    img_map = gm.getMap(self.google_key, text, map_width, self.map_height)
                     if img_map is not None:
                         word["map"] = self.encodeBase64(img_map)
                         word["map_x"] = self.bounding_boxes[idx]["x"]

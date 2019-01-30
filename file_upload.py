@@ -188,8 +188,8 @@ def upload_file():
                 vis_list.append(vis)
 
             session["vis"] = vis_list
-            # with open("./southern_life.pkl", "w+") as f:
-            #     pickle.dump(vis_list, f)
+            with open("./southern_life.pkl", "w+") as f:
+                pickle.dump(vis_list, f)
     return redirect(url_for("index"))
 
 

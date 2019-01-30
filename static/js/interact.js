@@ -614,28 +614,31 @@ function drawOverlays() {
 function drawLocations() {
     for(let i=0; i<word_blocks.length; i++) {
         for(let j=0; j<word_blocks[i].length; j++) {
-            if(word_blocks[i][j]["label"] == "GPE") {
-                // draw the overlay color box
-                let idx_block = word_blocks[i][j]["idx_block"];
-                let idx_word = word_blocks[i][j]["word_pos"];
-                let text_id = "#text-" + idx_block.toString() + "-" + idx_word.toString();
-                let $loc = $("<div/>", {"class":"entity-location"});
-                $loc.width(word_blocks[i][j]["width"]);
-                $loc.height(word_blocks[i][j]["height"]);
-                $loc.css("top", word_blocks[i][j]["y"] + "px");
-                if(idx_word == 0) {
-                    $loc.css("left", word_blocks[i][j]["x"] + "px");                
+            for(let k=0; k<word_blocks[i][j].length; k++) {
+                if(word_blocks[i][j][k]["label"] == "GPE") {
+                    // draw the overlay color box
+                    let idx_block = word_blocks[i][j][k]["idx_block"];
+                    let idx_word = word_blocks[i][j][k]["word_pos"];
+                    let text_id = "#text-" + i + "-" + idx_block.toString() + "-" + idx_word.toString();
+                    let $loc = $("<div/>", {"class":"entity-location"});
+                    $loc.width(word_blocks[i][j][k]["width"]);
+                    $loc.height(word_blocks[i][j][k]["height"]);
+                    $loc.css("top", word_blocks[i][j][k]["y"] + "px");
+                    if(idx_word == 0) {
+                        $loc.css("left", word_blocks[i][j][k]["x"] + "px");                
+                    }
+                    $(text_id).parent().append($loc);
+                    // draw the map
+                    let $img = new Image();
+                    $img.src = "data:image/png;base64,"+word_blocks[i][j][k]["map"];
+                    $($img).css("top", $(text_id).parent().parent().position().top + "px");
+                    $($img).data("word-id",text_id);
+                    $("#entity-map-container").append($img);
                 }
-                $(text_id).parent().append($loc);
-                // draw the map
-                let $img = new Image();
-                $img.src = "data:image/png;base64,"+word_blocks[i][j]["map"];
-                $($img).css("top", $(text_id).parent().parent().position().top + "px");
-                $($img).data("word-id",text_id);
-                $("#entity-map-container").append($img);
             }
         }
     }
+    reinitializeWidgetEntities();
 }
 
 // Initialize the usable canvas for drawing
