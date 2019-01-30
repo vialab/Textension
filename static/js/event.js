@@ -273,13 +273,38 @@ function createMeshMap() {
     block_y = argsort(block_y);
 }
 
+function reinitializeWidgetEntities() {
+    let $grid_rows = $(".img-box")
+        , $first = $($grid_rows[0])
+        , $last = $($grid_rows[$grid_rows.length-1])
+        , stage_width = $first.width()
+        , stage_height = $last.position().top + $last.height() - $first.position().top;
+    $(".stage, .vis, .cell-grid").css("min-height", stage_height);
+    $(".stage, .vis, .cell-grid").css("min-width", stage_width);
+    let right_margin = $(".cell-grid").position().left + $(".cell-grid").width() - margin_size
+        , left_margin = $(".cell-grid").position().left + margin_size;
+    $("#context-map-container").css("left", right_margin);
+    $("#entity-map-container").css("left", left_margin - $("#entity-map-container").width());
+    // resize our drawing canvas as well, retaining all markings
+    let canvas = document.getElementById('draw-board')
+        , buffer = document.getElementById('buffer');
+    buffer.width = stage_width;
+    buffer.height = stage_height;
+    buffer.getContext("2d").drawImage(canvas, 0, 0);
+    canvas.width = stage_width;
+    canvas.height = stage_height;
+    canvas.getContext("2d").drawImage(buffer, 0, 0);
+    $("#draw-board").width(canvas.width);
+    $("#draw-board").height(canvas.height);
+}
+
 function resetBlockMesh() {
-    $("#context-map-container").css("left",$(".cell-grid").position().left + $(".cell-grid").width());
     for(let i=0; i < mesh.length; i++) {
         for(let j=0; j < mesh[i].length; j++) {
             $(mesh[i][j]).css("min-width", $(mesh[i][j]).data("img-width"));
         }
     }
+    reinitializeWidgetEntities();
 }
 
 function resizeBlockMesh(block_num) {
@@ -312,6 +337,7 @@ function resizeBlockMesh(block_num) {
         let $b = $(mesh[i][0]).parent();
         $b.height($b.height()+dh);
     }
+    reinitializeWidgetEntities();
 }
 
 function mapBlockMesh() {

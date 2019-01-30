@@ -27,8 +27,7 @@ body {
 /* Hide default HTML checkbox */
 .switch input {display:none;}
 
-.check-btn, .stage, .check-btn, .tool-box, #vis-container
-, .vis, .vis .img-block
+.check-btn, .check-btn, .tool-box, #vis-container, .vis .img-block
 , .vis .img-block.img-patch .patch-box span
 , #context-map-container, #entity-map-container, #entity-map-container img
 , .text-space  {
@@ -356,8 +355,6 @@ canvas.entity-location, canvas.ngram-usage {
 
 #draw-board {
     position: absolute;
-    top: 0;
-    left: 0;
 }
 
 .draw-color {
@@ -380,6 +377,10 @@ canvas.entity-location, canvas.ngram-usage {
     height: 0px;
     overflow: visible;
     pointer-events: none;
+}
+
+canvas#buffer {
+    display:none;
 }
 
 #sample-text-box {

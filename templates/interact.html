@@ -221,6 +221,7 @@
         </div>
         {% endfor %}
         <canvas class="overlay" id="draw-board"></canvas>
+        <canvas class="" id="buffer"></canvas>
         <div id="context-map-container"></div>
         <div id="entity-map-container"></div>
       </div>
@@ -273,6 +274,7 @@
     var img_height = {{ image_size[1]|safe }}
     var bg_color = [{{bg_color[0]|safe}},{{bg_color[1]|safe}},{{bg_color[2]|safe}}]
     var num_blocks = {{num_blocks}}
+    var margin_size = {{session["options"]["margin_size"]}}
   </script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.transit/0.9.12/jquery.transit.min.js"></script>
   <script type='text/javascript' src="https://cdn.jsdelivr.net/g/canvas2image@0.1(base64.js+canvas2image.min.js+canvas2image.js)"></script>  
