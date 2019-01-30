@@ -12,9 +12,7 @@ $(document).ready(function() {
     // click event listener for lines to be toggled opened or closed
     $(".img-block:not(.img-patch)").on("click", function() {
         if (getActiveMode() != "vertical") return; // proper mode needed
-        let id = parseInt($(this).attr("id"));
-        console.log($(this));
-        if(id == 0) return; // the first line of the page doesn't need space
+        let id = $(this).attr("id").replace("block", "patch");
         toggleSingleSpace($("#"+id.toString()+".img-patch"), false)
     });
 
@@ -120,6 +118,7 @@ $(document).ready(function() {
             $(".vis-container").each(function(i, $e) {
                 let block_num = $(this).data("block");
                 $(".img-patch-text", $e).each(function(idx) {
+                    console.log(ocr[block_num][idx]);
                     $(this).val(ocr[block_num][idx]);
                 });
             });
@@ -275,6 +274,7 @@ function createMeshMap() {
 }
 
 function resetBlockMesh() {
+    $("#context-map-container").css("left",$(".cell-grid").position().left + $(".cell-grid").width());
     for(let i=0; i < mesh.length; i++) {
         for(let j=0; j < mesh[i].length; j++) {
             $(mesh[i][j]).css("min-width", $(mesh[i][j]).data("img-width"));

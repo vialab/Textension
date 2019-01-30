@@ -174,7 +174,7 @@
           {% for i in range(mesh|length) %}
           <div class="img-box" data-img-height="{{ mesh[i][0]['height'] }}" style="height:{{ mesh[i][0]['height'] }}px;">
             {% for j in range(mesh[i]|length) %}
-            <span style="min-width:{{mesh[i][j]['width']}}px;" data-img-width="{{mesh[i][j]['width']}}" data-width-offset="0" class="img-cell {{'background' if mesh[i][j]['background'] else 'interactive'}}" data-block="{{mesh[i][j]['idx_block'] if not mesh[i][j]['background']}}">
+            <span style="width:{{mesh[i][j]['width']}}px;" data-img-width="{{mesh[i][j]['width']}}" data-width-offset="0" class="img-cell {{'background' if mesh[i][j]['background'] else 'interactive'}}" data-block="{{mesh[i][j]['idx_block'] if not mesh[i][j]['background']}}">
               <img data-img-height="{{mesh[i][j]['height']}}" data-height-offset="0" src="data:image/png;base64,{{ mesh[i][j]['src'] }}"/>
             </span>
             {% endfor %}
@@ -188,9 +188,10 @@
           {% for i in range(image_text[b]|length) %}
             {% if (image_patches[b]|length) > 0 and (image_patches[b][i]|length) > 0 %}
             <div class="img-block img-patch squeeze" id="patch-{{b}}-{{i}}" data-img-height="{{ image_patches[b][i][0]['height'] }}" style="height:0px;">
+              <input type="text" class="img-patch-text" style="margin-left:{{bounding_boxes[b][i-1]['x']}}px;"/>              
               {% for y in range(image_patches[b][i]|length) %}
-              <span id="patch-box-{{b}}-{{i}}-{{y}}" class="patch-box" style="width:{{ image_patches[b][i][y]['width'] }}px;">
-                <img style="width:{{ image_patches[b][i][y]['width'] }}px;" id="patch-{{i}}-{{y}}" src="data:image/png;base64,{{ image_patches[b][i][y]['src'] }}"/>
+              <span class="patch-box" style="width:{{ image_patches[b][i][y]['width'] }}px;">
+                <img style="width:{{ image_patches[b][i][y]['width'] }}px;" id="patch-box-{{b}}-{{i}}-{{y}}" src="data:image/png;base64,{{ image_patches[b][i][y]['src'] }}"/>
               </span>
                 {% if y < (image_patch_space[b][i]|length)%}
                 <span class="text-space squeeze" style="width:0px;" data-img-width="{{ image_patch_space[b][i][y]['width'] }}">
@@ -198,7 +199,6 @@
                 </span>
                 {% endif %}
               {% endfor %}
-              <input class="img-patch-text" style="margin-left:{{bounding_boxes[b][i-1]['x']}}px;"/>
             </div>
             {% endif %}
           {% if image_patches[b]|length > 0 %}

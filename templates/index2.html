@@ -265,8 +265,12 @@
                 </thead>
                 <tbody>
                   <tr>
-                    <td>Spread</td>
+                    <td>Vertical Spread</td>
                     <td><input id="option-spread" type="number" class="form-control" form="demo-upload" value="{{ session['options']['spread'] }}"/></td>
+                  </tr>
+                  <tr>
+                    <td>Horizontal Spread</td>
+                    <td><input id="option-stretch" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['horizontal_spread'] }}"/></td>
                   </tr>
                   <tr>
                     <td>Hi-Res</td>
@@ -285,6 +289,26 @@
                         <input id="option-antialias" type="checkbox" form="demo-upload" checked/>
                       {% else %}
                         <input id="option-antialias" type="checkbox" form="demo-upload"/>                        
+                      {% endif %}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Fill Background</td>
+                    <td>
+                      {% if session['options']['stripe_bg']==True %}
+                        <input id="option-fill" type="checkbox" form="demo-upload" checked/>
+                      {% else %}
+                        <input id="option-fill" type="checkbox" form="demo-upload"/>                        
+                      {% endif %}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Multi-Column</td>
+                    <td>
+                      {% if session['options']['multi_column']==True %}
+                        <input id="option-column" type="checkbox" form="demo-upload" checked/>
+                      {% else %}
+                        <input id="option-column" type="checkbox" form="demo-upload"/>                        
                       {% endif %}
                     </td>
                   </tr>
@@ -323,6 +347,10 @@
                     <td><input id="option-height" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['height'] }}"/></td>
                   </tr>
                   <tr>
+                    <td>Margin Size</td>
+                    <td><input id="option-margin" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['margin_size'] }}"/></td>
+                  </tr>
+                  <tr>
                     <td>Google Dev Key</td>
                     <td><input id="option-google" type="text" class="form-control" form="demo-upload" value="{{ session['options']['google_key'] }}"/></td>
                   </tr>
@@ -359,7 +387,10 @@
         formData.append("buffer", $('#option-buffer').val()); 
         formData.append("width", $('#option-width').val()); 
         formData.append("height", $('#option-height').val());
-        formData.append("google_key", $('#option-google').val());
+        formData.append("margin_size", $('#option-margin').val());
+        formData.append("multi_column", $('#option-column').is(":checked"));
+        formData.append("horizontal_spread", $('#option-stretch').val());
+        formData.append("stripe_bg", $('#option-fill').is(":checked"));
       });
     });
   </script>

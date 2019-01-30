@@ -40,7 +40,11 @@ default_options = {
     "translate": False,
     "antialias": True,
     "blur":0,
-    "google_key":""
+    "google_key":"",
+    "horizontal_spread": 500,
+    "margin_size": 100, 
+    "stripe_bg": False, 
+    "multi_column": True
 }
     
 @app.route('/', methods=['GET', 'POST'])
@@ -158,7 +162,10 @@ def upload_file():
                                 , _line_buffer=session["options"]["buffer"]
                                 , _blur=session["options"]["blur"]
                                 , _google_key=session["options"]["google_key"]
-                                , _max_size=(session["options"]["width"],session["options"]["height"]))
+                                , _max_size=(session["options"]["width"],session["options"]["height"])
+                                , _margin_size=session["options"]["margin_size"]
+                                , _stripe_bg=session["options"]["stripe_bg"]
+                                , _blockify_page=session["options"]["multi_column"])
                     vis.blockify()
                     vis_list.append(vis)
             else:
@@ -173,7 +180,10 @@ def upload_file():
                                 , _line_buffer=session["options"]["buffer"]
                                 , _blur=session["options"]["blur"]
                                 , _google_key=session["options"]["google_key"]
-                                , _max_size=(session["options"]["width"],session["options"]["height"]))
+                                , _max_size=(session["options"]["width"],session["options"]["height"])
+                                , _margin_size=session["options"]["margin_size"]
+                                , _stripe_bg=session["options"]["stripe_bg"]
+                                , _blockify_page=session["options"]["multi_column"])
                 vis.blockify()
                 vis_list.append(vis)
 
@@ -206,7 +216,10 @@ def get_image():
                     , _line_buffer=session["options"]["buffer"]
                     , _blur=session["options"]["blur"]
                     , _google_key=session["options"]["google_key"]
-                    , _max_size=(session["options"]["width"],session["options"]["height"]))
+                    , _max_size=(session["options"]["width"],session["options"]["height"])
+                    , _margin_size=session["options"]["margin_size"]
+                    , _stripe_bg=session["options"]["stripe_bg"]
+                    , _blockify_page=session["options"]["multi_column"])
     vis.decompose()
     vis_list.append(vis)
     session["vis"] = vis_list
@@ -221,12 +234,12 @@ def savevisSessionArgs(form):
         session["options"] = default_options
         
     options_form = session["options"]
-
     for option in form:
         if option not in options_form:
             # don't save unnecessary data
             continue
-        if option == "translate" or option == "hires" or option == "antialias":
+        if option == "translate" or option == "hires" or option == "antialias" \
+        or option == "stripe_bg" or option == "multi_column":
             if form[option] == u"true":
                 options_form[option] = True
             else:

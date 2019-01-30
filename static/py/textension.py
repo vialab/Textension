@@ -33,12 +33,13 @@ class Block(object):
 
     def __init__(self, _img_file, _translate=False
     , _pixel_cut_width=5, _noise_threshold=25, _vertical_spread=5
-    , _horizontal_spread=5, _line_buffer=1, _hi_res=True, _rgb_text=(0,0,0)
+    , _horizontal_spread=500, _line_buffer=1, _hi_res=True, _rgb_text=(0,0,0)
     , _rgb_bg=(255,255,255), _anti_alias=True, _map_height=150, _blur=0
-    , _google_key="", _coords=(0,0), _block=0):
+    , _google_key="", _coords=(0,0), _block=0, _full_img_width=None):
         """ Initialize a file to work with """
         self.img_file = _img_file # PIL image
         self.img_width, self.img_height = self.img_file.convert("RGBA").size # resized width and height
+        self.full_img_width = _full_img_width # width of the full image (all blocks included)
         self.img_coords = _coords # starting coordinates for this block
         self.line_list = self.detectLines(self.img_file) # X coordinates for vertical lines
         self.translate = _translate # indicator for translating OCR'd text
@@ -100,8 +101,8 @@ class Block(object):
         # img.show()
         if self.translate and self.google_key != "":
             self.translateText() # translate the text to french
-        self.space_height = self.getMinSpaceHeight() # get the minimum patch height                    
-        self.cropImageBlocks() # slice original image into lines
+        self.space_height = 1 # get the minimum patch height                    
+        self.cropImageBlocks(False) # slice original image into lines
         self.generateExpandedPatches() # strip and expand line spaces
         self.getWordBlocks() # get all word meta info per block
         self.getNgramPlotImageList() # get ngram charts for all our word info
@@ -247,22 +248,17 @@ class Block(object):
         new_img_patch_space = [] # expanded images
         space_count = [len(line) for line in self.img_space] # number of spaces per line
         space_width = [] # total width per line
-        min_space = 999 # amount of generated space to create at a time
         # get min space and space width
         for line in self.img_space:
             if len(line) == 0:
                 space_width.append(0)
                 continue
             line_space = [space["img"].size[0] for space in line]
-            min_line_space = min(line_space)
             total_width = sum(line_space)
             space_width.append(total_width)
-            if min_line_space < min_space:
-                min_space = min_line_space
-        # how much space we want to create at a minimum
-        pixel_spread = self.horizontal_spread * min_space
+        max_stretch = self.horizontal_spread * (self.img_width / self.full_img_width)
         # calculate the largest line width to justify our line towards
-        max_width = max([width+(space_count[idx]*pixel_spread) for idx, width in enumerate(space_width)])
+        max_width = max([width+max_stretch for idx, width in enumerate(space_width)])
         
         for idx_line, line in enumerate(self.img_space):
             img_space_list = []
@@ -361,7 +357,7 @@ class Block(object):
                 y_start = 0
                 y_end = self.space_height
             else:
-                y_start = box['y']-self.space_height
+                y_start = box['y']-(self.space_height+self.line_buffer)
                 y_end = box['y']-self.line_buffer
 
             assert y_end > y_start
@@ -953,9 +949,9 @@ class Block(object):
 class Textension(Block):
     def __init__(self, stream, _translate=False, _max_size=(1024,1024)
     , _pixel_cut_width=5, _noise_threshold=25, _vertical_spread=5
-    , _horizontal_spread=5, _line_buffer=1, _hi_res=True, _rgb_text=(0,0,0)
+    , _horizontal_spread=500, _line_buffer=1, _hi_res=True, _rgb_text=(0,0,0)
     , _rgb_bg=(255,255,255), _anti_alias=True, _map_height=150, _blur=0
-    , _google_key="", _expand_margin=True):
+    , _google_key="", _margin_size=100, _stripe_bg=False, _blockify_page=True):
         """ Initialize a file to work with """
         # convert uploaded stream to PIL image
         self.img_file = Image.open(stream).convert("RGB") # image itself
@@ -973,17 +969,17 @@ class Textension(Block):
         , _google_key)
         self.block_bounds = [[9999, 9999], [0, 0]] # box coords by which all blocks reside
         self.bg_color = (255,255,255) # the background color of the HTML stage
-        self.expand_margin = _expand_margin # expand and fade margins to bg color
         self.x_mesh = [] # x coords for page block columns 
         self.y_mesh = [] # y coords for page block rows
         self.mesh = [] # two dim array of page block images
         self.block_boxes = [] # detected blocks using tesserocr
         self.blocks = [] # recursed textension objects of each block on the page
-        self.margin_size = 100
-        self.stripe_bg = False
+        self.margin_size = _margin_size # size of the margin
+        self.stripe_bg = _stripe_bg # use vertical gradient to fill blocks
+        self.blockify_page = _blockify_page # capture and decompose multiple blocks
 
     def blockify(self):
-        if self.expand_margin:
+        if self.margin_size > 0:
             self.expandMargin(self.margin_size) # expand the margins for infinite canvas
         self.chopPageByBlock()
         for i, (img, box, _, _) in enumerate(self.block_boxes):
@@ -991,7 +987,7 @@ class Textension(Block):
             , self.noise_threshold, self.vertical_spread, self.horizontal_spread
             , self.line_buffer, self.hi_res, self.rgb_text, self.rgb_bg
             , self.anti_alias, self.map_height, self.blur, self.google_key
-            , _coords=(box["x"],box["y"]), _block=i)
+            , _coords=(box["x"],box["y"]), _block=i, _full_img_width=self.img_width)
             b.decompose()
             self.blocks.append(b)
 
@@ -1150,40 +1146,40 @@ class Textension(Block):
             However, only cluster if it makes our bounding box larger """
         for i,box in enumerate(boxes):
             changed = True
+            count = 0
+            orig_box = box
             while changed:
                 changed = False
+                if count > 100:
+                    break
                 for b in boxes:
-                    idx = box["x"]+box["w"]
-                    idy = box["y"]+box["h"]
+                    idx = orig_box["x"]+orig_box["w"]
+                    idy = orig_box["y"]+orig_box["h"]
                     dx = b["x"]+b["w"]
                     dy = b["y"]+b["h"]
-                    
-                    x_diff = b["x"]-box["x"]
-                    y_diff = b["y"]+box["y"]
-                    xdx_diff = dx-box["x"]
-                    ydy_diff = dy-box["y"]
-                    dx_diff = dx-idx
-                    dy_diff = dy-idy
-                    idxx_diff = b["x"]-idx
-                    idyy_diff = b["y"]-idy
-                    if x_diff <= margin and x_diff > 0:
-                        boxes[i]["x"] = b["x"]
-                        boxes[i]["w"] = boxes[i]["w"]+x_diff
+
+                    xdiff = orig_box["x"]-b["x"]
+                    wdiff = dx-idx
+                    ydiff = orig_box["y"]-b["y"]
+                    hdiff = dy-idy
+
+                    if xdiff > 0 and xdiff <= margin:
+                        orig_box["x"] = b["x"]
+                        orig_box["w"] = orig_box["w"] + xdiff
                         changed = True
-                    if (xdx_diff <= margin and xdx_diff > 0) \
-                    or (dx_diff <= margin and dx_diff > 0) \
-                    or (idxx_diff <= margin and idxx_diff > 0):
-                        boxes[i]["w"] = boxes[i]["w"]+xdx_diff
+                    if wdiff > 0 and wdiff <= margin:
+                        orig_box["w"] = orig_box["w"] + wdiff
                         changed = True
-                    if y_diff <= margin and y_diff > 0:
-                        boxes[i]["y"] = b["y"]
-                        boxes[i]["y"] = boxes[i]["y"]+x_diff
+                    if ydiff > 0 and ydiff <= margin:
+                        orig_box["y"] = b["y"]
+                        orig_box["h"] = orig_box["h"] + ydiff
                         changed = True
-                    if (ydy_diff <= margin and ydy_diff > 0) \
-                    or (dy_diff <= margin and dy_diff > 0) \
-                    or (idyy_diff <= margin and idyy_diff > 0):
-                        boxes[i]["h"] = boxes[i]["h"]+ydy_diff
+                    if hdiff > 0 and hdiff <= margin:
+                        orig_box["h"] = orig_box["h"] + hdiff
                         changed = True
+                if not changed:
+                    boxes[i] = orig_box
+                count += 1                
 
     def chopPageByBlock(self):
         with PyTessBaseAPI(oem=OEM.LSTM_ONLY) as api:
@@ -1192,7 +1188,7 @@ class Textension(Block):
             self.block_boxes = api.GetComponentImages(RIL.BLOCK, True)
 
         boxes = [box[1] for box in self.block_boxes]
-        margin = self.space_height
+        margin = 2
         for i, box in enumerate(boxes):
             if boxes[i]["x"] > margin and boxes[i]["x"]+boxes[i]["w"] < self.img_width-margin:
                 boxes[i]["x"] = boxes[i]["x"]-margin
@@ -1201,8 +1197,7 @@ class Textension(Block):
                 boxes[i]["y"] = boxes[i]["y"]-margin
                 boxes[i]["h"] = boxes[i]["h"]+(margin*2)
 
-        # self.justifyBlocks(boxes, margin)
-
+        self.justifyBlocks(boxes, margin)
         # img = np.array(self.img_file, dtype=np.uint8)
         for i, box in enumerate(boxes):
             # box is a dict with x, y, w and h keys
@@ -1217,18 +1212,28 @@ class Textension(Block):
                 self.block_bounds[1][0] = dx
             if dy > self.block_bounds[1][1]:
                 self.block_bounds[1][1] = dy
-            self.y_mesh.append(box["y"])
-            self.y_mesh.append(dy)
-            self.x_mesh.append(box["x"])
-            self.x_mesh.append(dx)
-            self.block_boxes[i] = list(self.block_boxes[i])
-            self.block_boxes[i][1] = boxes[i]
-            self.block_boxes[i][0] = self.img_file.crop((box["x"],box["y"],dx,dy))
+            if self.blockify_page:
+                self.y_mesh.append(box["y"])
+                self.y_mesh.append(dy)
+                self.x_mesh.append(box["x"])
+                self.x_mesh.append(dx)
+                self.block_boxes[i] = list(self.block_boxes[i])
+                self.block_boxes[i][1] = boxes[i]
+                self.block_boxes[i][0] = self.img_file.crop((box["x"],box["y"],dx,dy))
         #     cv2.rectangle(img, (box["x"],box["y"]), (box["x"]+box["w"],box["y"]+box["h"]),(0,255,0),1)
         # cv2.rectangle(img, tuple(self.block_bounds[0]), tuple(self.block_bounds[1]),(255,0,0),1)
         # img = Image.fromarray(img)
         # img.show()
-        if self.expand_margin:
+        if not self.blockify_page:
+            self.x_mesh.append(self.block_bounds[0][0])
+            self.y_mesh.append(self.block_bounds[0][1])
+            x = self.block_bounds[0][0]
+            y = self.block_bounds[0][1]
+            dx = self.block_bounds[1][0]
+            dy = self.block_bounds[1][1]
+            full_block = self.img_file.crop((x,y,dx,dy))
+            self.block_boxes = [[full_block, {"x":x,"y":y,"w":dx-x,"h":dy-y}, 0, 0]]
+        if self.margin_size > 0:
             self.x_mesh.append(self.margin_size)
             self.x_mesh.append(self.img_width-self.margin_size)
             self.y_mesh.append(self.margin_size)

@@ -295,6 +295,7 @@ function toggleTextVisibility() {
 }
 
 function toggleSingleSpace($elem, is_horizontal) {
+    let deferrals = [];
     in_transit++;
     if(is_horizontal) {
         let $parent = $elem.parent();
@@ -302,13 +303,9 @@ function toggleSingleSpace($elem, is_horizontal) {
             $parent.removeClass("squeeze");
             space_width = $parent.data("img-width");
             stock_width = $parent.width();
-            $parent.transition({width:space_width}, detectResizeStage);
+            deferrals.push($parent.transition({width:space_width}).promise());
             block_id = $parent.parent().attr("id");
             justifyDocument(block_id, (space_width-stock_width));
-        } else {
-            // disabled - requires implementation of reverse justification
-            // $parent.addClass("squeeze");
-            // $parent.width(0);
         }
     } else {
         if($elem.hasClass("squeeze")) {
@@ -319,17 +316,23 @@ function toggleSingleSpace($elem, is_horizontal) {
                     space_height = $elem.data("map-height");
                 }
             }
-            $elem.transition({height:space_height}, detectResizeStage);
+            deferrals.push($elem.transition({height:space_height}).promise());
         } else {
-            $elem.transition({height:0}, detectResizeStage);
+            deferrals.push($elem.transition({height:0}).promise());
             $elem.addClass("squeeze");
         }
     }
+    $.when(...deferrals).done(function() {
+        resetBlockMesh();
+        for(let i=0; i < block_mesh.length; i++) resizeBlockMesh(i);
+        mapBlockMesh();
+    });
 }
 
 // When we open a space, distribute the same amount of space across all lines
 // in order to keep the edges of our document in line
 function justifyDocument(idx, space_width) {
+    let deferrals = [];
     $(".img-block").each(function(x){
         if(!$(this).hasClass("img-patch") && $(this).attr("id")==idx) {
             return;
@@ -365,13 +368,18 @@ function justifyDocument(idx, space_width) {
                             }
                         }
                     }
-                    $(this).transition({width:add_width}, detectResizeStage);
+                    deferrals.push($(this).transition({width:add_width}).promise());
                     added_width += add_width;
                 });
                 $spaces = $("span.text-space.squeeze", $(this));
             }
         }
-    });        
+    });
+    $.when(...deferrals).done(function() {
+        resetBlockMesh();
+        for(let i=0; i < block_mesh.length; i++) resizeBlockMesh(i);
+        mapBlockMesh();
+    });      
 }
 
 // based on whatever mode is selected, open the required spaces
@@ -454,7 +462,7 @@ function openSpaces( is_horizontal ) {
         resetBlockMesh();
         for(let i=0; i < block_mesh.length; i++) resizeBlockMesh(i);
         mapBlockMesh();
-    })
+    });
 }
 
 function closeSpaces( is_horizontal ) {
@@ -497,48 +505,54 @@ function togglePageOptions() {
 function setUniqueness(dateval) {
     let idx_date = dateval - 1800;
     let usage_list = [];
+    let temp = [];
     for(let i=0; i<ngram_plot.length; i++) {
-        usage_list.push(ngram_plot[i]["usage"][idx_date]);
+        temp = [];
+        for(let j=0; j<ngram_plot[i].length; j++) {
+            temp.push(ngram_plot[i][j]["usage"][idx_date]);
+        }
+        usage_list.push(argsort(temp, true));
     }
-    usage_list = argsort(usage_list, true);
 
-    for(let rank=0; rank<usage_list.length; rank++) {
-        let i = usage_list.sort_indices[rank];
-        let norm_rank = rank;
-        if (rank > 0) {
-            let last_rank = rank-1;
-            let last_idx = usage_list.sort_indices[last_rank];
-            while(ngram_plot[i]["usage"][idx_date] == ngram_plot[last_idx]["usage"][idx_date] && last_rank > 0) {
-                last_rank--;
-                last_idx = usage_list.sort_indices[last_rank];
+    for(let i=0; i<usage_list.length; i++) {
+        for(let rank=0; rank<usage_list[i].length; rank++) {
+            let j = usage_list[i].sort_indices[rank];
+            let norm_rank = rank;
+            if (rank > 0) {
+                let last_rank = rank-1;
+                let last_idx = usage_list[i].sort_indices[last_rank];
+                while(ngram_plot[i][j]["usage"][idx_date] == ngram_plot[i][last_idx]["usage"][idx_date] && last_rank > 0) {
+                    last_rank--;
+                    last_idx = usage_list[i].sort_indices[last_rank];
+                }
+                norm_rank = last_rank;
             }
-            norm_rank = last_rank;
-        }
-        let idx_block = ngram_plot[i]["idx_block"];
-        let idx_word = ngram_plot[i]["word_pos"];
-        let id = "unique-" + idx_block.toString() + "-" + idx_word.toString();
-        let patch_height = $("#"+id).closest("div.img-patch").data("img-height");
-        let img_url = "uniqueness_0.png";
-        let image_rank = (norm_rank/usage_list.length);
+            let idx_block = ngram_plot[i][j]["idx_block"];
+            let idx_word = ngram_plot[i][j]["word_pos"];
+            let id = "unique-" + i + "-" + idx_block.toString() + "-" + idx_word.toString();
+            let patch_height = $("#"+id).closest("div.img-patch").data("img-height");
+            let img_url = "uniqueness_0.png";
+            let image_rank = (norm_rank/usage_list.length);
 
-        if(image_rank >= 0.8) {
-            img_url = "uniqueness_4.png";
-        } else if(image_rank >= 0.6) {
-            img_url = "uniqueness_3.png";
-        } else if(image_rank >= 0.4) {
-            img_url = "uniqueness_2.png";
-        } else if(image_rank >= 0.2) {
-            img_url = "uniqueness_1.png";
-        } else {
-            img_url = "uniqueness_0.png";
-        }
+            if(image_rank >= 0.8) {
+                img_url = "uniqueness_4.png";
+            } else if(image_rank >= 0.6) {
+                img_url = "uniqueness_3.png";
+            } else if(image_rank >= 0.4) {
+                img_url = "uniqueness_2.png";
+            } else if(image_rank >= 0.2) {
+                img_url = "uniqueness_1.png";
+            } else {
+                img_url = "uniqueness_0.png";
+            }
 
-        $("#"+id).css("background", "url('./static/css/" + img_url + "')");
-        $("#"+id).css("background-size", "100% 100%");
-        if(patch_height > 15) {
-            patch_height = 15;
+            $("#"+id).css("background", "url('./static/css/" + img_url + "')");
+            $("#"+id).css("background-size", "100% 100%");
+            if(patch_height > 15) {
+                patch_height = 15;
+            }
+            $("#"+id).height(patch_height);
         }
-        $("#"+id).height(patch_height);
     }
 }
 
@@ -578,19 +592,19 @@ function drawOverlays() {
                         if(idx_word==0) {
                             $img.css("left",word_blocks[i][j][k]["x"]+"px");
                         }
-                        $(patch_id).append($img);
+                        $(patch_id).parent().append($img);
                         break;
                     }
                 }
 
                 // place the uniqueness glyph placeholders
-                let $uniqueness = $("<span/>", {"id":"unique-" 
+                let $uniqueness = $("<span/>", {"id":"unique-" + i + "-"
                     + idx_block + "-" + idx_word, "class":"uniqueness-bar"});
                 $uniqueness.css({"height":"0px", "width":"20px"});
                 if(idx_word==0) {
                     $uniqueness.css("left",word_blocks[i][j][k]["x"]+"px");
                 }
-                $(patch_id).append($uniqueness);
+                $(patch_id).parent().append($uniqueness);
             }
         }
     }

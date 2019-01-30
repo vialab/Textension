@@ -72,6 +72,8 @@ function defineWord($elem) {
 // two words before and after each instance
 function createContextMap($elem) {
     var og_text = $elem.data("ocr");
+    $("#context-map-container").css("left",$(".cell-grid").position().left + $(".cell-grid").width());
+
     if(typeof(og_text) == "undefined") alert("Word not recognized");
 
     var $context_map = $("<table/>");
@@ -96,21 +98,21 @@ function createContextMap($elem) {
         var after = []
         
         if(idx_word > 1) {
-            before.push($("#text-" + idx_block + "-" + idx_line + "-" + (idx_word-2).toString()));
+            before.push($(".text-box #text-" + idx_block + "-" + idx_line + "-" + (idx_word-2).toString()));
         }
         if(idx_word > 0) {
-            before.push($("#text-" + idx_block + "-" + idx_line + "-" + (idx_word-1).toString()));
+            before.push($(".text-box #text-" + idx_block + "-" + idx_line + "-" + (idx_word-1).toString()));
         }
         var last_id = $(".img-block:not(.img-patch)#block-" + idx_block 
-            + "-" + idx_line.toString() + " span img").last().attr("id");
+            + "-" + idx_line.toString() + " span.text-box img").last().attr("id");
         var arr_last_id = last_id.split("-");
-        var idx_last = parseInt(arr_last_id[2]);
+        var idx_last = parseInt(arr_last_id[3]);
         
         if((idx_last-idx_word) >= 2) {
-            after.push($("#text-" + idx_block + "-" + idx_line + "-" + (idx_word+2).toString()));
+            after.push($(".text-box #text-" + idx_block + "-" + idx_line + "-" + (idx_word+2).toString()));
         }
         if((idx_last-idx_word) >= 1) {
-            after.push($("#text-" + idx_block + "-" + idx_line + "-" + (idx_word+1).toString()));
+            after.push($(".text-box #text-" + idx_block + "-" + idx_line + "-" + (idx_word+1).toString()));
         }
         var row_html = "<tr>";
         if(before.length == 2) {

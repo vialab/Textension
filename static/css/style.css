@@ -228,6 +228,7 @@ input:focus + .check-btn {
     margin: 0 auto;
     white-space: nowrap;
     display: flex;
+    font-size:0;
 }
 
 .vis .img-block img, .cell-grid .img-box img {
@@ -319,6 +320,8 @@ canvas.entity-location, canvas.ngram-usage {
     left: 0;
     top: 0;
     width: 100%;
+    font-size: 16px;
+    text-align: center;
 }
 
 .img-patch .img-patch-text {
@@ -391,10 +394,6 @@ canvas.entity-location, canvas.ngram-usage {
 .text-box img, .text-space img, .patch-box img {
     position: absolute;
     top: 0;
-}
-
-.text-box img, .text-space img, .patch-box img.ngram-usage {
-    max-height: 25px;
 }
 
 .custom-text { 
