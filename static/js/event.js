@@ -118,7 +118,6 @@ $(document).ready(function() {
             $(".vis-container").each(function(i, $e) {
                 let block_num = $(this).data("block");
                 $(".img-patch-text", $e).each(function(idx) {
-                    console.log(ocr[block_num][idx]);
                     $(this).val(ocr[block_num][idx]);
                 });
             });

@@ -512,6 +512,7 @@ canvas#buffer {
     white-space: nowrap;
     overflow-x: scroll;
     padding: 0 15px;
+    text-align: right;
 }
 
 #page-options ul li {

@@ -67,6 +67,8 @@ def interact(page_no=0):
     if sample is not None:
         if sample == "book_of_myths":
             sample = "./server/book_of_myths.pkl"
+        if sample == "textension":
+            sample = "./server/textension.pkl"
         if sample == "southern_life":
             sample = "./server/southern_life.pkl"
         with open(sample, 'r') as f:
@@ -76,7 +78,7 @@ def interact(page_no=0):
         return redirect(url_for("index"))
     # default to first page
     try:
-        page_no = int(page_no)
+        page_no = int(page_no)-1
     except:
         page_no = 0
     if page_no >= len(session["vis"]):
@@ -188,8 +190,8 @@ def upload_file():
                 vis_list.append(vis)
 
             session["vis"] = vis_list
-            with open("./southern_life.pkl", "w+") as f:
-                pickle.dump(vis_list, f)
+            # with open("./a_mad_tea_party.pkl", "w+") as f:
+            #     pickle.dump(vis_list, f)
     return redirect(url_for("index"))
 
 
