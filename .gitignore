@@ -8,5 +8,5 @@ outputs/**
 .vscode/**
 **/*.pyc
 vis.pkl
-app_session/**
+app_session/*.pkl
 samples/**

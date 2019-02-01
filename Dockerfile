@@ -15,6 +15,8 @@ RUN apt-get update && apt-get install -y \
 	poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
+RUN python -m pip install --upgrade pip
+
 RUN pip install flask numpy scikit-learn scipy spacy pypdf2 pdfminer wand image google-api-python-client matplotlib opencv-python pandas pyocr textstat tesserocr
 
 RUN python -m spacy download en
