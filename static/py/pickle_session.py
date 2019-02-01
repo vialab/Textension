@@ -6,7 +6,7 @@ from collections import MutableMapping
 from flask.sessions import SessionInterface, SessionMixin
 
 
-class PickleSession(MutableMapping, SessionMixin):
+class PickleSession(SessionMixin):
     """Server-side session implementation.
 
     Uses pickle to achieve a disk-backed session such that multiple
