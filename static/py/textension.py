@@ -21,7 +21,6 @@ mpl.use("Agg")
 import matplotlib.pyplot as plt
 from opacityConversion import *
 from math import ceil, floor
-from skimage.filters import threshold_local
 
 class Block(object):
     """ Inline Viz wrapper object that performs all algorithm functions and 
