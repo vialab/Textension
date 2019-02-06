@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
 
 RUN python -m pip install --upgrade pip
 
-RUN pip install flask numpy scikit-learn scipy spacy pypdf2 pdfminer wand image google-api-python-client matplotlib opencv-python pandas pyocr textstat tesserocr imutils colour pdf2image
+RUN pip install flask numpy scikit-learn scipy spacy pypdf2 pdfminer wand image google-api-python-client matplotlib opencv-python pandas pyocr textstat tesserocr imutils colour pdf2image uwsgi
 
 RUN python -m spacy download en
 #pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.0.0/en_core_web_sm-2.0.0.tar.gz
@@ -30,6 +30,7 @@ COPY . /usr/src/app
 
 EXPOSE 5000
 
-CMD ["flask", "run", "--host=0.0.0.0"]
+CMD ["uwsgi", "uwsgi.ini"]
+# CMD ["flask", "run", "--host=0.0.0.0"]
 
 # This project is linked to an automated build on dockerhub

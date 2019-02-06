@@ -613,7 +613,7 @@ class Block(object):
                         "idx_block":idx
                         , "idx_word": len(word_boxes)
                         , "word_pos": i
-                        , "size":(box["w"],((self.space_height - self.line_buffer) * self.vertical_spread))
+                        , "size":(box["w"],box["h"])
                         , "text":text.strip()
                     }
                     self.ngram_data.append(ngram)
