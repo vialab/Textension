@@ -108,7 +108,7 @@ This project is being developed using an iterative approach. Therefore, now rele
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+This research was conducted as part of the CO.SHS project (co-shs.ca) and has received financial support from the Canada Foundation for Innovation (Cyberinfrastructure Initiative – Challenge 1 – First competition).
 
 ## Acknowledgments
 
