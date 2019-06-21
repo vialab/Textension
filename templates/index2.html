@@ -145,7 +145,7 @@
 
     #app-content {
       width: 100%;
-      margin: 100px 0 0 0;
+      margin: 100px 0 100px 0;
     }
 
     .logo {
@@ -154,11 +154,14 @@
       right: 5%;
       font-size: 5vw;
       font-weight: 900;
+      background-color: rgba(255,255,255, 0.5);
+      padding: 5px 15px;
+
     }
-    .logo .first {
+    .cover-block .first {
       color: #163e6f;
     }
-    .logo .last {
+    .cover-block .last {
       color : white;
     }
     .tool-box-logo {
@@ -175,17 +178,15 @@
 </head>
 
 <body>
-  <div class="logo">
-    <span class="first">TEXT</span><span class="last">ENSION</span>
-  </div>
-  <div class="container-fluid">
+
+  <div class="container-fluid" style="padding: 0;">
     <span id="tool-box-toggle" onclick="openNav()">☰</span>      
     <div class="tool-box">
       <div class="tool-box-close" style="background-color:rgba(255,255,255,0.8);">
         <a href="javascript:void(0)" class="close-btn" onclick="closeNav()">&times;</a>
       </div>
       <div class="tool-box-logo">
-        <img src="./static/css/vialab_logo_2019_rgb.png"/>
+        <a href="vialab.ca"><img src="./static/css/vialab_logo_2019_rgb.png"/></a>
       </div>
       <div class="tool-box-link">
         <a data-toggle="tab" href="#menu-file">File</a>
@@ -193,19 +194,28 @@
         <a data-toggle="tab" href="#menu-settings">Settings</a>
       </div>
     </div>
-
-    <div id="app-content">      
+    <div class="cover-container">
+      <div id="cover-caption" class="cover-block">
+        <div id="cover-title"><span class="first">TEXT</span><span class="last">ENSION</span></div>
+        <div id="cover-blurb">Digitally augment analog text.</div>
+        <div id="cover-button"><button class="btn btn-primary btn-lg" onclick="window.location = '/interact?sample=a_mad_tea_party';">Try Our Demo</button></div>
+      </div>
+      <div class="cover-block">
+          Bringing together ideas studied in digital document spaces and existing word-scale visualizations.
+      </div>
+      <div id="cover-pic">
+        <img src="./static/css/cover-example.png"/>
+      </div>
+    </div>
+    <div class="content-container">
+      <div class="content-box title">How it works<hr/></div>
+      <div class="content-box body">
+        The Textension platform automatically adds visualizations and natural language processing applications to analog texts, using any web-based device with a camera. After taking a picture of a particular page from a book or uploading an existing image, our system builds an interactive digital object that automatically inserts modular elements in a digital space.
+      </div>
+    </div>
+    <div id="app-content" class="container">
       <div class="tab-content">
-
         <div id="menu-file" class="tab-pane fade in active">
-          <div class="row">
-            <div class="col-md-12 text-center">
-              <b>Textension: Digitally Augmenting Analog Texts</b>
-              <p>Analog text as a medium still remains persistent in the workflow of scholars even though there is a plethora of digital options available that afford great power and flexibility to the user.</p>
-              <p>Textension brings together ideas studied in digital document spaces and existing word-scale visualizations and demonstrates how these known quantities can be leveraged to bridge analog and digital reading and writing. Our
-                  framework is informed by previous results describing text visualization and the different ways they are used with analog documents</p>
-            </div>
-          </div>
           <div class="row">
             <div class="col-md-12 text-center">
               <b>Use your own documents to process and analyze.</b><br/>You could also click to browse for a file on your computer.
@@ -225,6 +235,7 @@
           </div>
           <div class="row">
               <div class="col-md-12 text-center">
+                <a href="/interact?sample=a_mad_tea_party" class="sample-doc">Mad Tea Party</a>
                 <a href="/interact?sample=textension" class="sample-doc">Textension</a>
                 <!-- <a href="/interact?sample=book_of_myths" class="sample-doc">Book of Myths</a> -->
                 <a href="/interact?sample=southern_life" class="sample-doc">Southern Life in Southern Literature</a>
@@ -369,6 +380,11 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+    <div class="content-container">
+      <div class="content-box">
+          This research was conducted by <a href="vialab.ca">VIALAB</a> as part of the <a href="https://co-shs.ca/en/">CO.SHS project</a> and has received financial support from the Canada Foundation for Innovation.
       </div>
     </div>
   </div>
