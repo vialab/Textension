@@ -163,12 +163,13 @@
     }
     .tool-box-logo {
       margin: 0 0 5% 0;
-      padding: 5% 0 10% 0;
       background-color: rgba(255,255,255,0.8);
     }
     .tool-box-logo img {
+      z-index: 1;
+      position: relative;
       width: 100%;
-      padding: 5%;
+      top: -25px;
     }
   </style>
 </head>
@@ -184,7 +185,7 @@
         <a href="javascript:void(0)" class="close-btn" onclick="closeNav()">&times;</a>
       </div>
       <div class="tool-box-logo">
-        <!-- <img src="./static/css/uoit_logo.png"/> -->
+        <img src="./static/css/vialab_logo_2019_rgb.png"/>
       </div>
       <div class="tool-box-link">
         <a data-toggle="tab" href="#menu-file">File</a>
@@ -197,6 +198,14 @@
       <div class="tab-content">
 
         <div id="menu-file" class="tab-pane fade in active">
+          <div class="row">
+            <div class="col-md-12 text-center">
+              <b>Textension: Digitally Augmenting Analog Texts</b>
+              <p>Analog text as a medium still remains persistent in the workflow of scholars even though there is a plethora of digital options available that afford great power and flexibility to the user.</p>
+              <p>Textension brings together ideas studied in digital document spaces and existing word-scale visualizations and demonstrates how these known quantities can be leveraged to bridge analog and digital reading and writing. Our
+                  framework is informed by previous results describing text visualization and the different ways they are used with analog documents</p>
+            </div>
+          </div>
           <div class="row">
             <div class="col-md-12 text-center">
               <b>Use your own documents to process and analyze.</b><br/>You could also click to browse for a file on your computer.

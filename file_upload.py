@@ -65,8 +65,8 @@ def interact(page_no=0):
     # samples are pre-processed and pickled for easy loading
     sample = request.args.get("sample")
     if sample is not None:
-        if sample == "book_of_myths":
-            sample = "./server/book_of_myths.pkl"
+        if sample == "a_mad_tea_party":
+            sample = "./server/a_mad_tea_party.pkl"
         if sample == "textension":
             sample = "./server/textension.pkl"
         if sample == "southern_life":

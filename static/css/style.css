@@ -30,7 +30,7 @@ body {
 .check-btn, .check-btn, .tool-box, #vis-container, .vis .img-block
 , .vis .img-block.img-patch .patch-box span
 , #context-map-container, #entity-map-container, #entity-map-container img
-, .text-space  {
+, .text-space, #cover-button button {
     -webkit-transition: all 0.5s ease;
     transition: all 0.5s ease;
 }
@@ -160,6 +160,7 @@ input:focus + .check-btn {
     font-size: 36px;
     font-size: 3vh;
     padding: 0 15px;
+    z-index: 2;
 }
 
 .tool-box a {
@@ -551,4 +552,102 @@ canvas#buffer {
 
 .vis-container {
     position: absolute;
+}
+
+.cover-container {
+    display: grid;
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    place-items: center;
+    grid-template-columns: 1fr;
+    grid-template-rows: 4fr 1fr;
+    background-color: #163e6f;
+    color: white;
+}
+
+.cover-container .cover-block {
+    padding: 25px;
+    max-width: 500px;
+    text-align: center;
+}
+
+#cover-caption.cover-block {
+    max-width: 900px;
+    z-index: 2;
+}
+
+#cover-caption #cover-title {
+    font-size: 3.5em;
+    font-weight: bold;
+    color: #163e6f;
+    background-color: rgba(255,255,255,0.5);
+    /* padding: 5px 15px; */
+    text-align: center;
+}
+
+#cover-caption #cover-blurb {
+    font-size: 2em;
+}
+
+#cover-caption #cover-button {
+    padding-top: 50px;
+    text-align: center;
+}
+
+#cover-caption #cover-button button {
+    font-size: 1.5em;
+    background-color: rgba(0,0,0,0);
+    border: 3px solid white;
+}
+
+#cover-caption #cover-button button:hover {
+    color: #163e6f;
+    background-color: white;
+}
+
+#cover-pic {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    opacity: 0.5;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 1;
+}
+
+#cover-pic img {
+    position: absolute;
+    bottom: 0px;
+    width: 100%;
+    height: auto;
+}
+
+.content-container {
+    display: grid;
+    width: 100%;
+    background-color: lightgray;
+    place-items: center;
+    padding: 50px;
+    color: #163e6f;
+}
+
+.content-container .content-box {
+    text-align: center;
+    width: 80%;
+    max-width: 600px;
+    padding: 5px;
+}
+
+.content-container .content-box.title {
+    font-size: 2em;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: white;
+}
+
+.content-container .content-box.body {
+    font-size: 1.5em;
+    text-align: justify;
 }

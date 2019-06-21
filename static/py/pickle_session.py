@@ -1,5 +1,5 @@
 import os
-
+import datetime
 from uuid import uuid1
 from pickle import UnpicklingError, dumps, loads
 from collections import MutableMapping
@@ -78,7 +78,8 @@ class PickleSessionInterface(SessionInterface):
             response.delete_cookie(
                 app.session_cookie_name, domain=domain)
             return
-        cookie_exp = self.get_expiration_time(app, session)
+        expire_date = datetime.datetime.now()
+        expire_date = expire_date + datetime.timedelta(days=90)
         response.set_cookie(
             app.session_cookie_name, session.sid,
-            expires=cookie_exp, httponly=True, domain=domain)
+            expires=expire_date, httponly=True, domain=domain)
