@@ -765,3 +765,7 @@ function argsort(to_sort, desc=false) {
     }
     return to_sort;
 }
+
+$(document).ready(function() {
+    closeActiveSpaces(false);
+});

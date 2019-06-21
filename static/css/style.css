@@ -185,6 +185,7 @@ input:focus + .check-btn {
 }
 
 .tool-box-link {
+    line-height: 2;
     height: 20%;
     width: 100%;
 }
