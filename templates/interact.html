@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Textension | Interaction{% endblock %}
 {%block content%}
-  <div id="loading" style="background-image:url('http://www.greengold.tv/assets/loading.gif');" class="show"></div>
+  <div id="loading" style="background-image:url('{{ url_for('static', filename='css/loading.gif') }}');" class="show"></div>
   <div class="modal fade" id="text-edit" tabindex="-1" role="dialog" aria-labelledby="text-edit-title" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">

@@ -1,5 +1,6 @@
 $(document).ready(function() {
     closeNav();
+    togglePageOptions();
 });
 
 /// open the side bar containing the tools

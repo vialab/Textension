@@ -503,6 +503,7 @@ canvas#buffer {
     left: 0;
     height: 150px;
     width: 100vw;
+    z-index: 2;
 }
 
 #page-options ul {
@@ -545,10 +546,10 @@ canvas#buffer {
 #page-options #page-options-toggle {
     position: absolute;
     right: 0;
-    top: 0;
+    top: 2px;
     padding-right: 5px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 16px;
 }
 
 .vis-container {

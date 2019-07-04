@@ -767,5 +767,5 @@ function argsort(to_sort, desc=false) {
 }
 
 $(document).ready(function() {
-    closeActiveSpaces(false);
+    closeActiveSpaces();
 });
