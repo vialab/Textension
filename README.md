@@ -1,7 +1,6 @@
 # Textension
 
-A visualization tool built for researchers in the humanities and social sciences. 
-This project aims to digitize analog text into modular web objects that allow users to annotate, manipulate, and perform analytics.
+The Textension platform automatically adds visualizations and natural language processing applications to analog texts, using any web-based device with a camera. After taking a picture of a particular page or set of pages from a book or uploading an existing image, our system builds an interactive digital object that automatically inserts modular elements in a digital space. Leveraging the findings of previous studies, our framework augments the reading of analog texts with digital tools, making it possible to work with texts in both a digital and analog environments.
 
 ## Getting Started
 
@@ -78,15 +77,7 @@ http://localhost:5000/
 
 ## Deployment
 
-Deployment is made simple due to the use of Docker. Before deploying in a live system, please contact the project authors in order to receive a copy of the database. 
-
-Once a database connection can be made (locally), all that is left to do is to run the shell script using the command provided below, and ensure that the appropriate routing/proxies have been setup on your web server. 
-
-NOTE: Modifications of used ports may be required.
-
-```
-./run.sh
-```
+Deployment for this project has been automated, and so please be aware that pushes to this repository will automatically build, run, and deploy to the VIALAB production servers at https://textension.vialab.ca/. Deployment will automatically handle database connections through the injection of required environment variables in Kubernetes.
 
 ## Built With
 
