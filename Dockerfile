@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
 
 RUN python -m pip install --upgrade pip
 
-RUN pip install flask numpy scikit-learn scipy spacy pypdf2 pdfminer wand image google-api-python-client matplotlib opencv-python pandas pyocr textstat tesserocr imutils colour pdf2image uwsgi
+RUN pip install Werkzeug==0.14.1 flask==1.0.4 numpy scikit-learn==0.20 scipy==1.2.0 spacy pypdf2 pdfminer wand image google-api-python-client matplotlib==2.2.4 opencv-python pandas==0.24.2 pyocr textstat tesserocr imutils colour pdf2image uwsgi
 
 RUN python -m spacy download en
 #pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.0.0/en_core_web_sm-2.0.0.tar.gz
