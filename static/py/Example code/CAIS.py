@@ -4,7 +4,7 @@ A python script that implements Seam Carving / Content Aware Image Scaling.
 A sample command:
 python CAIS.py -i input.jpg -r 400 500 -o output.jpg -v
 
-This will rescale input.jpg to 400 x 500 pixels and save it as output.jpg. The -v will make the process verbose 
+This will rescale input.jpg to 400 x 500 pixels and save it as output.jpg. The -v will make the process verbose
 
 CAIS.py
 An implementation of the Seam Carving / Content Aware Imaging Scaling algorithm.
@@ -53,7 +53,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-import Image
+from PIL import Image
 from scipy.ndimage.filters import generic_gradient_magnitude, sobel
 import numpy
 from math import fabs

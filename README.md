@@ -10,26 +10,11 @@ These instructions will get you a copy of the project up and running on your loc
 
 This software was created in PYTHON 2.7 and is not compatible with more up to date versions.
 
-A database connection is required for proper functioning of this software. Please create your own `dbconfig.py` file in the `./static/py/` directory. An example is provided:
-
-```
-mysql = {
-    "host":"localhost",
-    "port":2251,
-    "user":"root",
-    "passwd":"123456789",
-    "db":"mydatabasename"
-}
-```
-
-Along with this, you will also need to install some packages (UNIX):
-
 ```
 apt-get update && apt-get install -y \
         build-essential \
-        python-dev \
+        python2.7 \
         python-pip \
-        python-tk \
         tesseract-ocr \
         libtesseract-dev \
         libleptonica-dev \
@@ -49,13 +34,20 @@ source venv/bin/activate
 ```
 Install Python dependencies:
 
+Recommended:
 ```
-pip install flask numpy scikit-learn scipy spacy pypdf2 pdfminer wand image \
+pip install -r requirements.txt
+```
+Or, alternatively:
+```
+pip install flask numpy scikit-learn scipy spacy pypdf2 pdfminer wand pillow \
 google-api-python-client matplotlib opencv-python pandas pyocr textstat tesserocr
+```
 
+Then always do:
+```
 python -m spacy download en
 ```
-Note: `pip install -r requirements.txt` might work as well (not tested)
 
 ### Running Flask
 
@@ -84,7 +76,6 @@ Deployment for this project has been automated, and so please be aware that push
 * [Flask](http://flask.pocoo.org/) - The web framework used (PYTHON 2.7)
 * [Jinja2](http://jinja.pocoo.org/docs/2.10/) - Template engine
 * [Bootstrap](https://getbootstrap.com/) - Front-end component library
-* [MySQL](https://www.mysql.com/) - Database back-end
 * [Docker](https://www.docker.com/) - Container / Dependency management
 
 ## Versioning

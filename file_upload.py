@@ -51,7 +51,7 @@ default_options = {
 def index():
     if "options" not in session:
         session["options"] = default_options
-    return render_template('index2.html')
+    return render_template('index.html')
 
 @app.route('/return_file')
 def return_file():
