@@ -24,7 +24,7 @@ ALLOWED_EXTENSIONS = set(['bmp', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.secret_key = 'super secret key'
+app.secret_key = 'super secret key and diceroll: 12'
 app.config['SESSION_TYPE'] = 'filesystem'
 app.session_interface = ps.PickleSessionInterface("./app_session")
 h = HTMLParser()
