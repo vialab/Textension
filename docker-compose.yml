@@ -5,4 +5,5 @@ services:
     ports:
       - "5000:5000"
     environment:
-      FLASK_ENV: development
+      TZ: America/Toronto
+      # FLASK_ENV: development

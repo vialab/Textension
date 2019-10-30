@@ -37,12 +37,16 @@ RUN rm -rf /usr/share/man \
         libleptonica-dev \
     && apt-get autoremove -y --purge && apt-get autoclean -y && apt-get purge
 
-ENV FLASK_APP file_upload.py
-EXPOSE 5000
+
 
 COPY . /usr/src/app
 
+EXPOSE 5000
+
+ENV FLASK_APP file_upload.py
+ENV FLASK_ENV production
+ENV FLASK_DEBUG False
+
 CMD ["uwsgi", "uwsgi.ini"]
-# CMD ["flask", "run", "--host=0.0.0.0"]
 
 # This project is linked to an automated build on dockerhub

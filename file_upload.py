@@ -206,7 +206,7 @@ def get_image():
     img = img.crop((133,5,499,img.size[1]-5))
     bImage = io.BytesIO()
     img.save(bImage, "PNG")
-    img.save("test.png","PNG")    
+    img.save("test.png","PNG")
     bImage.seek(0)
     vis = Textension(bImage
                     , _translate=session["options"]["translate"]
