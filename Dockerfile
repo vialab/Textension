@@ -1,36 +1,52 @@
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 
 RUN sed -i 's/archive.ubuntu.com/mirror.science.uoit.ca/g' \
         /etc/apt/sources.list
 
+ENV TZ=America/Toronto
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+
+WORKDIR /usr/src/app
+COPY ./requirements.txt /usr/src/app/requirements.txt
+
 RUN apt-get update && apt-get install -y \
         build-essential \
-        python-dev \
+        python2.7 \
         python-pip \
-        python-tk \
         tesseract-ocr \
         libtesseract-dev \
         libleptonica-dev \
         libmagickwand-dev \
-	poppler-utils \
-    && rm -rf /var/lib/apt/lists/*
+	    poppler-utils \
+    && rm -rf /var/lib/apt/lists/* \
+    && python -m pip install --upgrade pip 
 
-RUN python -m pip install --upgrade pip
-
-RUN pip install Werkzeug==0.14.1 flask==1.0.4 numpy scikit-learn==0.20 scipy==1.2.0 spacy pypdf2 pdfminer wand image google-api-python-client matplotlib==2.2.4 opencv-python pandas==0.24.2 pyocr textstat tesserocr imutils colour pdf2image uwsgi
+RUN pip install spacy==2.2.1
 
 RUN python -m spacy download en
 #pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.0.0/en_core_web_sm-2.0.0.tar.gz
 
-ENV FLASK_APP file_upload.py
+RUN pip install -r requirements.txt
 
-WORKDIR /usr/src/app
+RUN rm -rf /usr/share/man \
+    && apt-get remove -y \
+        build-essential \
+        gcc-7 \ 
+        libtesseract-dev \
+        libleptonica-dev \
+    && apt-get autoremove -y --purge && apt-get autoclean -y && apt-get purge
+
+
 
 COPY . /usr/src/app
 
 EXPOSE 5000
 
+ENV FLASK_APP file_upload.py
+ENV FLASK_ENV production
+ENV FLASK_DEBUG False
+
 CMD ["uwsgi", "uwsgi.ini"]
-# CMD ["flask", "run", "--host=0.0.0.0"]
 
 # This project is linked to an automated build on dockerhub

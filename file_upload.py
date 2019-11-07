@@ -24,7 +24,7 @@ ALLOWED_EXTENSIONS = set(['bmp', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.secret_key = 'super secret key'
+app.secret_key = 'super secret key and diceroll: 12'
 app.config['SESSION_TYPE'] = 'filesystem'
 app.session_interface = ps.PickleSessionInterface("./app_session")
 h = HTMLParser()
@@ -51,7 +51,7 @@ default_options = {
 def index():
     if "options" not in session:
         session["options"] = default_options
-    return render_template('index2.html')
+    return render_template('index.html')
 
 @app.route('/return_file')
 def return_file():
@@ -206,7 +206,7 @@ def get_image():
     img = img.crop((133,5,499,img.size[1]-5))
     bImage = io.BytesIO()
     img.save(bImage, "PNG")
-    img.save("test.png","PNG")    
+    img.save("test.png","PNG")
     bImage.seek(0)
     vis = Textension(bImage
                     , _translate=session["options"]["translate"]
