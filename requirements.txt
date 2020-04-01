@@ -31,7 +31,7 @@ pandas==0.24.2
 pathlib==1.0.1
 pdf2image==1.9.0
 pdfminer==20140328
-Pillow==6.2.0
+Pillow==6.2.2
 plac==0.9.6
 preshed==3.0.2
 pyasn1==0.4.7
