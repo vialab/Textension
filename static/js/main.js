@@ -1,10 +1,35 @@
+// import * as modal from './modules/modal.js';
+
+
+function downloadText() {
+    let file = new Blob([JSON.stringify(ocr, null, 2)], { type: "application/json" })
+    let link = document.getElementById('download_data')
+    let url = URL.createObjectURL(file);
+
+    // Convert and download as image 
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'Textension.txt');
+    link.click();
+}
+
+
 $(document).ready(function() {
     closeNav();
 
     if (typeof togglePageOptions === "function") {
         togglePageOptions();
     }
+
+
+    // document.on("addedfiles", function(files) {
+    //     console.log("added files event  ",files)
+    // })
+
+    $('[data-toggle="tooltip"]').tooltip({ container: 'body' })
 });
+
+
+
 
 /// open the side bar containing the tools
 function openNav() {

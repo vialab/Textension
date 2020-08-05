@@ -27,5 +27,5 @@ def FindMatches(targetwindow, validMask, sourceimage, G):
 		if err<0:
 			err=0
 
-	ErrNVal=zip(SSD,pixelVal)
+	ErrNVal=list(zip(SSD,pixelVal))
 	return [(err, val) for (err, val) in ErrNVal if err<=MinErr*(1+ErrThreshold)]

@@ -244,25 +244,50 @@ function injectMetaData() {
     }
 }
 
+function updateCustomTextBox( text_id, text ) {
+    let text_box = $(".custom-text", $("#" + text_id).parent())
+    text_box.html(text);
+
+    // $(`#${text_id}`).css('width', `${text_box.innerWidth()}px`)
+    $(`#${text_id}`).parent().css('width', `${text_box.innerWidth()}px`)
+    $("#" + text_id).css("opacity", 0);
+
+    let text_ocr = $("#" + text_id).data("ocr");
+    $("#" + text_id).data("ocr-orig", text_ocr);
+    $("#" + text_id).data("ocr", text);
+}
+
 function saveText() {
     let text = $("#edit-text").val();    
     let text_id = $("#img-text-id").val();
-    $(".custom-text", $("#"+text_id).parent()).html(text);
-    $("#"+text_id).css("opacity", 0);
+    // $(".custom-text", $("#"+text_id).parent()).html(text);
+    // $("#"+text_id).css("opacity", 0);
+    // $("#text-visibility").html("Show Text");
+    updateCustomTextBox( text_id, text );
     $("#text-visibility").html("Show Text");
 }
 
 function replaceAllText() {
     let text = $("#edit-text").val();
     let text_id = $("#img-text-id").val();
-    $(".custom-text", $("#"+text_id).parent()).html(text);
-    $("#"+text_id).css("opacity", 0);
+    // $(".custom-text", $("#"+text_id).parent()).html(text);
+    // $("#"+text_id).css("opacity", 0);
+    // $("#text-visibility").html("Show Text");
+    updateCustomTextBox(text_id, text);
     $("#text-visibility").html("Show Text");
 
-    let text_ocr = $("#"+text_id).data("ocr");
+    let text_ocr = $("#"+text_id).data("ocr-orig");
     if(text_ocr != "") {
-        $(".custom-text", $("img[data-ocr='" + text_ocr + "']").parent()).html(text);
+        let text_box = $(".custom-text", $("img[data-ocr='" + text_ocr.toLowerCase() + "']").parent())
+        text_box.html(text);
+        text_box.parent().css('width', `${text_box.innerWidth()}px`)
         $("img[data-ocr='" + text_ocr + "']").css("opacity",0);
+
+
+        $("#" + text_id).data("ocr-orig", text_ocr);
+        $("#" + text_id).data("ocr", text);
+        text_box.data("ocr-orig", text_ocr);
+        text_box.data("ocr", text);
     }
 }
 
@@ -271,7 +296,7 @@ function undoAllText() {
     let $elem = $("#" + text_id);
     $elem.css("opacity",1);
     $("#text-visibility").html("Hide Text");     
-    $(".custom-text", $("#"+text_id).parent()).html("");   
+    $(".custom-text", $("#"+text_id).parent()).html("");
     $("#edit-text").val("");
     let text_ocr = $("#"+text_id).data("ocr");
     if(text_ocr != "") {
@@ -629,11 +654,13 @@ function drawLocations() {
                     }
                     $(text_id).parent().append($loc);
                     // draw the map
-                    let $img = new Image();
-                    $img.src = "data:image/png;base64,"+word_blocks[i][j][k]["map"];
-                    $($img).css("top", $(text_id).parent().parent().position().top + "px");
-                    $($img).data("word-id",text_id);
-                    $("#entity-map-container").append($img);
+                    if (word_blocks[i][j][k]["map"]) {
+                        let $img = new Image();
+                        $img.src = "data:image/png;base64,"+word_blocks[i][j][k]["map"];
+                        $($img).css("top", $(text_id).parent().parent().position().top + "px");
+                        $($img).data("word-id",text_id);
+                        $("#entity-map-container").append($img);
+                    }
                 }
             }
         }
@@ -705,10 +732,16 @@ function erase() {
 
 // download the current html canvas as an image
 function print() {
+    // event.preventDefault();
     html2canvas($(".vis"), {
         onrendered: function (canvas) {
+            let link = document.getElementById('download_data')
+
             // Convert and download as image 
-            Canvas2Image.saveAsPNG(canvas);
+            link.setAttribute('download', 'Textension.png');
+            link.setAttribute('href', canvas.toDataURL("image/png").replace("image/png", "image/octet-stream"));
+            link.click();
+            // Canvas2Image.saveAsPNG(canvas);
         }
     });
 }

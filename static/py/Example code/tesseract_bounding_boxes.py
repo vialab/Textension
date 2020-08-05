@@ -8,7 +8,7 @@ api.SetPageSegMode(tesseract.PSM_AUTO)
 mImgFile = "test.jpg"
 mBuffer=open(mImgFile,"rb").read()
 result = tesseract.ProcessPagesBuffer(mBuffer,len(mBuffer),api)
-print "result(ProcessPagesBuffer)=",result
+print("result(ProcessPagesBuffer)=",result)
 
 #tesseract.GetBoxText() method returns the exact position of each character in an array.
 

@@ -1,5 +1,5 @@
 {
     "git.ignoreLimitWarning": true,
     "python.linting.pylintEnabled": false,
-    "python.pythonPath": "${workspaceRoot}/venv/bin"
+    "python.pythonPath": "/home/nbeals/miniconda3/envs/textension3.8/bin/python"
 }

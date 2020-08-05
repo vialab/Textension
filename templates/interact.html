@@ -2,6 +2,7 @@
 {% block title %}Textension | Interaction{% endblock %}
 {%block content%}
   <div id="loading" style="background-image:url('{{ url_for('static', filename='css/loading.gif') }}');" class="show"></div>
+  <a id="download_data" style="display: none;"></a>
   <div class="modal fade" id="text-edit" tabindex="-1" role="dialog" aria-labelledby="text-edit-title" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -35,15 +36,26 @@
       <a href="javascript:void(0)" class="close-btn" onclick="closeNav()">&times;</a>
     </div>
     <div class="tool-box-link">
-      <a href="/">Load New Document ...</a>
-      <a href="#" onclick="javasript:openActiveSpaces();">Open Spaces</a>
-      <a href="#" onclick="javasript:closeActiveSpaces();">Close Spaces</a>
-      <a href="#" onclick="print();">Print</a>
+      <a href="/upload">Load New Document ...</a>
+      <!-- <a href="#" onclick="javasript:openActiveSpaces();">Open Spaces</a>
+      <a href="#" onclick="javasript:closeActiveSpaces();">Close Spaces</a> -->
+      <a href="#" onclick="print();">Download Page</a>
+      <a href="#" onclick="downloadText();">Download Text</a>
+    <!-- </div>
+    <div class="tool-box-link"> -->
+      <!-- <a href="/">Load New Document ...</a> -->
+      <hr style="margin-top: 10px; margin-bottom: 11px"> </hr>
+      <a href="#" onclick="javascript:openActiveSpaces();" data-toggle="tooltip" data-placement="top"
+      title="Open all vertical and/or horizontal line spaces (depends on selected mode)." >Open All Spaces</a>
+      <a href="#" onclick="javascript:closeActiveSpaces();" data-toggle="tooltip" data-placement="top"
+      title="Close all vertical and/or horizontal line spaces (depends on selected mode).">Close All Spaces</a>
     </div>
-    <div class="tool-box-btn">
+    <div class="tool-box-btn" style="padding-top: 2px;">
     <label class="switch">
       <input id="vertical-space" type="checkbox" onclick="toggleMode(this, false, false, false, false);" data-mode="vertical"/>
-      <span class="check-btn">
+      <!-- <input id="vertical-space" type="checkbox" onclick="toggleSpace(false);" data-mode="vertical"/> -->
+      <span class="check-btn" data-toggle="tooltip" data-placement="top"
+      title="Toggle vertical spacing mode.">
         <table>
           <tr><td><i class="fa fa-arrows-v" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
           <tr><td>Vertical Space</td></tr>
@@ -51,8 +63,10 @@
       </span>
     </label>
     <label class="switch">
+      <!-- <input id="horizontal-space" type="checkbox" onclick="toggleSpace(true);" data-mode="horizontal"/> -->
       <input id="horizontal-space" type="checkbox" onclick="toggleMode(this, false, false, false, false);" data-mode="horizontal"/>
-      <span class="check-btn">
+      <span class="check-btn" data-toggle="tooltip" data-placement="top"
+      title="Toggle horizontal spacing mode.">
         <table>
           <tr><td><i class="fa fa-arrows-h" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
           <tr><td>Horizontal Space</td></tr>
@@ -60,17 +74,23 @@
       </span>
     </label>
     <label class="switch">
-      <input id="location" type="checkbox"/>
-      <span class="check-btn">
+      <input id="ocr-text" type="checkbox" />
+      <span class="check-btn"  data-toggle="tooltip" data-placement="top"
+      title="Toggle visibility of the extracted (OCR) text" >
         <table>
-          <tr><td><i class="fa fa-map-marker" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
-          <tr><td>Locations</td></tr>
+          <tr>
+            <td><i class="fa fa-eye" style="font-size: 30px;" aria-hidden="true"></i></td>
+          </tr>
+          <tr>
+            <td>OCR</td>
+          </tr>
         </table>
       </span>
     </label>
     <label class="switch">
       <input id="confidence" type="checkbox"/>
-      <span class="check-btn"><table>
+      <span class="check-btn" data-toggle="tooltip" data-placement="top"
+      title="The darker the orange, the more uncertain it is."><table>
           <tr><td><i class="fa fa-thumbs-up" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
           <tr><td>OCR Uncertainty</td></tr>
         </table>
@@ -78,14 +98,15 @@
     </label>
     <label class="switch">
       <input id="ngram" type="checkbox"/>
-      <span class="check-btn">
+      <span class="check-btn" data-toggle="tooltip" data-placement="top"
+      title="Display time series graphs showing the usage of that n-gram over time.">
           <table>
             <tr><td><i class="fa fa-line-chart" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
             <tr><td>N-Gram Usage</td></tr>
           </table>
       </span>
     </label>
-    <label class="switch">
+    <!-- <label class="switch">
       <input id="uniqueness" type="checkbox"/>
       <span class="check-btn">
           <table>
@@ -93,23 +114,29 @@
             <tr><td>Uniqueness</td></tr>
           </table>
       </span>
-    </label>
+    </label> -->
     <div class="range-slider" id="uniqueness-range" style="display:none;">
       <input class="range-slider__range" type="range" value="1800" min="1800" max="2000" onchange="setUniqueness(this.value)"><span class="range-slider__value">1800</span>
     </div>
     <br/>
-    <label class="switch">
-      <input id="draw-tool" type="checkbox"/>
-      <span class="check-btn">
-          <table>
-            <tr><td><i class="fa fa-pencil" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
-            <tr><td>Draw</td></tr>
-          </table>
+    <label class="switch" >
+      <input id="location" type="checkbox" />
+      <span class="check-btn" data-toggle="tooltip" data-placement="top"
+      title="Show a map of the locations found within the text.">
+        <table>
+          <tr>
+            <td><i class="fa fa-map-marker" style="font-size: 30px;" aria-hidden="true"></i></td>
+          </tr>
+          <tr>
+            <td>Locations</td>
+          </tr>
+        </table>
       </span>
     </label>
     <label class="switch">
       <input id="eraser-tool" type="checkbox" onclick="toggleMode(this, false, false, false, false);" data-mode="eraser"/>
-      <span class="check-btn">
+      <span class="check-btn" data-toggle="tooltip" data-placement="top"
+      title="Remove or edit words within the document, click on any word to begin.">
           <table>
             <tr><td><i class="fa fa-eraser" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
             <tr><td>Erase Words</td></tr>
@@ -117,17 +144,23 @@
       </span>
     </label>
     <label class="switch">
-      <input id="ocr-text" type="checkbox"/>
-      <span class="check-btn">
-          <table>
-            <tr><td><i class="fa fa-eye" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
-            <tr><td>OCR</td></tr>
-          </table>
+      <input id="draw-tool" type="checkbox" />
+      <span class="check-btn" data-toggle="tooltip" data-placement="top"
+      title="Free draw on the document.">
+        <table>
+          <tr>
+            <td><i class="fa fa-pencil" style="font-size: 30px;" aria-hidden="true"></i></td>
+          </tr>
+          <tr>
+            <td>Draw</td>
+          </tr>
+        </table>
       </span>
     </label>
     <label class="switch">
       <input id="define-tool" type="checkbox" onclick="toggleMode(this);" data-mode="define"/>
-      <span class="check-btn">
+      <span class="check-btn" data-toggle="tooltip" data-placement="top"
+      title="Dictionary defintions, click and hold.">
           <table>
             <tr><td><i class="fa fa-book" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
             <tr><td>Dictionary</td></tr>
@@ -157,7 +190,8 @@
     {% endif %}
     <label class="switch">
       <input id="context-tool" type="checkbox" onclick="toggleMode(this);" data-mode="context"/>
-      <span class="check-btn">
+      <span class="check-btn" data-toggle="tooltip" data-placement="top"
+      title="Build a context map of words by clicking on the desired words with this tool enabled.">
           <table>
             <tr><td><i class="fa fa-sliders" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
             <tr><td>Context Map</td></tr>
@@ -226,15 +260,28 @@
         <div id="entity-map-container"></div>
       </div>
       <!-- BLOCKS END -->
+      {% if num_pages > 1 %}
+        <div class="page-num-container">
+          {% if page_no > 0 %}
+            <div><a href="/interact/{{page_no-1}}"><span>&lt;</span></a></div>
+          {% endif %}
+          {% for i in range(num_pages) %}
+          <div><a href="/interact/{{i+1}}"><span>{{i+1}}</span></a></div>
+          {% endfor %}
+          {% if (page_no < (num_pages-1)) and num_pages>1 %}
+            <div><a href="/interact/{{page_no+1}}"><span>&gt;</span></a></div>
+          {% endif %}
+        </div>
+      {% endif %}
     </div>
-  <div id="page-options">
+  <!-- <div id="page-options">
     <span id="page-options-toggle" onclick="togglePageOptions();">▼</span>
     <ul>
       {% for i in range(num_pages) %}
         <li><a href="/interact/{{i+1}}"><span>{{i+1}}</span></a></li>
       {% endfor %}
     </ul>
-  </div>
+  </div> -->
   <div id="color-options">
     <div id="text-options">
       <span id="text-color-select"></span>
@@ -263,6 +310,7 @@
 </div>
 {%endblock%}
 {%block scripts%}
+  <script src="{{ url_for('static', filename='js/textensionModel.js') }}"></script>
   <script type="text/javascript">
     var ocr = {{ ocr|safe }}
     var translation = {{ translation|safe }}
@@ -275,6 +323,9 @@
     var bg_color = [{{bg_color[0]|safe}},{{bg_color[1]|safe}},{{bg_color[2]|safe}}]
     var num_blocks = {{num_blocks}}
     var margin_size = {{session["options"]["margin_size"]}}
+
+
+    var textensionData = new TextensionModel( ocr, translation, word_blocks )
   </script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.transit/0.9.12/jquery.transit.min.js"></script>
   <script type='text/javascript' src="https://cdn.jsdelivr.net/g/canvas2image@0.1(base64.js+canvas2image.min.js+canvas2image.js)"></script>  

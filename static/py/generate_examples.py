@@ -23,5 +23,5 @@ def create_textures(HSIZE,WSIZE):
                    HSIZE,
                    WSIZE,
                    k)
-        print cmd
+        print(cmd)
         subprocess.call(cmd, shell=True)

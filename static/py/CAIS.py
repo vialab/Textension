@@ -72,7 +72,7 @@ def print_fn( s ):
 
 	global verbose
 	if verbose:
-		print s
+		print(s)
 
 def grayscale_filter ( img ):
 
@@ -456,7 +456,7 @@ def main():
 	parser.add_option("-m", "--mark", dest="mark", help="Mark Seams Targeted. Only works for deleting", action="store_true")
 	(options, args) = parser.parse_args()
 	if not options.input_image or not options.resolution:
-		print "Incorrect Usage; please see python CAIS.py --help"
+		print("Incorrect Usage; please see python CAIS.py --help")
 		sys.exit(2)
 	if options.verbose:
 		global verbose
@@ -473,7 +473,7 @@ def main():
 		input_image = options.input_image
 		resolution = ( int(options.resolution[0]), int(options.resolution[1]) )
 	except:
-		print "Incorrect Usage; please see python CAIS.py --help"
+		print("Incorrect Usage; please see python CAIS.py --help")
 		sys.exit(2)
 
 	CAIS(input_image, resolution, output, mark)

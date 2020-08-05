@@ -1,3 +1,59 @@
+
+/* Added by nathan: */
+
+.page-num-container {
+  display: flex;
+  margin-top: 60px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* .page-num-container div {
+  width: 100px;
+  height: 100px;
+} */
+
+.page-num-container div {
+    /* list-style-type: none; */
+    border: 1px solid darkgray;
+    background-color: rgb(243, 243, 243);
+    height: 40px;
+    width: 40px;
+    /* white-space: nowrap;
+    overflow-x: scroll; */
+    /* padding: 0 15px; */
+    /* text-align: right; */
+}
+/* 
+#page-options ul li {
+    display: inline-block;
+    line-height: 75px;
+    margin: 15px;
+    height: 120px;
+    width: 100px;
+}
+
+#page-options ul li a {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 1px solid black;
+    background-color: white;
+} */
+
+.page-num-container div a span {
+    display: block;
+    /* height: 100%; */
+    /* margin: 0 auto; */
+    text-align: center;
+    line-height: 40px;
+    font-size: 32px;
+}
+
+
+/* From Jay \/ */
+
+
 body {
     background-color: #eee;
 }
@@ -55,10 +111,10 @@ body {
     font-size: 1.6vh;
 }
 
-.check-btn:hover {
+/* .check-btn:hover {
     background-color: #1477bd;
     color: white;
-}
+} */
 
 input:checked + .check-btn {
     background-color: #1477bd;
@@ -168,7 +224,7 @@ input:focus + .check-btn {
     text-decoration: none;
     font-size: 18px;
     color: white;
-    display: block;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+    display: block; 
     -webkit-transition: 0.3s;
     transition: 0.3s;
 }
@@ -185,17 +241,23 @@ input:focus + .check-btn {
 }
 
 .tool-box-link {
-    line-height: 2;
-    height: 20%;
+    /* line-height: 2; */
+    /* height: 20%; */
     width: 100%;
 }
 
 .tool-box-link a {
     height: 25%;
-    font-size:18px;
-    font-size: 2vh;
+    font-size: 22px;
+    /* font-size: 2vh; */
     white-space: nowrap;
     overflow: hidden;
+}
+
+.tool-box-link-small {
+    padding: 4px 32px 4px 32px !important;
+    line-height: 1.3;
+    height: auto !important;
 }
 
 
@@ -402,7 +464,8 @@ canvas#buffer {
 .custom-text { 
     position: absolute;
     left: 0;
-    white-space:nowrap;
+    font-size: 26px !important;
+    white-space: nowrap;
 }
 
 .popover {
@@ -559,7 +622,8 @@ canvas#buffer {
 .cover-container {
     display: grid;
     position: relative;
-    width: 100vw;
+    /* width: 100vw; */
+    width: 100%;
     height: 100vh;
     place-items: center;
     grid-template-columns: 1fr;

@@ -23,7 +23,7 @@ if __name__ == "__main__":
     tex=ndimage.imread(inputfile)
     tex=tex/255.0;
     Sythim=SynthTexture(tex, w, [syn_size_1,syn_size_2])
-    print "Serial Version ", time.time()-t0, " seconds"
+    print("Serial Version ", time.time()-t0, " seconds")
     im_out=Image.fromarray(Sythim*255)
     im_out.show()
     im_out.convert('RGB').save(outputfile,"JPEG")

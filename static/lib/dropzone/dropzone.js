@@ -154,6 +154,11 @@
         return done();
       },
       init: function() {
+
+        this.on("drop", function(event) {
+          $("#loading").addClass("show")
+        })
+
         return noop;
       },
       forceFallback: false,

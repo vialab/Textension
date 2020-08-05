@@ -4,6 +4,9 @@ services:
     build: .
     ports:
       - "5000:5000"
+      # - "3000:3000"
     environment:
       TZ: America/Toronto
-      # FLASK_ENV: development
+      FLASK_ENV: development
+    # volumes:
+      # - ./:/usr/src/app

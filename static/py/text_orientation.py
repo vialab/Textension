@@ -9,7 +9,7 @@ def orientation(fname):
 
         it = api.AnalyseLayout()
         orientation, direction, order, deskew_angle = it.Orientation()
-        print "Orientation: {:d}".format(orientation)
-        print "WritingDirection: {:d}".format(direction)
-        print "TextlineOrder: {:d}".format(order)
-        print "Deskew angle: {:.4f}".format(deskew_angle)
+        print("Orientation: {:d}".format(orientation))
+        print("WritingDirection: {:d}".format(direction))
+        print("TextlineOrder: {:d}".format(order))
+        print("Deskew angle: {:.4f}".format(deskew_angle))

@@ -94,7 +94,8 @@ class Block(object):
                 self.bounding_boxes.append({"x":0, "y":box["y"], "w":self.img_width, "h":box["h"]})
                 api.SetRectangle(box["x"], box["y"], box["w"], box["h"])
                 ocr_result = api.GetUTF8Text()
-                self.ocr_text.append(ocr_result)
+                conf = api.MeanTextConf()
+                self.ocr_text.append([ocr_result,conf])
         #         # cv2.rectangle(img, (box["x"],box["y"]), (box["x"]+box["w"],box["y"]+box["h"]),(0,255,0),1)
         # img = Image.fromarray(img)
         # img.show()
@@ -208,9 +209,9 @@ class Block(object):
 
     def translateText(self):
         """ Translate text that has been OCR'd from this image """
-        for text in self.ocr_text:
-            trans_text = g_translate(text, self.google_key)
-            self.ocr_translated.append(trans_text)
+        # for text in self.ocr_text:
+        #     trans_text = g_translate(text, self.google_key)
+        #     self.ocr_translated.append(trans_text)
 
     def generateFullCompositeImage(self):
         """ Merge image blocks with patches to generate complete composite image """
@@ -602,7 +603,7 @@ class Block(object):
                 conf = api.MeanTextConf()
                 label = ""
 
-                if text != u"":
+                if text != "":
                     # if we have text to analyze, run entity recognition
                     entities = self.nlp(text)
                     if len(entities.ents) > 0:
@@ -717,7 +718,8 @@ class Block(object):
     def encodeBase64(self, image):
         bImage = io.BytesIO()
         image.save(bImage, format="PNG")
-        return base64.b64encode(bImage.getvalue())
+
+        return base64.b64encode(bImage.getvalue()).decode("utf-8")
 
     def sampleBackgroundTextColor(self, image):
         """ Returns background color and text color using min color distance from extremes """
@@ -755,9 +757,9 @@ class Block(object):
     def calculateAverageColor(self, color_list):
         """ Calculate average RGB values """
         rgb = [sum(color) for color in zip(*color_list)]
-        r = rgb[0] / len(color_list)
-        g = rgb[1] / len(color_list)
-        b = rgb[2] / len(color_list)
+        r = rgb[0] // len(color_list)
+        g = rgb[1] // len(color_list)
+        b = rgb[2] // len(color_list)
         return (r, g, b)
 
     def getSampledBackgroundColor(self, idx, pixel_list, width):

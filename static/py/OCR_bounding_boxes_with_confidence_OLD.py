@@ -11,11 +11,11 @@ import glob
 import numpy as np
 
 #this get the average rgb color of a swatch in an image
-def get_average_color((x,y), n, image):
+def get_average_color(xxx_todo_changeme, n, image):
     """ Returns a 3-tuple containing the RGB value of the average color of the
     given square bounded area of length = n whose origin (top left corner)
     is (x, y) in the given image"""
-
+    (x,y) = xxx_todo_changeme
     r, g, b = 0, 0, 0
     count = 0
     for s in range(x, x+n+1):
@@ -101,9 +101,9 @@ def textConfidence(fname):
             api.SetImageFile(fname)
             text = api.GetUTF8Text()
             #print api.AllWordConfidences()
-            print textstat.flesch_kincaid_grade(text)
+            print(textstat.flesch_kincaid_grade(text))
 
-            print  textstat.flesch_reading_ease(text)
+            print(textstat.flesch_reading_ease(text))
 
             print ("90-100 : Very Easy")
             print ("80-89 : Easy")
@@ -123,10 +123,10 @@ def orientation(fname):
 
         it = api.AnalyseLayout()
         orientation, direction, order, deskew_angle = it.Orientation()
-        print "Orientation: {:d}".format(orientation)
-        print "WritingDirection: {:d}".format(direction)
-        print "TextlineOrder: {:d}".format(order)
-        print "Deskew angle: {:.4f}".format(deskew_angle)
+        print("Orientation: {:d}".format(orientation))
+        print("WritingDirection: {:d}".format(direction))
+        print("TextlineOrder: {:d}".format(order))
+        print("Deskew angle: {:.4f}".format(deskew_angle))
 
 #Find the bounding boxes
 
@@ -307,7 +307,7 @@ def findBoundingBoxesLine(fname):
             box2 = boundingBoxes[boxCounter+1]
 
             middleyDistance = (box2['y'] - (box1['y']+box1['h']))/2
-            print middleyDistance
+            print(middleyDistance)
 
 
         # This cuts a number of lines from below the text bounding box.

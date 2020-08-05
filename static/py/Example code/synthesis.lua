@@ -190,7 +190,7 @@ cmd:option('-output_file', 'out.png', 'Filename of synthesized texture')
 cmd:option('-height', 64, 'Height of generated image')
 cmd:option('-width', 64, 'Width of generated image')
 cmd:option('-k', 15, 'Kernel size to use for texture synthesis')
-cmd:option('-gpu', 0,
+cmd:option('-gpu', -1,
     'Zero-indexed ID of the GPU to use; to use CPU only, set -gpu < 0')
 local params = cmd:parse(arg)
 

@@ -6,9 +6,9 @@ def textConfidence(fname):
             api.SetImageFile(fname)
             text = api.GetUTF8Text()
             #print api.AllWordConfidences()
-            print textstat.flesch_kincaid_grade(text)
+            print(textstat.flesch_kincaid_grade(text))
 
-            print  textstat.flesch_reading_ease(text)
+            print(textstat.flesch_reading_ease(text))
 
             print ("90-100 : Very Easy")
             print ("80-89 : Easy")

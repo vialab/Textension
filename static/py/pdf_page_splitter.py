@@ -6,7 +6,7 @@ import os
 
 def pdfSplitPages(fname):
     infile = PdfFileReader(open(fname, 'rb'))
-    for i in xrange(infile.getNumPages()):
+    for i in range(infile.getNumPages()):
         p = infile.getPage(i)
         outfile = PdfFileWriter()
         outfile.addPage(p)

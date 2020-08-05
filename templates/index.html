@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <head>
-  <title>Textension | Upload</title>
+  <title>Textension</title>
   <meta name='author' content='Adam Bradley'x>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -178,7 +178,8 @@
 </head>
 
 <body>
-
+  <div id="loading" style="background-image:url('{{ url_for('static', filename='css/loading.gif') }}');">
+  </div>
   <div class="container-fluid" style="padding: 0;">
     <span id="tool-box-toggle" onclick="openNav()">☰</span>      
     <div class="tool-box">
@@ -189,9 +190,9 @@
         <a href="vialab.ca"><img src="./static/css/vialab_logo_2019_rgb.png"/></a>
       </div>
       <div class="tool-box-link">
-        <a data-toggle="tab" href="#menu-file">File</a>
-        <a data-toggle="tab" href="#menu-camera">Camera</a>
-        <a data-toggle="tab" href="#menu-settings">Settings</a>
+        <a data-toggle="tab" href="#menu-file" data-target="#menu-file" onclick="window.location='#menu-file'">File</a>
+        <a data-toggle="tab" href="#menu-camera" data-target="#menu-camera" onclick="window.location='#menu-camera'">Camera</a>
+        <a data-toggle="tab" href="#menu-settings" data-target="#menu-settings" onclick="window.location='#menu-settings'">Settings</a>
       </div>
     </div>
     <div class="cover-container">
@@ -235,10 +236,28 @@
           </div>
           <div class="row">
               <div class="col-md-12 text-center">
-                <a href="/interact?sample=a_mad_tea_party" class="sample-doc">Mad Tea Party</a>
-                <a href="/interact?sample=textension" class="sample-doc">Textension</a>
+                <a href="/interact?sample=a_mad_tea_party" class="sample-doc" style="
+                    text-shadow: 0px 0px 8px #ffffff;
+                    font-size: 16px;
+                    color: black;
+                    font-weight: bold;
+                    background-image: url(./static/css/a_mad_tea_party.png);
+                ">Mad Tea Party</a>
+                <a href="/interact?sample=textension" class="sample-doc" style="
+                    text-shadow: 0px 0px 8px #ffffff;
+                    font-size: 16px;
+                    color: black;
+                    font-weight: bold;
+                    background-image: url(./static/css/textension.png);
+                  ">Textension</a>
                 <!-- <a href="/interact?sample=book_of_myths" class="sample-doc">Book of Myths</a> -->
-                <a href="/interact?sample=southern_life" class="sample-doc">Southern Life in Southern Literature</a>
+                <a href="/interact?sample=southern_life" class="sample-doc" style="
+                    text-shadow: 0px 0px 8px #ffffff;
+                    font-size: 16px;
+                    color: black;
+                    font-weight: bold;
+                    background-image: url(./static/css/southern_life.png);
+                    ">Southern Life in Southern Literature</a>
               </div>
           </div>
         </div>

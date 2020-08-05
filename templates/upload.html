@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<head>
+  <title>Textension | Upload</title>
+  <meta name='author' content='Adam Bradley'x>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="./static/lib/dropzone/dropzone.css">
+  <link rel="stylesheet" href="./static/lib/dropzone/style.css">
+  <link rel="stylesheet" type="text/css" href="./static/lib/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="./static/css/style.css">
+
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+  <style>
+    #dropzone {
+      padding: 15px 50px;
+      margin: auto;
+      width: 80%;
+    }
+
+    #video{
+      margin: 0;
+    }
+
+    #photo {
+      margin: 0;
+    }
+
+    #startbutton {
+       margin: 10px 0;
+       box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+  	   background-color: #008CBA; /* Blue */
+       border: none;
+       color: white;
+       padding: 15px 32px;
+       text-align: center;
+       text-decoration: none;
+       display: inline-block;
+       font-size: 16px;
+       border-radius: 8px;
+       transition-duration: 0.4s;
+       cursor: pointer;
+       clear: right;
+    }
+
+    #startbutton:active {
+       margin: 10px 0;
+       box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+       background-color: #00FFFF; /* Cyan */
+       border: none;
+       color: white;
+       padding: 15px 32px;
+       text-align: center;
+       text-decoration: none;
+       display: inline-block;
+       font-size: 16px;
+       border-radius: 8px;
+       transition-duration: 0.4s;
+       cursor: pointer;
+       clear: right;
+    }
+
+    #dlbutton {
+       margin: 10px 0;
+       box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+  	   background-color: #008CBA; /* Blue */
+       border: none;
+       color: white;
+       padding: 15px 32px;
+       text-align: center;
+       text-decoration: none;
+       display: inline-block;
+       font-size: 16px;
+       border-radius: 8px;
+       transition-duration: 0.4s;
+       cursor: pointer;
+       clear: right;
+    }
+
+    #dlbutton:active {
+       margin: 10px 0;
+       box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+       background-color: #00FFFF; /* Cyan */
+       border: none;
+       color: white;
+       padding: 15px 32px;
+       text-align: center;
+       text-decoration: none;
+       display: inline-block;
+       font-size: 16px;
+       border-radius: 8px;
+       transition-duration: 0.4s;
+       cursor: pointer;
+       clear: right;
+    }
+
+    #canvas{
+      display: none;
+    }
+
+    .camera{
+
+    }
+
+    .output{
+      position: relative
+  	  top: 10px;
+
+
+    }
+
+    .col-md-6 {
+      /*border:2px solid blue;*/
+    }
+
+    .col-md-4{
+      border:2px solid white;
+    }
+
+    .row{
+      overflow: hidden;
+    }
+
+    [class*="col-"]{
+      margin-bottom: -99999px;
+      padding-bottom: 99999px;
+    }
+
+    #camera-overlay {
+      position: absolute;
+      left: 50%;
+    }
+
+    #camera-frame {
+      position: relative;
+      top: 5px;
+      left: -50%;
+      right: 133px;
+      width: 363px;
+      height: 470px;
+      border: 2px dashed red;
+    }
+
+    #app-content {
+      width: 100%;
+      /* margin: 100px 0 100px 0; */
+      padding-top: 180px;
+    }
+
+    .logo {
+      position: absolute;
+      bottom: 5%;
+      right: 5%;
+      font-size: 5vw;
+      font-weight: 900;
+      background-color: rgba(255,255,255, 0.5);
+      padding: 5px 15px;
+
+    }
+    .cover-block .first {
+      color: #163e6f;
+    }
+    .cover-block .last {
+      color : white;
+    }
+    .tool-box-logo {
+      margin: 0 0 5% 0;
+      background-color: rgba(255,255,255,0.8);
+    }
+    .tool-box-logo img {
+      z-index: 1;
+      position: relative;
+      width: 100%;
+      top: -25px;
+    }
+  </style>
+</head>
+
+<body>
+    <div id="loading" style="background-image:url('{{ url_for('static', filename='css/loading.gif') }}');">
+    </div>
+    <div id="app-content" class="container">
+      <div class="tab-content">
+        <div id="menu-file" class="tab-pane fade in active">
+          <div class="row">
+            <div class="col-md-12 text-center">
+              <b>Use your own documents to process and analyze.</b><br/>You could also click to browse for a file on your computer.
+              <div id="dropzone">
+                <form action="/upload" class="dropzone needsclick dz-clickable" id="demo-upload">
+                  <div class="dz-message needsclick">
+                    <b>Drag &amp; drop a document or image here.</b>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div class="row" style="margin-top: 50px;">
+            <div class="col-md-12 text-center">
+              <i>Don't have a document handy? No problem. Try one of our samples:</i>
+            </div>
+          </div>
+          <div class="row">
+              <div class="col-md-12 text-center">
+                <a href="/interact?sample=a_mad_tea_party" class="sample-doc" style="
+                    text-shadow: 0px 0px 8px #ffffff;
+                    font-size: 16px;
+                    color: black;
+                    font-weight: bold;
+                    background-image: url(./static/css/a_mad_tea_party.png);
+                ">Mad Tea Party</a>
+                <a href="/interact?sample=textension" class="sample-doc" style="
+                    text-shadow: 0px 0px 8px #ffffff;
+                    font-size: 16px;
+                    color: black;
+                    font-weight: bold;
+                    background-image: url(./static/css/textension.png);
+                  ">Textension</a>
+                <!-- <a href="/interact?sample=book_of_myths" class="sample-doc">Book of Myths</a> -->
+                <a href="/interact?sample=southern_life" class="sample-doc" style="
+                    text-shadow: 0px 0px 8px #ffffff;
+                    font-size: 16px;
+                    color: black;
+                    font-weight: bold;
+                    background-image: url(./static/css/southern_life.png);
+                    ">Southern Life in Southern Literature</a>
+              </div>
+          </div>
+        </div>
+
+<!-- 
+        <div id="menu-camera" class="tab-pane fade">
+          <div class="row">
+            <div class="col-md-12 text-center vertical-center">
+              <div class="camera">
+                <div id="camera-overlay">
+                  <div id="camera-frame">This is where you want the book to be.</div>
+                </div>
+                <video id="video" muted="muted">Video stream not available.</video>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12 text-center">
+              <button id="startbutton"><span class="glyphicon glyphicon-picture"></span>Take a picture</button>
+            </div>
+          </div>
+        
+          <div class="row">
+            <div class="col-md-12 text-center vertical-center">
+              <div class="output">
+                <p>The screen capture will appear in this box.</p>
+                <img style="display:none;" id="photo" alt="">
+              </div>
+            </div>
+            <div class="col=md-12">
+              <canvas id="canvas"></canvas>
+            </div>
+          </div>
+        </div> -->
+
+      </div>
+    </div>
+    <!-- <div class="content-container">
+      <div class="content-box">
+          This research was conducted by <a href="vialab.ca">VIALAB</a> as part of the <a href="https://co-shs.ca/en/">CO.SHS project</a> and has received financial support from the Canada Foundation for Innovation.
+      </div>
+    </div> -->
+  </div>
+
+
+  <script src="./static/lib/jquery/jquery-3.2.0.min.js"></script>
+  <script src="./static/js/main.js"></script>
+  <script src="./static/lib/dropzone/dropzone.js"></script>
+  <script src="./static/lib/capture/capture.js"></script>
+  <script src="./static/lib/bootstrap/js/bootstrap.min.js"></script>
+  <script>
+    Dropzone.autoDiscover = false;
+    $(function() {
+      var myDropzone = new Dropzone("#demo-upload");
+      myDropzone.on("queuecomplete", function(file) {
+        window.location = "{{ url_for('interact') }}";
+      });
+      myDropzone.on("sending", function(file, xhr, formData) {
+        formData.append("spread", $('#option-spread').val());
+        formData.append("hires", $('#option-hires').is(":checked"));
+        formData.append("antialias", $('#option-antialias').is(":checked"));
+        formData.append("translate", $('#option-translate').is(":checked"));
+        formData.append("cut", $('#option-cut').val());
+        formData.append("blur", $('#option-blur').val());
+        formData.append("noise", $('#option-noise').val());
+        formData.append("buffer", $('#option-buffer').val()); 
+        formData.append("width", $('#option-width').val()); 
+        formData.append("height", $('#option-height').val());
+        formData.append("margin_size", $('#option-margin').val());
+        formData.append("google_key", $('#option-google').val());
+        formData.append("multi_column", $('#option-column').is(":checked"));
+        formData.append("horizontal_spread", $('#option-stretch').val());
+        formData.append("stripe_bg", $('#option-fill').is(":checked"));
+      });
+    });
+  </script>
+</body>
+
+</html>

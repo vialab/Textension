@@ -96,7 +96,7 @@ def insertMaps(fname):
 
 
             boxCount = boxCount + 1
-        print entityBoxes
+        print(entityBoxes)
 
 
 

@@ -165,10 +165,10 @@ def find_optimal_components_subset(contours, edges):
             new_area_frac = 1.0 * crop_area(new_crop) / crop_area(crop) - 1
             if new_f1 > f1 or (
                     remaining_frac > 0.25 and new_area_frac < 0.15):
-                print '%d %s -> %s / %s (%s), %s -> %s / %s (%s), %s -> %s' % (
+                print('%d %s -> %s / %s (%s), %s -> %s / %s (%s), %s -> %s' % (
                         i, covered_sum, new_sum, total, remaining_frac,
                         crop_area(crop), crop_area(new_crop), area, new_area_frac,
-                        f1, new_f1)
+                        f1, new_f1))
                 crop = new_crop
                 covered_sum = new_sum
                 del c_info[i]
@@ -210,7 +210,7 @@ def pad_crop(crop, contours, edges, border_contour, pad_px=15):
         int_area = crop_area(intersect_crops(crop, this_crop))
         new_crop = crop_in_border(union_crops(crop, this_crop))
         if 0 < int_area < this_area and crop != new_crop:
-            print '%s -> %s' % (str(crop), str(new_crop))
+            print('%s -> %s' % (str(crop), str(new_crop)))
             changed = True
             crop = new_crop
 
@@ -243,7 +243,7 @@ def process_image(path, out_path):
     # TODO: dilate image _before_ finding a border. This is crazy sensitive!
     contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     borders = find_border_components(contours, edges)
-    borders.sort(key=lambda (i, x1, y1, x2, y2): (x2 - x1) * (y2 - y1))
+    borders.sort(key=lambda i_x1_y1_x2_y2: (i_x1_y1_x2_y2[3] - i_x1_y1_x2_y2[1]) * (i_x1_y1_x2_y2[4] - i_x1_y1_x2_y2[2]))
 
     border_contour = None
     if len(borders):
@@ -260,7 +260,7 @@ def process_image(path, out_path):
 
     contours = find_components(edges)
     if len(contours) == 0:
-        print '%s -> (no text!)' % path
+        print('%s -> (no text!)' % path)
         return
 
     crop = find_optimal_components_subset(contours, edges)
@@ -279,7 +279,7 @@ def process_image(path, out_path):
     #im.show()
     text_im = orig_im.crop(crop)
     text_im.save(out_path)
-    print '%s -> %s' % (path, out_path)
+    print('%s -> %s' % (path, out_path))
 
 
 if __name__ == '__main__':
@@ -295,4 +295,4 @@ if __name__ == '__main__':
         try:
             process_image(path, out_path)
         except Exception as e:
-            print '%s %s' % (path, e)
+            print('%s %s' % (path, e))

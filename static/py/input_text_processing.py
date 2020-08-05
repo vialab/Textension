@@ -1,6 +1,6 @@
 import os
 # import Textension as iv
-import cPickle as pickle
+import pickle as pickle
 from pdf_page_splitter import *
 from ocr_pdf_with_imag_conversion_bounding_boxes import *
 from OCR_bounding_boxes_with_confidence import *

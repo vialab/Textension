@@ -3,20 +3,20 @@ sys.path.append('./static/py')
 import io
 import os
 from flask import Flask, request, redirect, url_for,send_from_directory,render_template,jsonify, send_file, session, jsonify
-from werkzeug import secure_filename
+from werkzeug.utils import secure_filename
 import numpy as np
 from PIL import Image
 import base64
 import re
-import cStringIO
+# import cStringIO
 import imp
 import pdf_text_extraction
-import cPickle as pickle
+import pickle as pickle
 import pickle_session as ps
 import json
 import wand.image as wi
 from textension import Block, Textension
-from HTMLParser import HTMLParser
+from html.parser import HTMLParser
 from input_text_processing import *
 
 UPLOAD_FOLDER = './uploads/'
@@ -71,8 +71,8 @@ def interact(page_no=0):
             sample = "./server/textension.pkl"
         if sample == "southern_life":
             sample = "./server/southern_life.pkl"
-        with open(sample, 'r') as f:
-            session["vis"] = pickle.load(f)
+        with open(sample, 'rb') as f:
+            session["vis"] = pickle.load(f,encoding='bytes')
     # if we don't have a vis to render, redirect back home
     if "vis" not in session:
         return redirect(url_for("index"))
@@ -128,7 +128,8 @@ def interact(page_no=0):
         , bounding_boxes=bounding_boxes
         , word_blocks=json.dumps(word_blocks)
         , ngram_plot=json.dumps(ngram_plot)
-        , ocr=json.dumps([h.unescape(line) for line in ocr_text])
+        # , ocr=json.dumps([h.unescape(line) for line in ocr_text])
+        , ocr=json.dumps(ocr_text)
         , translation=json.dumps([h.unescape(line) for line in ocr_translated])
         , page_no=page_no
         , num_pages=len(session["vis"])
@@ -192,7 +193,11 @@ def upload_file():
             session["vis"] = vis_list
             # with open("./a_mad_tea_party.pkl", "w+") as f:
             #     pickle.dump(vis_list, f)
-    return redirect(url_for("index"))
+    
+    if "options" not in session:
+        session["options"] = default_options
+    return render_template('upload.html')
+    # return redirect(url_for("index"))
 
 
 @app.route('/hook', methods=['POST'])
@@ -206,7 +211,6 @@ def get_image():
     img = img.crop((133,5,499,img.size[1]-5))
     bImage = io.BytesIO()
     img.save(bImage, "PNG")
-    img.save("test.png","PNG")
     bImage.seek(0)
     vis = Textension(bImage
                     , _translate=session["options"]["translate"]
@@ -222,10 +226,11 @@ def get_image():
                     , _margin_size=session["options"]["margin_size"]
                     , _stripe_bg=session["options"]["stripe_bg"]
                     , _blockify_page=session["options"]["multi_column"])
-    vis.decompose()
+    # vis.decompose()
+    vis.blockify()
     vis_list.append(vis)
     session["vis"] = vis_list
-    return redirect(url_for("index"))
+    return redirect(url_for("interact"))
 
 
 
@@ -242,7 +247,7 @@ def savevisSessionArgs(form):
             continue
         if option == "translate" or option == "hires" or option == "antialias" \
         or option == "stripe_bg" or option == "multi_column":
-            if form[option] == u"true":
+            if form[option] == "true":
                 options_form[option] = True
             else:
                 options_form[option] = False
