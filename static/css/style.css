@@ -418,7 +418,7 @@ canvas.entity-location, canvas.ngram-usage {
 }
 
 #draw-board {
-    position: absolute;
+    position: relative;
 }
 
 .draw-color {

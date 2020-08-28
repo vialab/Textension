@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Textension | Interaction{% endblock %}
+{% block title %}{{ _('Textension | Interaction') }}{% endblock %}
 {%block content%}
   <div id="loading" style="background-image:url('{{ url_for('static', filename='css/loading.gif') }}');" class="show"></div>
   <a id="download_data" style="display: none;"></a>
@@ -7,7 +7,7 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="text-edit-title">Edit Text</h5>
+          <h5 class="modal-title" id="text-edit-title">{{ _('Edit Text') }}</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
@@ -21,11 +21,11 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary" onclick="saveText();">Edit Text</button>
-          <button type="button" id="text-visibility" class="btn btn-primary" onclick="toggleTextVisibility();">Remove Text</button>
-          <button type="button" class="btn btn-primary" onclick="replaceAllText();">Replace All</button>
-          <button type="button" class="btn btn-primary" onclick="undoAllText();">Undo All</button>
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" onclick="saveText();">{{ _('Edit Text') }}</button>
+          <button type="button" id="text-visibility" class="btn btn-primary" onclick="toggleTextVisibility();">{{ _('Remove Text') }}</button>
+          <button type="button" class="btn btn-primary" onclick="replaceAllText();">{{ _('Replace All') }}</button>
+          <button type="button" class="btn btn-primary" onclick="undoAllText();">{{ _('Undo All') }}</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ _('Close') }}</button>
         </div>
       </div>
     </div>
@@ -36,29 +36,29 @@
       <a href="javascript:void(0)" class="close-btn" onclick="closeNav()">&times;</a>
     </div>
     <div class="tool-box-link">
-      <a href="/upload">Load New Document ...</a>
+      <a href="/upload">{{ _('Load New Document ...') }}</a>
       <!-- <a href="#" onclick="javasript:openActiveSpaces();">Open Spaces</a>
       <a href="#" onclick="javasript:closeActiveSpaces();">Close Spaces</a> -->
-      <a href="#" onclick="print();">Download Page</a>
-      <a href="#" onclick="downloadText();">Download Text</a>
+      <a href="#" onclick="print();">{{ _('Download Page') }}</a>
+      <a href="#" onclick="downloadText();">{{ _('Download Text') }}</a>
     <!-- </div>
     <div class="tool-box-link"> -->
       <!-- <a href="/">Load New Document ...</a> -->
       <hr style="margin-top: 10px; margin-bottom: 11px"> </hr>
       <a href="#" onclick="javascript:openActiveSpaces();" data-toggle="tooltip" data-placement="top"
-      title="Open all vertical and/or horizontal line spaces (depends on selected mode)." >Open All Spaces</a>
+      title="{{ _('Open all vertical and/or horizontal line spaces (depends on selected mode).') }}" >Open All Spaces</a>
       <a href="#" onclick="javascript:closeActiveSpaces();" data-toggle="tooltip" data-placement="top"
-      title="Close all vertical and/or horizontal line spaces (depends on selected mode).">Close All Spaces</a>
+      title="{{ _('Close all vertical and/or horizontal line spaces (depends on selected mode).') }}">Close All Spaces</a>
     </div>
     <div class="tool-box-btn" style="padding-top: 2px;">
     <label class="switch">
       <input id="vertical-space" type="checkbox" onclick="toggleMode(this, false, false, false, false);" data-mode="vertical"/>
       <!-- <input id="vertical-space" type="checkbox" onclick="toggleSpace(false);" data-mode="vertical"/> -->
       <span class="check-btn" data-toggle="tooltip" data-placement="top"
-      title="Toggle vertical spacing mode.">
+      title="{{ _('Toggle vertical spacing mode.') }}">
         <table>
           <tr><td><i class="fa fa-arrows-v" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
-          <tr><td>Vertical Space</td></tr>
+          <tr><td>{{ _('Vertical Space') }}</td></tr>
         </table>
       </span>
     </label>
@@ -66,23 +66,23 @@
       <!-- <input id="horizontal-space" type="checkbox" onclick="toggleSpace(true);" data-mode="horizontal"/> -->
       <input id="horizontal-space" type="checkbox" onclick="toggleMode(this, false, false, false, false);" data-mode="horizontal"/>
       <span class="check-btn" data-toggle="tooltip" data-placement="top"
-      title="Toggle horizontal spacing mode.">
+      title="{{ _('Toggle horizontal spacing mode.') }}">
         <table>
           <tr><td><i class="fa fa-arrows-h" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
-          <tr><td>Horizontal Space</td></tr>
+          <tr><td>{{ _('Horizontal Space') }}</td></tr>
         </table>
       </span>
     </label>
     <label class="switch">
       <input id="ocr-text" type="checkbox" />
       <span class="check-btn"  data-toggle="tooltip" data-placement="top"
-      title="Toggle visibility of the extracted (OCR) text" >
+      title="{{ _('Toggle visibility of the extracted (OCR) text') }}" >
         <table>
           <tr>
             <td><i class="fa fa-eye" style="font-size: 30px;" aria-hidden="true"></i></td>
           </tr>
           <tr>
-            <td>OCR</td>
+            <td>{{ _('OCR') }}</td>
           </tr>
         </table>
       </span>
@@ -90,19 +90,19 @@
     <label class="switch">
       <input id="confidence" type="checkbox"/>
       <span class="check-btn" data-toggle="tooltip" data-placement="top"
-      title="The darker the orange, the more uncertain it is."><table>
+      title="{{ _('The darker the orange, the more uncertain it is.') }}"><table>
           <tr><td><i class="fa fa-thumbs-up" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
-          <tr><td>OCR Uncertainty</td></tr>
+          <tr><td>{{ _('OCR Uncertainty') }}</td></tr>
         </table>
       </span>
     </label>
     <label class="switch">
       <input id="ngram" type="checkbox"/>
       <span class="check-btn" data-toggle="tooltip" data-placement="top"
-      title="Display time series graphs showing the usage of that n-gram over time.">
+      title="{{ _('Display time series graphs showing the usage of that n-gram over time.') }}">
           <table>
             <tr><td><i class="fa fa-line-chart" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
-            <tr><td>N-Gram Usage</td></tr>
+            <tr><td>{{ _('N-Gram Usage') }}</td></tr>
           </table>
       </span>
     </label>
@@ -122,13 +122,13 @@
     <label class="switch" >
       <input id="location" type="checkbox" />
       <span class="check-btn" data-toggle="tooltip" data-placement="top"
-      title="Show a map of the locations found within the text.">
+      title="{{ _('Show a map of the locations found within the text.') }}">
         <table>
           <tr>
             <td><i class="fa fa-map-marker" style="font-size: 30px;" aria-hidden="true"></i></td>
           </tr>
           <tr>
-            <td>Locations</td>
+            <td>{{ _('Locations') }}</td>
           </tr>
         </table>
       </span>
@@ -136,23 +136,23 @@
     <label class="switch">
       <input id="eraser-tool" type="checkbox" onclick="toggleMode(this, false, false, false, false);" data-mode="eraser"/>
       <span class="check-btn" data-toggle="tooltip" data-placement="top"
-      title="Remove or edit words within the document, click on any word to begin.">
+      title="{{ _('Remove or edit words within the document, click on any word to begin.') }}">
           <table>
             <tr><td><i class="fa fa-eraser" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
-            <tr><td>Erase Words</td></tr>
+            <tr><td>{{ _('Erase Words') }}</td></tr>
           </table>
       </span>
     </label>
     <label class="switch">
       <input id="draw-tool" type="checkbox" />
       <span class="check-btn" data-toggle="tooltip" data-placement="top"
-      title="Free draw on the document.">
+      title="{{ _('Free draw on the document.') }}">
         <table>
           <tr>
             <td><i class="fa fa-pencil" style="font-size: 30px;" aria-hidden="true"></i></td>
           </tr>
           <tr>
-            <td>Draw</td>
+            <td>{{ _('Draw') }}</td>
           </tr>
         </table>
       </span>
@@ -160,10 +160,10 @@
     <label class="switch">
       <input id="define-tool" type="checkbox" onclick="toggleMode(this);" data-mode="define"/>
       <span class="check-btn" data-toggle="tooltip" data-placement="top"
-      title="Dictionary defintions, click and hold.">
+      title="{{ _('Dictionary defintions, click and hold.') }}">
           <table>
             <tr><td><i class="fa fa-book" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
-            <tr><td>Dictionary</td></tr>
+            <tr><td>{{ _('Dictionary') }}</td></tr>
           </table>
       </span>
     </label>
@@ -173,7 +173,7 @@
       <span class="check-btn">
           <table>
             <tr><td><i class="fa fa-commenting" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
-            <tr><td>Translate</td></tr>
+            <tr><td>{{ _('Translate') }}</td></tr>
           </table>
       </span>
     </label>
@@ -191,10 +191,10 @@
     <label class="switch">
       <input id="context-tool" type="checkbox" onclick="toggleMode(this);" data-mode="context"/>
       <span class="check-btn" data-toggle="tooltip" data-placement="top"
-      title="Build a context map of words by clicking on the desired words with this tool enabled.">
+      title="{{ _('Build a context map of words by clicking on the desired words with this tool enabled.') }}">
           <table>
             <tr><td><i class="fa fa-sliders" style="font-size: 30px;" aria-hidden="true"></i></td></tr>
-            <tr><td>Context Map</td></tr>
+            <tr><td>{{ _('Context Map') }}</td></tr>
           </table>
       </span>
     </label>
@@ -254,7 +254,16 @@
           {% endfor %}
         </div>
         {% endfor %}
-        <canvas class="overlay" id="draw-board"></canvas>
+        <div style="position:absolute;">
+          <canvas class="overlay" id="draw-board"></canvas>
+          <svg id="svgcanvas" style="
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            width: 100%;
+            height: 100%;
+          "></svg>
+        </div>
         <canvas class="" id="buffer"></canvas>
         <div id="context-map-container"></div>
         <div id="entity-map-container"></div>
@@ -285,7 +294,7 @@
   <div id="color-options">
     <div id="text-options">
       <span id="text-color-select"></span>
-      <div style="height:30px;padding-left:40px;">TEXT COLOR</div>
+      <div style="height:30px;padding-left:40px;">{{ _('TEXT COLOR') }}</div>
       <div class="draw-color" style="background:#D93240;" id="#D93240" onclick="textColor(this)"></div>
       <div class="draw-color" style="background:#638CA6;" id="#638CA6" onclick="textColor(this)"></div>
       <div class="draw-color" style="background:#BFD4D9;" id="#BFD4D9" onclick="textColor(this)"></div>
@@ -296,7 +305,7 @@
     </div>
     <div id="draw-options">
       <span id="draw-color-select"></span>
-      <div style="height:30px;padding-left:40px;">PEN COLOR</div>
+      <div style="height:30px;padding-left:40px;">{{ _('PEN COLOR') }}</div>
       <div class="draw-color" style="background:#D93240;" id="#D93240" onclick="color(this)"></div>
       <div class="draw-color" style="background:#638CA6;" id="#638CA6" onclick="color(this)"></div>
       <div class="draw-color" style="background:#BFD4D9;" id="#BFD4D9" onclick="color(this)"></div>
@@ -330,6 +339,8 @@
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.transit/0.9.12/jquery.transit.min.js"></script>
   <script type='text/javascript' src="https://cdn.jsdelivr.net/g/canvas2image@0.1(base64.js+canvas2image.min.js+canvas2image.js)"></script>  
   <script type='text/javascript' src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+  <script type="text/javascript" src="https://unpkg.com/canvg@3.0.4/lib/umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/svg-pen-sketch"></script> 
   <script src="{{ url_for('static', filename='js/linguistic.js') }}"></script>
   <script src="{{ url_for('static', filename='js/interact.js') }}"></script>
   <script src="{{ url_for('static', filename='js/event.js') }}"></script>

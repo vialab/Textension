@@ -1,0 +1,342 @@
+# French translations for Synonymic Search.
+# Copyright (C) 2020 Vialab
+# This file is distributed under the same license as the Synonymic Search
+# project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2020.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Synonymic Search 1.0\n"
+"Report-Msgid-Bugs-To: vialab.research@gmail.com\n"
+"POT-Creation-Date: 2020-08-05 10:58-0400\n"
+"PO-Revision-Date: 2020-08-05 11:04-0400\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: fr\n"
+"Language-Team: fr <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n > 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.8.0\n"
+
+#: templates/404.html:3 templates/404.html:7
+msgid "Page Not Found"
+msgstr "Je ne parle francais"
+
+#: templates/500.html:3 templates/500.html:7
+msgid "Internal Server Error"
+msgstr ""
+
+#: templates/base.html:3 templates/index.html:3 templates/index.html:252
+#: templates/upload.html:207
+msgid "Textension"
+msgstr ""
+
+#: templates/index.html:193
+msgid "File"
+msgstr ""
+
+#: templates/index.html:194
+msgid "Camera"
+msgstr ""
+
+#: templates/index.html:195 templates/index.html:303
+msgid "Settings"
+msgstr ""
+
+#: templates/index.html:200
+msgid "TEXT"
+msgstr ""
+
+#: templates/index.html:200
+msgid "ENSION"
+msgstr ""
+
+#: templates/index.html:201
+msgid "Digitally augment analog text."
+msgstr ""
+
+#: templates/index.html:202
+msgid "Try Our Demo"
+msgstr ""
+
+#: templates/index.html:205
+msgid ""
+"Bringing together ideas studied in digital document spaces and existing "
+"word-scale visualizations."
+msgstr ""
+
+#: templates/index.html:212
+msgid "How it works"
+msgstr ""
+
+#: templates/index.html:214
+msgid ""
+"The Textension platform automatically adds visualizations and natural "
+"language processing applications to analog texts, using any web-based "
+"device with a camera. After taking a picture of a particular page from a "
+"book or uploading an existing image, our system builds an interactive "
+"digital object that automatically inserts modular elements in a digital "
+"space."
+msgstr ""
+
+#: templates/index.html:222 templates/upload.html:177
+msgid "Use your own documents to process and analyze."
+msgstr ""
+
+#: templates/index.html:222 templates/upload.html:177
+msgid "You could also click to browse for a file on your computer."
+msgstr ""
+
+#: templates/index.html:226 templates/upload.html:181
+msgid "Drag & drop a document or image here."
+msgstr ""
+
+#: templates/index.html:234 templates/upload.html:189
+msgid "Don't have a document handy? No problem. Try one of our samples:"
+msgstr ""
+
+#: templates/index.html:245 templates/upload.html:200
+msgid "Mad Tea Party"
+msgstr ""
+
+#: templates/index.html:260 templates/upload.html:215
+msgid "Southern Life in Southern Literature"
+msgstr ""
+
+#: templates/index.html:271
+msgid "This is where you want the book to be."
+msgstr ""
+
+#: templates/index.html:273
+msgid "Video stream not available."
+msgstr ""
+
+#: templates/index.html:279
+msgid "Take a picture"
+msgstr ""
+
+#: templates/index.html:286
+msgid "The screen capture will appear in this box."
+msgstr ""
+
+#: templates/index.html:308
+msgid "Vertical Spread"
+msgstr ""
+
+#: templates/index.html:312
+msgid "Horizontal Spread"
+msgstr ""
+
+#: templates/index.html:316
+msgid "Hi-Res"
+msgstr ""
+
+#: templates/index.html:326
+msgid "Anti-Aliasing"
+msgstr ""
+
+#: templates/index.html:336
+msgid "Fill Background"
+msgstr ""
+
+#: templates/index.html:346
+msgid "Multi-Column"
+msgstr ""
+
+#: templates/index.html:356 templates/interact.html:176
+msgid "Translate"
+msgstr ""
+
+#: templates/index.html:366
+msgid "Blur"
+msgstr ""
+
+#: templates/index.html:370
+msgid "Pixel Cut Width"
+msgstr ""
+
+#: templates/index.html:374
+msgid "Noise Threshold"
+msgstr ""
+
+#: templates/index.html:378
+msgid "Line Buffer"
+msgstr ""
+
+#: templates/index.html:382
+msgid "Max Width"
+msgstr ""
+
+#: templates/index.html:386
+msgid "Max Height"
+msgstr ""
+
+#: templates/index.html:390
+msgid "Margin Size"
+msgstr ""
+
+#: templates/index.html:394
+msgid "Google Dev Key"
+msgstr ""
+
+#: templates/index.html:406
+msgid "This research was conducted by"
+msgstr ""
+
+#: templates/index.html:406
+msgid "as part of the"
+msgstr ""
+
+#: templates/index.html:406
+msgid "CO.SHS project"
+msgstr ""
+
+#: templates/index.html:406
+msgid ""
+"and has received financial support from the Canada Foundation for "
+"Innovation."
+msgstr ""
+
+#: templates/interact.html:2
+msgid "Textension | Interaction"
+msgstr ""
+
+#: templates/interact.html:10 templates/interact.html:24
+msgid "Edit Text"
+msgstr ""
+
+#: templates/interact.html:25
+msgid "Remove Text"
+msgstr ""
+
+#: templates/interact.html:26
+msgid "Replace All"
+msgstr ""
+
+#: templates/interact.html:27
+msgid "Undo All"
+msgstr ""
+
+#: templates/interact.html:28
+msgid "Close"
+msgstr ""
+
+#: templates/interact.html:39
+msgid "Load New Document ..."
+msgstr ""
+
+#: templates/interact.html:42
+msgid "Download Page"
+msgstr ""
+
+#: templates/interact.html:43
+msgid "Download Text"
+msgstr ""
+
+#: templates/interact.html:49
+msgid ""
+"Open all vertical and/or horizontal line spaces (depends on selected "
+"mode)."
+msgstr ""
+
+#: templates/interact.html:51
+msgid ""
+"Close all vertical and/or horizontal line spaces (depends on selected "
+"mode)."
+msgstr ""
+
+#: templates/interact.html:58
+msgid "Toggle vertical spacing mode."
+msgstr ""
+
+#: templates/interact.html:61
+msgid "Vertical Space"
+msgstr ""
+
+#: templates/interact.html:69
+msgid "Toggle horizontal spacing mode."
+msgstr ""
+
+#: templates/interact.html:72
+msgid "Horizontal Space"
+msgstr ""
+
+#: templates/interact.html:79
+msgid "Toggle visibility of the extracted (OCR) text"
+msgstr ""
+
+#: templates/interact.html:85
+msgid "OCR"
+msgstr ""
+
+#: templates/interact.html:93
+msgid "The darker the orange, the more uncertain it is."
+msgstr ""
+
+#: templates/interact.html:95
+msgid "OCR Uncertainty"
+msgstr ""
+
+#: templates/interact.html:102
+msgid "Display time series graphs showing the usage of that n-gram over time."
+msgstr ""
+
+#: templates/interact.html:105
+msgid "N-Gram Usage"
+msgstr ""
+
+#: templates/interact.html:125
+msgid "Show a map of the locations found within the text."
+msgstr ""
+
+#: templates/interact.html:131
+msgid "Locations"
+msgstr ""
+
+#: templates/interact.html:139
+msgid "Remove or edit words within the document, click on any word to begin."
+msgstr ""
+
+#: templates/interact.html:142
+msgid "Erase Words"
+msgstr ""
+
+#: templates/interact.html:149
+msgid "Free draw on the document."
+msgstr ""
+
+#: templates/interact.html:155
+msgid "Draw"
+msgstr ""
+
+#: templates/interact.html:163
+msgid "Dictionary defintions, click and hold."
+msgstr ""
+
+#: templates/interact.html:166
+msgid "Dictionary"
+msgstr ""
+
+#: templates/interact.html:194
+msgid ""
+"Build a context map of words by clicking on the desired words with this "
+"tool enabled."
+msgstr ""
+
+#: templates/interact.html:197
+msgid "Context Map"
+msgstr ""
+
+#: templates/interact.html:288
+msgid "TEXT COLOR"
+msgstr ""
+
+#: templates/interact.html:299
+msgid "PEN COLOR"
+msgstr ""
+
+#: templates/upload.html:3
+msgid "Textension | Upload"
+msgstr ""
+

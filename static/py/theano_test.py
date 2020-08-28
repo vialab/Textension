@@ -23,4 +23,4 @@ array2 = numpy.asarray(image.getdata())
 from PIL import Image
 import numpy
 image = Image.open('color.png', 'r').getdata()
-imageArray = numpy.fromstring(image.tostring(), dtype='uint
+imageArray = numpy.fromstring(image.tostring(), dtype='uint')

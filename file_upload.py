@@ -3,6 +3,7 @@ sys.path.append('./static/py')
 import io
 import os
 from flask import Flask, request, redirect, url_for,send_from_directory,render_template,jsonify, send_file, session, jsonify
+from flask_babel import Babel
 from werkzeug.utils import secure_filename
 import numpy as np
 from PIL import Image
@@ -27,6 +28,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = 'super secret key and diceroll: 12'
 app.config['SESSION_TYPE'] = 'filesystem'
 app.session_interface = ps.PickleSessionInterface("./app_session")
+
+babel = Babel(app)
+
 h = HTMLParser()
 
 default_options = {
@@ -46,6 +50,17 @@ default_options = {
     "stripe_bg": False, 
     "multi_column": True
 }
+
+LANGUAGES = list(set(["en", "fr"]))  # list of set removes duplicates
+# Select the language to use
+
+@babel.localeselector
+def get_locale():
+    if request.cookies.get("selected-language", None):
+        language = request.cookies.get("selected-language")
+    else:
+        language = request.accept_languages.best_match(LANGUAGES)
+    return language
     
 @app.route('/', methods=['GET', 'POST'])
 def index():

@@ -8,8 +8,8 @@ currX = 0,
 prevY = 0,
 currY = 0,
 dot_flag = false,
-x = "black",
-y = 2,
+penStrokeStyle = "black",
+penLineWidth = 2,
 map_height = 150,
 haslistener=false,
 timeout_id = 0,
@@ -19,6 +19,8 @@ vertical_mode = false,
 horizontal_mode = false,
 resizing = false,
 in_transit = 0;
+
+let svgCanvas
 
 // keep track of mesh and blocks
 let mesh = [], block_mesh = [], block_y = [], block_x = [];
@@ -715,8 +717,8 @@ function draw() {
     ctx.beginPath();
     ctx.moveTo(prevX, prevY);
     ctx.lineTo(currX, currY);
-    ctx.strokeStyle = x;
-    ctx.lineWidth = y;
+    ctx.strokeStyle = penStrokeStyle;
+    ctx.lineWidth = penLineWidth;
     ctx.stroke();
     ctx.closePath();
 }
@@ -733,6 +735,10 @@ function erase() {
 // download the current html canvas as an image
 function print() {
     // event.preventDefault();
+    // Canvg.canvg(canvas, svgCanvas.outerHTML)
+    let v = canvg.Canvg.fromString(ctx, svgCanvas.getElement().outerHTML)
+    v.start()
+
     html2canvas($(".vis"), {
         onrendered: function (canvas) {
             let link = document.getElementById('download_data')
@@ -759,7 +765,7 @@ function findxy(res, e) {
         dot_flag = true;
         if (dot_flag) {
             ctx.beginPath();
-            ctx.fillStyle = x;
+            ctx.fillStyle = penStrokeStyle;
             ctx.fillRect(currX, currY, 2, 2);
             ctx.closePath();
             dot_flag = false;
@@ -801,4 +807,15 @@ function argsort(to_sort, desc=false) {
 
 $(document).ready(function() {
     closeActiveSpaces();
+
+    let svgSketch = SvgPenSketch.default;
+ 
+    // Prep the svg element to be drawn on (custom path styles can be passed in optionally)
+    const strokeStyle =  {"stroke": "black", "stroke-width": "2px", "fill": "none"};
+    svgCanvas = new svgSketch(document.querySelector("svg"), strokeStyle);
+    svgCanvas.penDownCallback = _ => {
+        svgCanvas.strokeStyles.stroke = penStrokeStyle
+        svgCanvas.strokeStyles['stroke-width'] = `${penLineWidth}px`
+    }
+
 });

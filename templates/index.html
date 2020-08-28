@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <head>
-  <title>Textension</title>
+  <title>{{ _('Textension') }}</title>
   <meta name='author' content='Adam Bradley'x>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -190,28 +190,28 @@
         <a href="vialab.ca"><img src="./static/css/vialab_logo_2019_rgb.png"/></a>
       </div>
       <div class="tool-box-link">
-        <a data-toggle="tab" href="#menu-file" data-target="#menu-file" onclick="window.location='#menu-file'">File</a>
-        <a data-toggle="tab" href="#menu-camera" data-target="#menu-camera" onclick="window.location='#menu-camera'">Camera</a>
-        <a data-toggle="tab" href="#menu-settings" data-target="#menu-settings" onclick="window.location='#menu-settings'">Settings</a>
+        <a data-toggle="tab" href="#menu-file" data-target="#menu-file" onclick="window.location='#menu-file'">{{ _('File') }}</a>
+        <a data-toggle="tab" href="#menu-camera" data-target="#menu-camera" onclick="window.location='#menu-camera'">{{ _('Camera') }}</a>
+        <a data-toggle="tab" href="#menu-settings" data-target="#menu-settings" onclick="window.location='#menu-settings'">{{ _('Settings') }}</a>
       </div>
     </div>
     <div class="cover-container">
       <div id="cover-caption" class="cover-block">
-        <div id="cover-title"><span class="first">TEXT</span><span class="last">ENSION</span></div>
-        <div id="cover-blurb">Digitally augment analog text.</div>
-        <div id="cover-button"><button class="btn btn-primary btn-lg" onclick="window.location = '/interact?sample=a_mad_tea_party';">Try Our Demo</button></div>
+        <div id="cover-title"><span class="first">{{ _('TEXT') }}</span><span class="last">{{ _('ENSION') }}</span></div>
+        <div id="cover-blurb">{{ _('Digitally augment analog text.') }}</div>
+        <div id="cover-button"><button class="btn btn-primary btn-lg" onclick="window.location = '/interact?sample=a_mad_tea_party';">{{ _('Try Our Demo') }}</button></div>
       </div>
       <div class="cover-block">
-          Bringing together ideas studied in digital document spaces and existing word-scale visualizations.
+          {{ _('Bringing together ideas studied in digital document spaces and existing word-scale visualizations.') }}
       </div>
       <div id="cover-pic">
         <img src="./static/css/cover-example.png"/>
       </div>
     </div>
     <div class="content-container">
-      <div class="content-box title">How it works<hr/></div>
+      <div class="content-box title">{{ _('How it works') }}<hr/></div>
       <div class="content-box body">
-        The Textension platform automatically adds visualizations and natural language processing applications to analog texts, using any web-based device with a camera. After taking a picture of a particular page from a book or uploading an existing image, our system builds an interactive digital object that automatically inserts modular elements in a digital space.
+        {{ _('The Textension platform automatically adds visualizations and natural language processing applications to analog texts, using any web-based device with a camera. After taking a picture of a particular page from a book or uploading an existing image, our system builds an interactive digital object that automatically inserts modular elements in a digital space.') }}
       </div>
     </div>
     <div id="app-content" class="container">
@@ -219,11 +219,11 @@
         <div id="menu-file" class="tab-pane fade in active">
           <div class="row">
             <div class="col-md-12 text-center">
-              <b>Use your own documents to process and analyze.</b><br/>You could also click to browse for a file on your computer.
+              <b>{{ _('Use your own documents to process and analyze.') }}</b><br/>{{ _('You could also click to browse for a file on your computer.') }}
               <div id="dropzone">
                 <form action="/upload" class="dropzone needsclick dz-clickable" id="demo-upload">
                   <div class="dz-message needsclick">
-                    <b>Drag &amp; drop a document or image here.</b>
+                    <b>{{ _('Drag & drop a document or image here.') }}</b>
                   </div>
                 </form>
               </div>
@@ -231,7 +231,7 @@
           </div>
           <div class="row" style="margin-top: 50px;">
             <div class="col-md-12 text-center">
-              <i>Don't have a document handy? No problem. Try one of our samples:</i>
+              <i>{{ _("Don't have a document handy? No problem. Try one of our samples:") }}</i>
             </div>
           </div>
           <div class="row">
@@ -242,14 +242,14 @@
                     color: black;
                     font-weight: bold;
                     background-image: url(./static/css/a_mad_tea_party.png);
-                ">Mad Tea Party</a>
+                ">{{ _('Mad Tea Party') }}</a>
                 <a href="/interact?sample=textension" class="sample-doc" style="
                     text-shadow: 0px 0px 8px #ffffff;
                     font-size: 16px;
                     color: black;
                     font-weight: bold;
                     background-image: url(./static/css/textension.png);
-                  ">Textension</a>
+                  ">{{ _('Textension') }}</a>
                 <!-- <a href="/interact?sample=book_of_myths" class="sample-doc">Book of Myths</a> -->
                 <a href="/interact?sample=southern_life" class="sample-doc" style="
                     text-shadow: 0px 0px 8px #ffffff;
@@ -257,7 +257,7 @@
                     color: black;
                     font-weight: bold;
                     background-image: url(./static/css/southern_life.png);
-                    ">Southern Life in Southern Literature</a>
+                    ">{{ _('Southern Life in Southern Literature') }}</a>
               </div>
           </div>
         </div>
@@ -268,22 +268,22 @@
             <div class="col-md-12 text-center vertical-center">
               <div class="camera">
                 <div id="camera-overlay">
-                  <div id="camera-frame">This is where you want the book to be.</div>
+                  <div id="camera-frame">{{ _('This is where you want the book to be.') }}</div>
                 </div>
-                <video id="video" muted="muted">Video stream not available.</video>
+                <video id="video" muted="muted">{{ _('Video stream not available.') }}</video>
               </div>
             </div>
           </div>
           <div class="row">
             <div class="col-md-12 text-center">
-              <button id="startbutton"><span class="glyphicon glyphicon-picture"></span>Take a picture</button>
+              <button id="startbutton"><span class="glyphicon glyphicon-picture"></span>{{ _('Take a picture') }}</button>
             </div>
           </div>
         
           <div class="row">
             <div class="col-md-12 text-center vertical-center">
               <div class="output">
-                <p>The screen capture will appear in this box.</p>
+                <p>{{ _('The screen capture will appear in this box.') }}</p>
                 <img style="display:none;" id="photo" alt="">
               </div>
             </div>
@@ -300,20 +300,20 @@
               <table style="margin: 0 auto;">
                 <thead>
                   <tr>
-                    <th>Settings</th>
+                    <th>{{ _('Settings') }}</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td>Vertical Spread</td>
+                    <td>{{ _('Vertical Spread') }}</td>
                     <td><input id="option-spread" type="number" class="form-control" form="demo-upload" value="{{ session['options']['spread'] }}"/></td>
                   </tr>
                   <tr>
-                    <td>Horizontal Spread</td>
+                    <td>{{ _('Horizontal Spread') }}</td>
                     <td><input id="option-stretch" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['horizontal_spread'] }}"/></td>
                   </tr>
                   <tr>
-                    <td>Hi-Res</td>
+                    <td>{{ _('Hi-Res') }}</td>
                     <td>
                       {% if session['options']['hires']==True %}
                         <input id="option-hires" type="checkbox" form="demo-upload" checked/>
@@ -323,7 +323,7 @@
                     </td>
                   </tr>
                   <tr>
-                    <td>Anti-Aliasing</td>
+                    <td>{{ _('Anti-Aliasing') }}</td>
                     <td>
                       {% if session['options']['antialias']==True %}
                         <input id="option-antialias" type="checkbox" form="demo-upload" checked/>
@@ -333,7 +333,7 @@
                     </td>
                   </tr>
                   <tr>
-                    <td>Fill Background</td>
+                    <td>{{ _('Fill Background') }}</td>
                     <td>
                       {% if session['options']['stripe_bg']==True %}
                         <input id="option-fill" type="checkbox" form="demo-upload" checked/>
@@ -343,7 +343,7 @@
                     </td>
                   </tr>
                   <tr>
-                    <td>Multi-Column</td>
+                    <td>{{ _('Multi-Column') }}</td>
                     <td>
                       {% if session['options']['multi_column']==True %}
                         <input id="option-column" type="checkbox" form="demo-upload" checked/>
@@ -353,7 +353,7 @@
                     </td>
                   </tr>
                   <tr>
-                    <td>Translate</td>
+                    <td>{{ _('Translate') }}</td>
                     <td>
                       {% if session['options']['translate']==True %}
                         <input id="option-translate" type="checkbox" form="demo-upload" checked/>
@@ -363,35 +363,35 @@
                     </td>
                   </tr>
                   <tr>
-                    <td>Blur</td>
+                    <td>{{ _('Blur') }}</td>
                     <td><input id="option-blur" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['blur'] }}"/></td>
                   </tr>
                   <tr>
-                    <td>Pixel Cut Width</td>
+                    <td>{{ _('Pixel Cut Width') }}</td>
                     <td><input id="option-cut" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['cut'] }}"/></td>
                   </tr>
                   <tr>
-                    <td>Noise Threshold</td>
+                    <td>{{ _('Noise Threshold') }}</td>
                     <td><input id="option-noise" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['noise'] }}"/></td>
                   </tr>
                   <tr>
-                    <td>Line Buffer</td>
+                    <td>{{ _('Line Buffer') }}</td>
                     <td><input id="option-buffer" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['buffer'] }}"/></td>
                   </tr>
                   <tr>
-                    <td>Max Width</td>
+                    <td>{{ _('Max Width') }}</td>
                     <td><input id="option-width" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['width'] }}"/></td>
                   </tr>
                   <tr>
-                    <td>Max Height</td>
+                    <td>{{ _('Max Height') }}</td>
                     <td><input id="option-height" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['height'] }}"/></td>
                   </tr>
                   <tr>
-                    <td>Margin Size</td>
+                    <td>{{ _('Margin Size') }}</td>
                     <td><input id="option-margin" type="number" class="form-control bfh-number" form="demo-upload" value="{{ session['options']['margin_size'] }}"/></td>
                   </tr>
                   <tr>
-                    <td>Google Dev Key</td>
+                    <td>{{ _('Google Dev Key') }}</td>
                     <td><input id="option-google" type="text" class="form-control" form="demo-upload" value="{{ session['options']['google_key'] }}"/></td>
                   </tr>
                 </tbody>
@@ -403,7 +403,7 @@
     </div>
     <div class="content-container">
       <div class="content-box">
-          This research was conducted by <a href="vialab.ca">VIALAB</a> as part of the <a href="https://co-shs.ca/en/">CO.SHS project</a> and has received financial support from the Canada Foundation for Innovation.
+          {{ _('This research was conducted by') }} <a href="vialab.ca">VIALAB</a> {{ _('as part of the') }} <a href="https://co-shs.ca/en/">{{ _('CO.SHS project') }}</a> {{ _('and has received financial support from the Canada Foundation for Innovation.') }}
       </div>
     </div>
   </div>

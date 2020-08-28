@@ -12,19 +12,15 @@ class TextensionModel {
     }
 
     setOCR( ocr ) {
-        // console.log("set OCR: ", ocr)
-
         this.ocr = ocr
     }
 
 
     setTranslation( translation ) {
-        // console.log("translation: ",translation)
         this.translation = translation
     }
 
     setWordBlocks( wordBlocks ) {
-        console.log(wordBlocks)
         this.wordBlocks = wordBlocks
 
         for (const key in this.wordBlocks) {
@@ -40,8 +36,6 @@ class TextensionModel {
                         for (const wkey in line) {
                             if (line.hasOwnProperty(wkey)) {
                                 const word = line[wkey];
-                                
-                                // console.log(line, word)
 
                                 if (word.confidence < ocrLine[1]) {
                                     // single word confidence is lower than whole line confidence, lets take that word from that line
@@ -49,7 +43,7 @@ class TextensionModel {
                                     let ocrWords = ocrLine[0].split(" ")
 
                                     if (ocrWords.length == line.lenth) {
-                                        console.log("replacing: ", word.text, "  with ", ocrWords[word.word_pos],ocrWords)
+                                        // console.log("replacing: ", word.text, "  with ", ocrWords[word.word_pos],ocrWords)
     
                                         word.text = ocrWords[word.word_pos]
                                     }
