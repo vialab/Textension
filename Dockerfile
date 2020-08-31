@@ -43,6 +43,11 @@ RUN python -m spacy download en
 RUN pip install textstat
 
 
+RUN apt-get install 'ffmpeg'\
+    'libsm6'\ 
+    'libxext6'  -y
+
+
 COPY . /usr/src/app
 
 EXPOSE 5000
