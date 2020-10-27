@@ -1,5 +1,5 @@
 # FROM ubuntu:18.04
-FROM python:3
+FROM python:3.8
 
 # RUN sed -i 's/archive.ubuntu.com/mirror.science.uoit.ca/g' \
 #         /etc/apt/sources.list
